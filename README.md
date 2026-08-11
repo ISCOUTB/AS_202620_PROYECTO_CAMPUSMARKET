@@ -6,6 +6,7 @@ Marketplace universitario para la compra, venta y alquiler de productos.
 
 - Joshua tenorio alvarez
 - Camilo martinez berrio
+- Nilver garcia pimentel
 
 ## Descripción
 CampusMarket es una plataforma orientada a estudiantes universitarios
