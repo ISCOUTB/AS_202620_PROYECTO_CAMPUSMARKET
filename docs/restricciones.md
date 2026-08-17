@@ -10,7 +10,7 @@ CampusMarket debe ser desarrollado dentro del semestre académico.
 
 ## R-02. Tamaño del equipo
 
-El proyecto será desarrollado por un equipo de dos integrantes.
+El proyecto será desarrollado por un equipo de tres integrantes.
 
 **Justificación:** Las decisiones de diseño y el número de funcionalidades deben ser compatibles con la capacidad de trabajo de un equipo pequeño. Esto limita la cantidad de componentes y funciones que pueden implementarse durante el semestre.
 
