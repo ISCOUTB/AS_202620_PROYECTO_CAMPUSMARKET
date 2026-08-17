@@ -32,12 +32,9 @@ La primera versión de CampusMarket no incluirá pagos en línea, procesamiento 
 
 **Justificación:** Estas funcionalidades requieren integraciones externas y aumentan considerablemente la complejidad del sistema. No son necesarias para demostrar el funcionamiento principal del marketplace durante el semestre.
 
-## R-06. Aplicación web
 
-CampusMarket será desarrollado inicialmente como una aplicación web accesible mediante un navegador.
+## R-06. Plataforma web
 
-**Justificación:** Una aplicación web permite que los estudiantes accedan al sistema sin necesidad de instalar software adicional y evita aumentar el alcance inicial con el desarrollo de aplicaciones independientes para diferentes plataformas.
+CampusMarket será desarrollado como una página web accesible desde navegadores modernos.
 
-## Resumen
-
-Estas restricciones permiten mantener CampusMarket dentro de un alcance viable para el semestre y sirven como límites para las decisiones arquitectónicas que se tomarán posteriormente.
+**Justificación:** La página permitirá que los estudiantes accedan a CampusMarket desde computadores, tabletas o teléfonos mediante un navegador, sin necesidad de instalar programas adicionales. Esto también permite mantener el proyecto dentro de un alcance adecuado para el semestre.
