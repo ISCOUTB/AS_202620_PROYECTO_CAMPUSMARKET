@@ -4,85 +4,122 @@
 
 ### 1.1 Descripción del sistema
 
-CampusMarket es una plataforma orientada a estudiantes universitarios que busca facilitar la publicación, búsqueda, venta y alquiler de productos nuevos o usados dentro de la comunidad estudiantil.
+CampusMarket es una plataforma web orientada a estudiantes universitarios que busca facilitar la publicación, búsqueda, venta y alquiler de productos nuevos o usados dentro de la comunidad estudiantil.
 
-La idea nace debido a que muchos estudiantes ofrecen productos por medios como grupos de WhatsApp, redes sociales o conversaciones informales, donde las publicaciones pueden perderse fácilmente y no existe una forma organizada de consultar los artículos disponibles.
+La idea surge debido a que muchos estudiantes ofrecen productos mediante grupos de WhatsApp, redes sociales u otros medios informales, donde las publicaciones pueden perderse fácilmente y no existe una forma centralizada y organizada de consultar los artículos disponibles.
 
-CampusMarket busca centralizar estas publicaciones en una plataforma en la que los estudiantes puedan encontrar y ofrecer productos de una manera más organizada.
+CampusMarket busca centralizar estas publicaciones en una plataforma donde los estudiantes puedan encontrar y ofrecer productos de manera organizada, manteniendo un alcance adecuado para el desarrollo académico durante el semestre.
 
-### 1.2 Objetivos funcionales
+### 1.2 Objetivos de negocio e interesados
 
-El sistema permitirá:
+Los objetivos de negocio de CampusMarket se orientan a mejorar la forma en que los estudiantes universitarios ofrecen y encuentran productos dentro de su comunidad.
 
-- Registrar usuarios e iniciar sesión.
-- Crear publicaciones de productos.
-- Indicar si un producto es nuevo o usado.
-- Indicar si el producto está disponible para venta, alquiler o ambas modalidades.
-- Consultar productos publicados.
-- Buscar y filtrar productos.
-- Editar y eliminar publicaciones propias.
-- Consultar la información necesaria para contactar al propietario del producto.
-- Permitir al administrador supervisar el contenido de la plataforma.
+| ID | Objetivo de negocio | Interesado principal |
+|---|---|---|
+| ON-01 | Centralizar en una sola plataforma las publicaciones de productos que actualmente se encuentran dispersas en grupos de WhatsApp, redes sociales y otros medios informales. | Estudiantes universitarios |
+| ON-02 | Facilitar que los estudiantes encuentren productos disponibles para compra o alquiler dentro de la comunidad universitaria. | Estudiantes compradores o arrendatarios |
+| ON-03 | Dar mayor visibilidad a los productos que los estudiantes desean vender o alquilar mediante publicaciones organizadas y consultables. | Estudiantes vendedores o propietarios |
+| ON-04 | Mantener un entorno controlado para las publicaciones y apoyar la supervisión del contenido disponible en la plataforma. | Administrador de CampusMarket |
 
 ### 1.3 Objetivos de calidad
 
-Los principales atributos de calidad considerados para CampusMarket son:
+Los principales atributos de calidad considerados para CampusMarket son los siguientes.
 
 #### Mantenibilidad
 
-La aplicación debe estar organizada de forma que sea posible modificar o agregar funcionalidades sin afectar innecesariamente otras partes del sistema.
+La aplicación debe estar organizada de forma que sea posible modificar o agregar funcionalidades sin afectar innecesariamente partes del sistema que no estén relacionadas con el cambio.
+
+Este objetivo se desarrolla mediante el escenario de calidad **EC-03 - Modificación del sistema**.
 
 #### Seguridad
 
-Un usuario solamente podrá modificar o eliminar las publicaciones que le pertenecen.
+Un estudiante solamente podrá modificar o eliminar las publicaciones que le pertenecen. Los intentos de modificación realizados por usuarios que no sean propietarios deberán ser rechazados.
+
+Este objetivo se desarrolla mediante el escenario **EC-02 - Protección de publicaciones**.
 
 #### Rendimiento
 
-Las funciones principales de consulta y búsqueda deben responder en tiempos adecuados para permitir una navegación cómoda.
+Las funciones principales de consulta y búsqueda deben responder en tiempos adecuados durante la operación normal del sistema.
+
+Este objetivo se desarrolla mediante el escenario **EC-01 - Consulta de productos**.
 
 #### Disponibilidad y recuperación
 
-En caso de una falla durante el uso del prototipo, el equipo debe poder recuperar el funcionamiento del sistema en un tiempo razonable.
+En caso de una falla durante una prueba o demostración, el equipo debe poder recuperar el funcionamiento del prototipo en un tiempo controlado y sin perder la información almacenada correctamente antes de la falla.
+
+Este objetivo se desarrolla mediante el escenario **EC-04 - Recuperación del prototipo**.
+
+Los escenarios completos y sus medidas verificables se encuentran en:
+
+[10-escenarios-de-calidad.md](./10-escenarios-de-calidad.md)
+
+El árbol de utilidad y su priorización se encuentran en:
+
+[10-arbol-de-utilidad.md](./10-arbol-de-utilidad.md)
 
 ---
 
 ## 2. Restricciones
 
+Las restricciones de CampusMarket delimitan el espacio de solución y condicionan las decisiones arquitectónicas que puede tomar el equipo.
+
 ### R-01. Tiempo de desarrollo
 
-El proyecto debe desarrollarse dentro del semestre académico.
+**Tipo:** Organizativa  
+**Origen:** Asignatura / calendario académico
 
-**Justificación:** El alcance del sistema debe mantenerse controlado para que pueda ser completado por el equipo dentro del tiempo establecido para la asignatura.
+CampusMarket debe alcanzar un prototipo funcional dentro del semestre académico.
+
+**Justificación:** El proyecto se desarrolla de manera incremental durante el curso y debe producir un sistema funcional y verificable dentro del periodo establecido. Esta condición limita el alcance y la complejidad que puede asumir el equipo.
 
 ### R-02. Tamaño del equipo
 
-CampusMarket será desarrollado por dos integrantes.
+**Tipo:** Organizativa  
+**Origen:** Conformación del equipo
 
-**Justificación:** Las funcionalidades y decisiones tomadas deben ser realizables por un equipo pequeño durante el semestre.
+CampusMarket será desarrollado por un equipo de tres integrantes.
 
-### R-03. Uso de GitHub
+**Justificación:** La capacidad de desarrollo disponible está limitada al trabajo de tres integrantes durante el semestre. Las decisiones arquitectónicas y el alcance deben ser compatibles con los recursos humanos disponibles.
 
-El código fuente y la documentación del proyecto se almacenarán en GitHub.
+### R-03. Repositorio y control de versiones
 
-**Justificación:** GitHub es la herramienta establecida en el curso para el control de versiones y el trabajo colaborativo.
+**Tipo:** Técnica / organizativa  
+**Origen:** Metodología de trabajo del curso
 
-### R-04. Uso de SonarCloud
+El código fuente, la documentación arquitectónica y las evidencias incrementales de CampusMarket deberán mantenerse versionados en el repositorio del proyecto.
 
-El repositorio deberá integrarse con SonarCloud durante el desarrollo.
+**Justificación:** El repositorio constituye el punto de referencia para verificar la evolución del sistema y mantener trazabilidad entre documentación, implementación y evidencias.
 
-**Justificación:** SonarCloud será utilizado para apoyar la evaluación de la calidad del código, de acuerdo con los lineamientos del curso.
+### R-04. Análisis de calidad del código
 
-### R-05. Alcance funcional
+**Tipo:** Técnica  
+**Origen:** Herramientas de calidad utilizadas en el proyecto
 
-El prototipo inicial no incluirá pagos en línea, gestión de envíos ni logística de entrega.
+El repositorio de CampusMarket deberá integrarse con SonarCloud durante el desarrollo.
 
-**Justificación:** Estas funciones aumentarían considerablemente la complejidad y no son necesarias para demostrar el funcionamiento principal del marketplace durante el semestre.
+**Justificación:** La integración permitirá analizar de manera continua características relacionadas con la calidad del código y obtener evidencia verificable sobre los problemas detectados.
 
-### R-06. Aplicación web
+### R-05. Alcance funcional del prototipo
 
-CampusMarket será planteado inicialmente como una aplicación web.
+**Tipo:** Organizativa / alcance  
+**Origen:** Alcance definido por el equipo
 
-**Justificación:** Permite que los usuarios puedan acceder mediante un navegador y evita aumentar el alcance inicial con el desarrollo de aplicaciones para diferentes plataformas.
+La versión inicial de CampusMarket no incluirá pagos en línea, procesamiento bancario, servicios de envío ni logística de entrega.
+
+**Justificación:** Estas funcionalidades requieren integraciones externas y aumentan considerablemente la complejidad técnica y operativa del sistema. Excluirlas permite concentrar el esfuerzo en las capacidades principales del marketplace.
+
+### R-06. Plataforma web
+
+**Tipo:** Técnica  
+**Origen:** Alcance tecnológico inicial
+
+CampusMarket será desarrollado como una aplicación web accesible desde navegadores modernos.
+
+**Justificación:** Esto permite que los estudiantes accedan al sistema desde diferentes dispositivos mediante un navegador sin requerir aplicaciones específicas para cada plataforma.
+
+El detalle completo de las restricciones se encuentra en:
+
+[02-restricciones.md](./02-restricciones.md)
 
 ---
 
@@ -92,21 +129,24 @@ CampusMarket será planteado inicialmente como una aplicación web.
 
 CampusMarket tendrá como principales actores a los estudiantes universitarios y al administrador de la plataforma.
 
-Los estudiantes interactuarán con el sistema para registrarse, iniciar sesión, publicar productos, consultar el catálogo, realizar búsquedas y administrar sus propias publicaciones.
+Los estudiantes utilizarán el sistema para registrarse, iniciar sesión, publicar productos, consultar el catálogo, realizar búsquedas y filtros y administrar sus propias publicaciones.
 
-El administrador utilizará el sistema para supervisar el contenido y apoyar la gestión general de la plataforma.
+El administrador utilizará CampusMarket para supervisar las publicaciones y apoyar la gestión general del contenido de la plataforma.
 
-### 3.2 Alcance
+### 3.2 Alcance funcional
 
 CampusMarket incluirá inicialmente:
 
 - Gestión básica de usuarios.
-- Gestión de publicaciones.
+- Registro e inicio de sesión.
+- Gestión de publicaciones de productos.
 - Consulta del catálogo.
-- Búsqueda y filtrado.
-- Productos nuevos y usados.
-- Venta y alquiler.
-- Administración básica de publicaciones.
+- Búsqueda y filtrado de productos.
+- Clasificación de productos como nuevos o usados.
+- Publicaciones para venta, alquiler o ambas modalidades.
+- Edición y eliminación de publicaciones propias.
+- Consulta de información para contactar al propietario del producto.
+- Supervisión básica de publicaciones por parte del administrador.
 
 No harán parte del alcance inicial:
 
@@ -121,3 +161,19 @@ No harán parte del alcance inicial:
 Los estudiantes y administradores accederán a CampusMarket mediante un navegador web.
 
 Cuando el prototipo se encuentre desplegado, la comunicación entre el navegador y CampusMarket deberá realizarse mediante HTTPS.
+
+En el alcance actual no se contemplan integraciones con sistemas bancarios, plataformas de pago, empresas de transporte ni servicios externos de logística.
+
+### 3.4 Diagrama de contexto
+
+El diagrama C4 de contexto identifica a CampusMarket, sus usuarios principales y las relaciones existentes entre ellos.
+
+El diagrama se encuentra documentado en:
+
+[01-contexto.md](../c4/01-contexto.md)
+
+---
+
+## 4. Estrategia de solución
+
+La estrategia de solución, la comparación de alternativas arquitectónicas y las tácticas asociadas a los escenarios de calidad se documentarán como parte de la Evidencia S3.
