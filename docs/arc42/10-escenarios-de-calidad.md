@@ -64,6 +64,9 @@ Los valores utilizados como medidas fueron definidos inicialmente por el equipo 
 
 **Prioridad:** Alta.
 
+**Decisión arquitectónica relacionada:**  
+[ADR-0001 - Adoptar un monolito modular para CampusMarket](../adr/0001-usar-monolito-modular.md)
+
 ---
 
 ## EC-04 - Recuperación del prototipo
