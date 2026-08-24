@@ -35,3 +35,28 @@ Los principales beneficiarios serán los estudiantes universitarios, tanto quien
 También se identifica al administrador de la plataforma como stakeholder, ya que tendrá la responsabilidad de supervisar el funcionamiento del sistema y gestionar contenido cuando sea necesario.
 
 De forma indirecta, la comunidad universitaria puede beneficiarse al fomentar la reutilización y circulación de productos que todavía tienen vida útil.
+## Estrategia arquitectónica
+
+CampusMarket adopta un **monolito modular** para la organización interna del backend, de acuerdo con la decisión registrada en el ADR-0001.
+
+El backend se encuentra organizado inicialmente en los siguientes módulos:
+
+- `usuarios`: registro, autenticación y gestión básica de usuarios.
+- `publicaciones`: creación, modificación y gestión de publicaciones.
+- `catalogo`: consulta, búsqueda y filtrado de productos.
+- `administracion`: supervisión y gestión básica del contenido.
+
+La aplicación aún no contiene lógica de negocio. En esta etapa se mantiene únicamente el esqueleto ejecutable requerido para continuar el desarrollo incremental del proyecto.
+
+## Tecnologías
+
+- **Frontend:** Flutter / Dart.
+- **Backend:** FastAPI / Python.
+- **Base de datos prevista:** MySQL.
+
+## Esqueleto ejecutable
+
+El backend puede iniciarse desde la raíz del repositorio con un solo comando:
+
+```bash
+python -m uvicorn backend.app.main:app --reload
