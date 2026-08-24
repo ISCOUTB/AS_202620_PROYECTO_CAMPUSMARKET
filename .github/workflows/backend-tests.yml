@@ -1,0 +1,29 @@
+name: Pruebas del backend
+
+on:
+  push:
+    branches:
+      - master
+      - S3-esqueleto-ejecutable
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Obtener repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar dependencias
+        run: pip install -r backend/requirements.txt
+
+      - name: Ejecutar pruebas
+        run: python -m pytest backend/tests -q
