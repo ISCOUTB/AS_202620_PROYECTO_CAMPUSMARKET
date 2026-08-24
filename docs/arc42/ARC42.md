@@ -4,11 +4,15 @@
 
 ### 1.1 Descripción del sistema
 
-CampusMarket es una plataforma web orientada a estudiantes universitarios que busca facilitar la publicación, búsqueda, venta y alquiler de productos nuevos o usados dentro de la comunidad estudiantil.
+CampusMarket es una plataforma orientada a estudiantes universitarios que busca facilitar la publicación, búsqueda, venta y alquiler de productos nuevos o usados dentro de la comunidad estudiantil.
 
 La idea surge debido a que muchos estudiantes ofrecen productos mediante grupos de WhatsApp, redes sociales u otros medios informales, donde las publicaciones pueden perderse fácilmente y no existe una forma centralizada y organizada de consultar los artículos disponibles.
 
 CampusMarket busca centralizar estas publicaciones en una plataforma donde los estudiantes puedan encontrar y ofrecer productos de manera organizada, manteniendo un alcance adecuado para el desarrollo académico durante el semestre.
+
+La interfaz será desarrollada con Flutter, utilizando inicialmente su capacidad Web y manteniendo la posibilidad de extender el mismo frontend a Android e iOS en etapas posteriores.
+
+---
 
 ### 1.2 Objetivos de negocio e interesados
 
@@ -20,6 +24,8 @@ Los objetivos de negocio de CampusMarket se orientan a mejorar la forma en que l
 | ON-02 | Facilitar que los estudiantes encuentren productos disponibles para compra o alquiler dentro de la comunidad universitaria. | Estudiantes compradores o arrendatarios |
 | ON-03 | Dar mayor visibilidad a los productos que los estudiantes desean vender o alquilar mediante publicaciones organizadas y consultables. | Estudiantes vendedores o propietarios |
 | ON-04 | Mantener un entorno controlado para las publicaciones y apoyar la supervisión del contenido disponible en la plataforma. | Administrador de CampusMarket |
+
+---
 
 ### 1.3 Objetivos de calidad
 
@@ -72,6 +78,8 @@ CampusMarket debe alcanzar un prototipo funcional dentro del semestre académico
 
 **Justificación:** El proyecto se desarrolla de manera incremental durante el curso y debe producir un sistema funcional y verificable dentro del periodo establecido. Esta condición limita el alcance y la complejidad que puede asumir el equipo.
 
+---
+
 ### R-02. Tamaño del equipo
 
 **Tipo:** Organizativa  
@@ -80,6 +88,8 @@ CampusMarket debe alcanzar un prototipo funcional dentro del semestre académico
 CampusMarket será desarrollado por un equipo de tres integrantes.
 
 **Justificación:** La capacidad de desarrollo disponible está limitada al trabajo de tres integrantes durante el semestre. Las decisiones arquitectónicas y el alcance deben ser compatibles con los recursos humanos disponibles.
+
+---
 
 ### R-03. Repositorio y control de versiones
 
@@ -90,6 +100,8 @@ El código fuente, la documentación arquitectónica y las evidencias incrementa
 
 **Justificación:** El repositorio constituye el punto de referencia para verificar la evolución del sistema y mantener trazabilidad entre documentación, implementación y evidencias.
 
+---
+
 ### R-04. Análisis de calidad del código
 
 **Tipo:** Técnica  
@@ -98,6 +110,8 @@ El código fuente, la documentación arquitectónica y las evidencias incrementa
 El repositorio de CampusMarket deberá integrarse con SonarCloud durante el desarrollo.
 
 **Justificación:** La integración permitirá analizar de manera continua características relacionadas con la calidad del código y obtener evidencia verificable sobre los problemas detectados.
+
+---
 
 ### R-05. Alcance funcional del prototipo
 
@@ -108,14 +122,18 @@ La versión inicial de CampusMarket no incluirá pagos en línea, procesamiento 
 
 **Justificación:** Estas funcionalidades requieren integraciones externas y aumentan considerablemente la complejidad técnica y operativa del sistema. Excluirlas permite concentrar el esfuerzo en las capacidades principales del marketplace.
 
-### R-06. Plataforma web
+---
+
+### R-06. Plataforma de ejecución inicial
 
 **Tipo:** Técnica  
 **Origen:** Alcance tecnológico inicial
 
-CampusMarket será desarrollado como una aplicación web accesible desde navegadores modernos.
+CampusMarket será desarrollado inicialmente como una aplicación accesible desde navegadores modernos mediante Flutter Web.
 
-**Justificación:** Esto permite que los estudiantes accedan al sistema desde diferentes dispositivos mediante un navegador sin requerir aplicaciones específicas para cada plataforma.
+La tecnología seleccionada permitirá reutilizar la base de código del frontend para una posible ejecución posterior en Android e iOS.
+
+**Justificación:** Mantener Web como plataforma inicial permite controlar el alcance del prototipo durante el semestre, mientras que Flutter ofrece la posibilidad de extender posteriormente la solución a dispositivos móviles sin mantener aplicaciones completamente independientes.
 
 El detalle completo de las restricciones se encuentra en:
 
@@ -132,6 +150,8 @@ CampusMarket tendrá como principales actores a los estudiantes universitarios y
 Los estudiantes utilizarán el sistema para registrarse, iniciar sesión, publicar productos, consultar el catálogo, realizar búsquedas y filtros y administrar sus propias publicaciones.
 
 El administrador utilizará CampusMarket para supervisar las publicaciones y apoyar la gestión general del contenido de la plataforma.
+
+---
 
 ### 3.2 Alcance funcional
 
@@ -156,13 +176,25 @@ No harán parte del alcance inicial:
 - Logística de entrega.
 - Integración con empresas de transporte.
 
+---
+
 ### 3.3 Interfaces externas
 
-Los estudiantes y administradores accederán a CampusMarket mediante un navegador web.
+Los estudiantes y administradores accederán inicialmente a CampusMarket mediante una interfaz desarrollada con Flutter Web.
 
-Cuando el prototipo se encuentre desplegado, la comunicación entre el navegador y CampusMarket deberá realizarse mediante HTTPS.
+El frontend se comunicará con el backend mediante una API REST.
+
+El backend será implementado con FastAPI y Python y será responsable de gestionar las reglas de la aplicación y el acceso a la persistencia.
+
+La base de datos prevista para el proyecto será MySQL.
+
+El frontend no accederá directamente a la base de datos.
+
+Cuando el prototipo se encuentre desplegado, la comunicación entre los clientes y CampusMarket deberá realizarse mediante HTTPS.
 
 En el alcance actual no se contemplan integraciones con sistemas bancarios, plataformas de pago, empresas de transporte ni servicios externos de logística.
+
+---
 
 ### 3.4 Diagrama de contexto
 
@@ -176,4 +208,27 @@ El diagrama se encuentra documentado en:
 
 ## 4. Estrategia de solución
 
-La estrategia de solución, la comparación de alternativas arquitectónicas y las tácticas asociadas a los escenarios de calidad se documentarán como parte de la Evidencia S3.
+La estrategia arquitectónica de CampusMarket se basa en la evaluación de **arquitectura en capas, arquitectura hexagonal y monolito modular** frente a los escenarios de calidad priorizados por el equipo.
+
+Como resultado de la comparación, se seleccionó un **monolito modular** como estrategia arquitectónica inicial, buscando equilibrar mantenibilidad, simplicidad operativa y capacidad de evolución dentro de las restricciones actuales del proyecto.
+
+El monolito modular se aplicará principalmente al backend de CampusMarket, que será organizado mediante módulos correspondientes a las capacidades principales del negocio:
+
+- `usuarios`
+- `publicaciones`
+- `catalogo`
+- `administracion`
+
+Estos módulos deberán mantener responsabilidades y fronteras explícitas, evitando dependencias innecesarias entre sus componentes internos.
+
+El detalle de la comparación entre estilos, las tácticas arquitectónicas seleccionadas, sus costos y las consecuencias de la decisión se encuentra en:
+
+[04-estrategia-de-solucion.md](./04-estrategia-de-solucion.md)
+
+La decisión se registra formalmente en:
+
+[ADR-0001 - Adoptar un monolito modular para CampusMarket](../adr/0001-usar-monolito-modular.md)
+
+El escenario de calidad que motiva principalmente esta decisión es:
+
+[EC-03 - Modificación del sistema](./10-escenarios-de-calidad.md#ec-03---modificación-del-sistema)
