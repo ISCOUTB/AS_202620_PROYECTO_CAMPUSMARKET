@@ -183,3 +183,38 @@ También introduce las siguientes responsabilidades y limitaciones:
 - el equipo deberá mantener explícitas las dependencias permitidas entre módulos.
 
 Para el alcance actual de CampusMarket, estas consecuencias se consideran aceptables frente a las restricciones de tiempo, tamaño del equipo y alcance del prototipo.
+
+---
+
+## 4.8 Alternativa menos adecuada para el contexto actual
+
+De las alternativas evaluadas, la **arquitectura hexagonal es la menos adecuada para el alcance actual de CampusMarket**, aunque técnicamente ofrece ventajas importantes en testabilidad, sustitución de infraestructura y aislamiento del dominio.
+
+El principal problema no es que el estilo sea inadecuado en sí mismo, sino el costo que introduce frente a las restricciones actuales del proyecto. Su aplicación requiere definir puertos, adaptadores, interfaces y mecanismos adicionales de inversión de dependencias, aumentando la cantidad de código de infraestructura y la indirección que debe mantener el equipo.
+
+Para un proyecto desarrollado por tres integrantes dentro de un semestre y con un prototipo de alcance controlado, este costo inicial no genera una mejora suficiente frente al monolito modular.
+
+En particular:
+
+- **EC-03 - Mantenibilidad:** la arquitectura hexagonal ofrece una respuesta muy favorable, pero el monolito modular permite obtener un aislamiento suficiente con menor complejidad estructural.
+- **EC-01 - Rendimiento:** ninguno de los dos estilos requiere comunicación distribuida, por lo que la arquitectura hexagonal no aporta una ventaja determinante para el tiempo de respuesta esperado.
+- **R-01 - Tiempo de desarrollo:** la cantidad adicional de interfaces y adaptadores aumenta el trabajo inicial del equipo.
+- **R-02 - Tamaño del equipo:** mantener correctamente las abstracciones de una arquitectura hexagonal exige una disciplina que resulta costosa para el tamaño y alcance actual del proyecto.
+
+Por estas razones, la arquitectura hexagonal se descarta para esta etapa. Podría reconsiderarse en el futuro si CampusMarket requiere sustituir infraestructura con frecuencia, integrar múltiples mecanismos externos o aislar con mayor rigor el dominio de sus adaptadores.
+
+---
+
+## 4.9 Principios de modularidad aplicados
+
+La estrategia de monolito modular se complementará con principios de diseño orientados a mantener bajo acoplamiento y alta cohesión.
+
+Para **EC-03 - Modificación del sistema**, se utilizarán principalmente:
+
+- **SRP (Single Responsibility Principle):** cada componente tendrá una responsabilidad y una razón principal de cambio.
+- **DIP (Dependency Inversion Principle):** cuando sea necesario desacoplar módulos, las dependencias se dirigirán hacia contratos o abstracciones y no hacia detalles internos.
+- **Alta cohesión (GRASP):** las responsabilidades relacionadas permanecerán dentro del mismo módulo.
+- **Bajo acoplamiento (GRASP):** se limitarán las dependencias entre los módulos `usuarios`, `publicaciones`, `catalogo` y `administracion`.
+- **Variaciones protegidas (GRASP):** los elementos que se espera que cambien se mantendrán encapsulados detrás de responsabilidades o contratos claramente definidos.
+
+Estas tácticas favorecen la mantenibilidad, pero introducen un costo: requieren mayor disciplina en la organización del código y, en algunos casos, interfaces o elementos de indirección adicionales. El equipo acepta este costo porque permite reducir el impacto de futuras modificaciones sin adoptar la complejidad completa de una arquitectura hexagonal.
