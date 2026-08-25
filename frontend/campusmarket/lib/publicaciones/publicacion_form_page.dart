@@ -61,6 +61,7 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
       _precioController.clear();
     } catch (_) {
       if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('No fue posible guardar la publicación.'),
@@ -76,7 +77,9 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('CampusMarket · Nueva publicación')),
+      appBar: AppBar(
+        title: const Text('CampusMarket · Nueva publicación'),
+      ),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 600),
@@ -89,13 +92,17 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
                 children: [
                   const Text(
                     'Publicar un producto',
-                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   const Text(
                     'Corte vertical S4: Flutter → FastAPI → SQLite.',
                   ),
                   const SizedBox(height: 24),
+
                   TextFormField(
                     controller: _tituloController,
                     decoration: const InputDecoration(
@@ -109,7 +116,9 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
                       return null;
                     },
                   ),
+
                   const SizedBox(height: 16),
+
                   TextFormField(
                     controller: _descripcionController,
                     maxLines: 3,
@@ -124,7 +133,9 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
                       return null;
                     },
                   ),
+
                   const SizedBox(height: 16),
+
                   TextFormField(
                     controller: _precioController,
                     keyboardType: TextInputType.number,
@@ -134,13 +145,17 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
                     ),
                     validator: (value) {
                       final parsed = double.tryParse(value ?? '');
+
                       if (parsed == null || parsed <= 0) {
                         return 'Ingresa un precio mayor que cero.';
                       }
+
                       return null;
                     },
                   ),
+
                   const SizedBox(height: 16),
+
                   DropdownButtonFormField<String>(
                     initialValue: _modalidad,
                     decoration: const InputDecoration(
@@ -148,7 +163,10 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
                       border: OutlineInputBorder(),
                     ),
                     items: const [
-                      DropdownMenuItem(value: 'venta', child: Text('Venta')),
+                      DropdownMenuItem(
+                        value: 'venta',
+                        child: Text('Venta'),
+                      ),
                       DropdownMenuItem(
                         value: 'alquiler',
                         child: Text('Alquiler'),
@@ -160,7 +178,9 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
                       }
                     },
                   ),
+
                   const SizedBox(height: 16),
+
                   DropdownButtonFormField<String>(
                     initialValue: _estado,
                     decoration: const InputDecoration(
@@ -168,8 +188,18 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
                       border: OutlineInputBorder(),
                     ),
                     items: const [
-                      DropdownMenuItem(value: 'nuevo', child: Text('Nuevo')),
-                      DropdownMenuItem(value: 'usado', child: Text('Usado')),
+                      DropdownMenuItem(
+                        value: 'nuevo',
+                        child: Text('Nuevo'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'usado',
+                        child: Text('Usado'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'reacondicionado',
+                        child: Text('Reacondicionado'),
+                      ),
                     ],
                     onChanged: (value) {
                       if (value != null) {
@@ -177,11 +207,15 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
                       }
                     },
                   ),
+
                   const SizedBox(height: 24),
+
                   FilledButton(
                     onPressed: _guardando ? null : _guardar,
                     child: Text(
-                      _guardando ? 'Guardando...' : 'Crear publicación',
+                      _guardando
+                          ? 'Guardando...'
+                          : 'Crear publicación',
                     ),
                   ),
                 ],
