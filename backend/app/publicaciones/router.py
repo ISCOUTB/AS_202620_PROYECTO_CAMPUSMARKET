@@ -14,7 +14,7 @@ class PublicacionCreate(BaseModel):
     descripcion: str = Field(min_length=3, max_length=500)
     precio: float = Field(gt=0)
     modalidad: Literal["venta", "alquiler"]
-    estado: Literal["nuevo", "usado"]
+    estado: Literal["nuevo", "usado", "reacondicionado"]
 
 
 class Publicacion(PublicacionCreate):
