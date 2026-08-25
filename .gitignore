@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Persistencia local de CampusMarket
+backend/data/*.db
+backend/data/*.sqlite
+backend/data/*.sqlite3
+
+# Flutter
+frontend/campusmarket/.dart_tool/
+frontend/campusmarket/build/

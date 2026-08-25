@@ -1,35 +1,38 @@
 # Uso de Inteligencia Artificial - CampusMarket
 
-Este documento registra el uso de herramientas de Inteligencia Artificial como apoyo durante el desarrollo del proyecto CampusMarket.
+Este documento registra el uso de herramientas de IA como apoyo al proyecto. Todo resultado se revisa antes de incorporarse y las decisiones finales corresponden al equipo.
 
-La Inteligencia Artificial se utiliza como herramienta de apoyo para la planificación, documentación, organización de ideas y revisión del proyecto. Las decisiones finales sobre el contenido, alcance y arquitectura son responsabilidad del equipo.
+## Evidencia S1
 
-## Evidencia S1 - Definición inicial del proyecto
+| Fecha | Herramienta | Uso realizado | Verificación del equipo | Qué se rechazó y por qué |
+|---|---|---|---|---|
+| 08/08/2026 | ChatGPT | Apoyo para analizar ideas y estructurar problema, objetivo y alcance inicial. | Se contrastó con el alcance acordado por el equipo. | Se descartaron funcionalidades de pagos y envíos porque excedían el alcance del semestre. |
+| 08/08/2026 | ChatGPT | Apoyo para organizar documentación inicial y mantenibilidad. | Se revisó antes de subir al repositorio. | Se descartó ampliar el prototipo con funciones no necesarias para S1. |
 
-| Fecha      | Herramienta | Uso realizado                                                                                                      |
-| ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------ |
-| 08/08/2026 | ChatGPT     | Apoyo para analizar las ideas iniciales del proyecto y seleccionar CampusMarket como propuesta de trabajo.         |
-| 08/08/2026 | ChatGPT     | Apoyo para estructurar la descripción del problema, objetivo general, alcance inicial y stakeholders del proyecto. |
-| 08/08/2026 | ChatGPT     | Apoyo para organizar la documentación inicial del repositorio y definir el aspecto de calidad de mantenibilidad.   |
-| 08/08/2026 | ChatGPT     | Apoyo para redactar y revisar la ficha del problema correspondiente a la Evidencia S1.                             |
+## Evidencia S2
 
-## Evidencia S2 - Escenarios de calidad y restricciones
+| Fecha | Herramienta | Uso realizado | Verificación del equipo | Qué se rechazó y por qué |
+|---|---|---|---|---|
+| 16/08/2026 | ChatGPT | Apoyo para estructurar arc42 1–3 y restricciones. | Se contrastó con la actividad de S2. | Se rechazaron restricciones que eran requisitos funcionales y no restricciones arquitectónicas. |
+| 16/08/2026 | ChatGPT | Apoyo para formular escenarios y árbol de utilidad. | Se verificó que cada escenario tuviera las seis partes y medida numérica. | Se descartaron medidas no verificables o formuladas de manera subjetiva. |
+| 16/08/2026 | ChatGPT | Apoyo para C4 Nivel 1 mediante PlantUML. | Se verificaron actores, relaciones, leyenda y alcance. | Se descartaron actores o integraciones que no pertenecían al alcance actual. |
 
-| Fecha      | Herramienta | Uso realizado                                                                                                                              |
-| ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| 16/08/2026 | ChatGPT     | Apoyo para revisar las instrucciones y material de clase correspondiente a la Evidencia S2.                                                |
-| 16/08/2026 | ChatGPT     | Apoyo para estructurar las secciones 1 a 3 de arc42: introducción y objetivos, restricciones, contexto y alcance.                          |
-| 16/08/2026 | ChatGPT     | Apoyo para identificar y justificar las restricciones principales del proyecto CampusMarket.                                               |
-| 16/08/2026 | ChatGPT     | Apoyo para formular cuatro escenarios de calidad relacionados con rendimiento, seguridad, mantenibilidad y disponibilidad.                 |
-| 16/08/2026 | ChatGPT     | Apoyo para organizar los escenarios utilizando fuente, estímulo, artefacto, entorno, respuesta y medida verificable.                       |
-| 16/08/2026 | ChatGPT     | Apoyo para estructurar el árbol de utilidad y relacionar los atributos de calidad con refinamientos, escenarios, impacto y riesgo técnico. |
-| 16/08/2026 | ChatGPT     | Apoyo para estructurar el diagrama C4 Nivel 1 de contexto del sistema CampusMarket mediante PlantUML.                                      |
-| 16/08/2026 | ChatGPT     | Apoyo para organizar y revisar el documento resumen de una página correspondiente a la Evidencia S2.                                       |
+## Evidencia S3
 
-## Consideraciones sobre el uso de IA
+| Fecha | Herramienta | Uso realizado | Verificación del equipo | Qué se rechazó y por qué |
+|---|---|---|---|---|
+| 17-23/08/2026 | ChatGPT | Comparación de arquitectura en capas, hexagonal y monolito modular. | Se contrastó con EC-01 a EC-04 y las restricciones del proyecto. | Se descartó recomendar microservicios porque no era una alternativa solicitada y añadía complejidad innecesaria. |
+| 17-23/08/2026 | ChatGPT | Apoyo para redactar ADR-0001 y tácticas. | El equipo revisó contexto, alternativas, decisión y consecuencias. | Se descartó arquitectura hexagonal como decisión actual por su mayor costo de abstracción para el alcance. |
+| 23/08/2026 | ChatGPT | Apoyo para organizar el esqueleto FastAPI, prueba de salud y documentación. | Se comprobó mediante GitHub Actions. | Se descartó implementar lógica de negocio completa porque S3 pedía únicamente el esqueleto ejecutable. |
 
-Las respuestas generadas por Inteligencia Artificial fueron utilizadas como apoyo y posteriormente revisadas por los integrantes del equipo antes de incorporarlas al repositorio.
+## Evidencia S4
 
-La IA no sustituye las decisiones tomadas por el equipo. Los integrantes son responsables de validar que la documentación corresponda con los requisitos de la asignatura y con el alcance definido para CampusMarket.
+| Fecha | Herramienta | Uso realizado | Verificación del equipo | Qué se rechazó y por qué |
+|---|---|---|---|---|
+| 25/08/2026 | ChatGPT | Auditoría de CampusMarket contra la ficha oficial de S4 y el feedback del curso. | Se contrastaron los 10 criterios uno por uno con el repositorio. | Se descartó crear C4 Nivel 3 porque la actividad lo pospone a Semana 6. |
+| 25/08/2026 | ChatGPT | Apoyo para diseñar el corte vertical crear publicación: Flutter → FastAPI → SQLite. | Se revisó que atraviese interfaz, lógica y persistencia y que corresponda con ADR-0001. | Se descartó documentar MySQL como persistencia implementada porque todavía no existe en el código. |
+| 25/08/2026 | ChatGPT | Apoyo para arc42 5, 6, 9, 12, C4 Nivel 2 y trazabilidad. | Se verificó que la documentación describa únicamente elementos presentes en la propuesta de implementación S4. | Se descartó copiar el contenido del ADR dentro de la sección 9; se mantiene un enlace al ADR. |
 
-A medida que avance el proyecto, este archivo será actualizado para registrar nuevos usos de herramientas de Inteligencia Artificial.
+## Criterio de uso
+
+La IA se utiliza como apoyo para análisis, documentación, organización y revisión. El equipo mantiene la responsabilidad de ejecutar las pruebas, revisar los cambios, interpretar los resultados y defender las decisiones arquitectónicas.

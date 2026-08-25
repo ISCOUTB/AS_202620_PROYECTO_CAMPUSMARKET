@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 
+import 'publicaciones/publicacion_form_page.dart';
+
+
 void main() {
   runApp(const CampusMarketApp());
 }
+
 
 class CampusMarketApp extends StatelessWidget {
   const CampusMarketApp({super.key});
@@ -12,15 +16,8 @@ class CampusMarketApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'CampusMarket',
-      home: Scaffold(
-        appBar: AppBar(title: const Text('CampusMarket')),
-        body: const Center(
-          child: Text(
-            'Bienvenido a CampusMarket',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-        ),
-      ),
+      theme: ThemeData(useMaterial3: true),
+      home: const PublicacionFormPage(),
     );
   }
 }
