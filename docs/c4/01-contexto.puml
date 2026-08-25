@@ -1,0 +1,29 @@
+@startuml
+title CampusMarket - C4 Nivel 1 · Contexto
+caption Evidencia S4 · 25-08-2026 · Equipo CampusMarket
+
+left to right direction
+skinparam shadowing false
+
+actor "Estudiante" as estudiante
+actor "Administrador" as admin
+
+rectangle "CampusMarket\nMarketplace universitario" as campus
+
+estudiante --> campus : Publica y consulta productos\nHTTPS
+admin --> campus : Supervisa publicaciones\nHTTPS
+
+legend right
+|= Elemento |= Significado |
+| Persona | Actor externo a CampusMarket |
+| CampusMarket | Sistema bajo diseño |
+| Flecha | Interacción con propósito y tecnología |
+endlegend
+
+note bottom of campus
+Fuera de alcance S4:
+- pagos electrónicos
+- envíos y logística
+- servicios externos de transporte
+end note
+@enduml

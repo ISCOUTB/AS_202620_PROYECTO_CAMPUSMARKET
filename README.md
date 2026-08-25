@@ -4,59 +4,108 @@ Marketplace universitario para la compra, venta y alquiler de productos.
 
 ## Integrantes
 
-- Joshua tenorio alvarez
-- Camilo martinez berrio
-- Nilver garcia pimentel
+- Joshua Tenorio Alvarez
+- Camilo Martinez Berrio
+- Nilver Garcia Pimentel
 
-## Descripción
-CampusMarket es una plataforma orientada a estudiantes universitarios
-que busca facilitar la publicación, búsqueda, venta y alquiler de
-productos nuevos o usados dentro de la comunidad estudiantil.
-
-El proyecto será desarrollado durante el curso de Arquitectura de
-Software.
-
-
-## Problema
-Los estudiantes universitarios compran durante su formación diferentes productos y materiales que posteriormente pueden dejar de utilizar, como libros, calculadoras, accesorios, dispositivos electrónicos y otros elementos relacionados o no con sus estudios.
-
-Aunque estos productos podrían ser aprovechados por otros estudiantes, no siempre existe un medio organizado para ofrecerlos. Las publicaciones suelen realizarse en grupos de mensajería o redes sociales, donde pueden perder visibilidad rápidamente y no existe una clasificación adecuada de los artículos.
-
-Además, un estudiante que necesita un producto específico puede tener dificultades para saber si otro miembro de la comunidad universitaria lo tiene disponible para vender o alquilar.
-
-Por esta razón, se plantea desarrollar CampusMarket, una plataforma que permita organizar las publicaciones de productos y facilite la conexión entre estudiantes interesados en vender, alquilar o adquirir artículos.
-
-## Objetivo General
-Diseñar e implementar un prototipo funcional de una plataforma de marketplace universitario que permita a los estudiantes publicar, buscar y gestionar productos disponibles para venta o alquiler, utilizando una arquitectura de software modular, escalable y mantenible.
-
-## Beneficiarios
-Los principales beneficiarios serán los estudiantes universitarios, tanto quienes desean ofrecer productos como quienes buscan adquirirlos o alquilarlos.
-
-También se identifica al administrador de la plataforma como stakeholder, ya que tendrá la responsabilidad de supervisar el funcionamiento del sistema y gestionar contenido cuando sea necesario.
-
-De forma indirecta, la comunidad universitaria puede beneficiarse al fomentar la reutilización y circulación de productos que todavía tienen vida útil.
 ## Estrategia arquitectónica
 
-CampusMarket adopta un **monolito modular** para la organización interna del backend, de acuerdo con la decisión registrada en el ADR-0001.
+CampusMarket adopta un **monolito modular** de acuerdo con [ADR-0001](docs/adr/0001-usar-monolito-modular.md).
 
-El backend se encuentra organizado inicialmente en los siguientes módulos:
+Fronteras principales del backend:
 
-- `usuarios`: registro, autenticación y gestión básica de usuarios.
-- `publicaciones`: creación, modificación y gestión de publicaciones.
-- `catalogo`: consulta, búsqueda y filtrado de productos.
-- `administracion`: supervisión y gestión básica del contenido.
+- `usuarios`
+- `publicaciones`
+- `catalogo`
+- `administracion`
 
-La aplicación aún no contiene lógica de negocio. En esta etapa se mantiene únicamente el esqueleto ejecutable requerido para continuar el desarrollo incremental del proyecto.
+La Evidencia S4 materializa un corte vertical en `publicaciones`.
 
-## Tecnologías
+## Tecnologías actuales
 
 - **Frontend:** Flutter / Dart.
 - **Backend:** FastAPI / Python.
-- **Base de datos prevista:** MySQL.
+- **Persistencia del corte S4:** SQLite.
+- **Persistencia prevista para evolución posterior:** MySQL.
 
-## Esqueleto ejecutable
+> La documentación distingue lo que existe de lo previsto: S4 usa SQLite porque es la persistencia realmente implementada en el corte vertical.
 
-El backend puede iniciarse desde la raíz del repositorio con un solo comando:
+## Requisitos previos
+
+- Python 3.12.
+- Flutter instalado y disponible en `PATH`.
+- Google Chrome.
+- Dependencias Python instaladas:
 
 ```bash
-python -m uvicorn backend.app.main:app --reload
+pip install -r backend/requirements.txt
+```
+
+## Arranque del corte vertical con un solo comando
+
+### Windows PowerShell
+
+Desde la raíz del repositorio:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\run_s4.ps1
+```
+
+El comando inicia:
+
+- Backend FastAPI: `http://localhost:8000`
+- Frontend Flutter Web: `http://localhost:3000`
+
+### Linux/macOS
+
+```bash
+bash scripts/run_s4.sh
+```
+
+## Corte vertical S4: crear una publicación
+
+Recorrido implementado:
+
+1. El estudiante completa el formulario Flutter.
+2. Flutter envía `POST /publicaciones`.
+3. FastAPI valida la solicitud.
+4. El módulo `publicaciones` ejecuta la lógica.
+5. El repositorio guarda el dato en SQLite.
+6. La API devuelve la publicación persistida.
+7. Flutter confirma el resultado.
+
+Rutas principales:
+
+- UI: `frontend/campusmarket/lib/publicaciones/publicacion_form_page.dart`
+- Cliente API: `frontend/campusmarket/lib/publicaciones/publicaciones_api.dart`
+- Interfaz backend: `backend/app/publicaciones/router.py`
+- Lógica: `backend/app/publicaciones/service.py`
+- Persistencia: `backend/app/publicaciones/repository.py`
+
+## Pruebas automatizadas
+
+```bash
+python -m pytest backend/tests -q
+```
+
+Pruebas relevantes:
+
+- `backend/tests/test_health.py`
+- `backend/tests/test_publicaciones_vertical.py`
+
+La prueba S4 crea una publicación mediante HTTP, verifica que SQLite persista el dato y vuelve a consultarlo.
+
+## Documentación S4
+
+- arc42 5: `docs/arc42/05-bloques-de-construccion.md`
+- arc42 6: `docs/arc42/06-vista-ejecucion.md`
+- arc42 9: `docs/arc42/09-decisiones.md`
+- arc42 10: escenarios existentes de S2
+- arc42 12: `docs/arc42/12-glosario.md`
+- C4 Nivel 1: `docs/c4/01-contexto.puml`
+- C4 Nivel 2: `docs/c4/02-contenedores.puml`
+- Trazabilidad: `docs/aspectos.md`
+
+## Alcance del corte S4
+
+S4 demuestra una ruta funcional mínima. No implementa todavía pagos, envíos, logística, autenticación completa ni todas las capacidades del marketplace. Estas funciones no se documentan como existentes.

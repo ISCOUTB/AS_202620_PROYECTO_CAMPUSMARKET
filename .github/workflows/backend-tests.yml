@@ -5,6 +5,7 @@ on:
     branches:
       - master
       - S3-esqueleto-ejecutable
+      - S4-corte-vertical
   pull_request:
     branches:
       - master

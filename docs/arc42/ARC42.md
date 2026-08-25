@@ -180,21 +180,31 @@ No harán parte del alcance inicial:
 
 ### 3.3 Interfaces externas
 
-Los estudiantes y administradores accederán inicialmente a CampusMarket mediante una interfaz desarrollada con Flutter Web.
+En el estado actual del prototipo, los estudiantes acceden a CampusMarket mediante una interfaz desarrollada con **Flutter Web**.
 
-El frontend se comunicará con el backend mediante una API REST.
+El frontend se comunica con el backend mediante una **API REST sobre HTTP/JSON**. Durante el desarrollo local de la Evidencia S4, Flutter Web se ejecuta en `localhost:3000` y el backend en `localhost:8000`.
 
-El backend será implementado con FastAPI y Python y será responsable de gestionar las reglas de la aplicación y el acceso a la persistencia.
+El backend está implementado con **FastAPI y Python** y es responsable de recibir las solicitudes de la interfaz, validar los datos, ejecutar la lógica de aplicación y coordinar el acceso a la persistencia.
 
-La base de datos prevista para el proyecto será MySQL.
+Para el **corte vertical de la Semana 4**, CampusMarket utiliza **SQLite** como mecanismo de persistencia local. Esta es la tecnología actualmente implementada y verificada en el prototipo para almacenar y recuperar publicaciones.
 
-El frontend no accederá directamente a la base de datos.
+El frontend no accede directamente a la persistencia. El recorrido implementado mantiene la siguiente separación:
 
-Cuando el prototipo se encuentre desplegado, la comunicación entre los clientes y CampusMarket deberá realizarse mediante HTTPS.
+**Flutter Web → API FastAPI → lógica del módulo `publicaciones` → SQLite**
 
-En el alcance actual no se contemplan integraciones con sistemas bancarios, plataformas de pago, empresas de transporte ni servicios externos de logística.
+La persistencia se encuentra implementada en:
 
----
+`backend/app/publicaciones/repository.py`
+
+y la base de datos local se genera durante la ejecución en:
+
+`backend/data/campusmarket.db`
+
+**MySQL** se mantiene como tecnología de persistencia prevista para una evolución posterior del proyecto. No se documenta en esta etapa como si ya estuviera implementada.
+
+Cuando el prototipo sea desplegado en un entorno accesible externamente, la comunicación entre los clientes y CampusMarket deberá realizarse mediante **HTTPS**.
+
+En el alcance actual no se contemplan integraciones con sistemas bancarios, plataformas de pago, empresas de transporte ni servicios externos de logística.---
 
 ### 3.4 Diagrama de contexto
 

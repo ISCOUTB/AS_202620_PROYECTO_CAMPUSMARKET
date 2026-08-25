@@ -1,0 +1,42 @@
+@startuml
+title CampusMarket - C4 Nivel 2 · Contenedores
+caption Evidencia S4 · 25-08-2026 · Equipo CampusMarket
+
+left to right direction
+skinparam shadowing false
+
+actor "Estudiante" as estudiante
+actor "Administrador" as admin
+
+package "CampusMarket" {
+  rectangle "Frontend Web\nFlutter / Dart" as frontend
+  rectangle "Backend API\nFastAPI / Python\nMonolito modular" as backend
+  database "Persistencia local\nSQLite" as db
+}
+
+estudiante --> frontend : Crea publicaciones\nHTTPS
+admin --> frontend : Supervisión básica de contenido\nHTTPS\n(no ejercitada en el corte S4)
+frontend --> backend : Crear publicaciones\nHTTP/JSON · REST
+backend --> db : Guarda y recupera publicaciones\nSQL / sqlite3
+
+legend right
+|= Caja |= Responsabilidad |
+| Frontend Web | Interfaz de usuario ejecutada en navegador |
+| Backend API | Validación y lógica de aplicación |
+| Persistencia local | Datos del corte vertical S4 |
+| Flecha | Propósito y tecnología de la interacción |
+endlegend
+
+note bottom of backend
+Correspondencia con el repositorio:
+frontend/campusmarket/lib/
+backend/app/
+backend/data/ (creado en ejecución)
+end note
+
+note bottom of db
+SQLite se usa para demostrar persistencia real en S4.
+La evolución a MySQL permanece como decisión futura;
+no se documenta aquí como si ya estuviera implementada.
+end note
+@enduml
