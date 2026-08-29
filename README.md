@@ -34,3 +34,114 @@ En S4, SQLite es la persistencia realmente implementada.
 
 ```bash
 pip install -r backend/requirements.txt
+
+```
+
+## Arranque con un solo comando
+
+### Windows
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\run_s4.ps1
+```
+
+### Linux/macOS
+
+```bash
+bash scripts/run_s4.sh
+```
+
+El comando inicia:
+
+- Backend FastAPI: `http://localhost:8000`
+- Frontend Flutter Web: `http://localhost:3000`
+
+## Corte vertical S4
+
+El corte vertical implementado recorre:
+
+**Flutter Web → FastAPI → lógica de publicaciones → SQLite**
+
+La Evidencia S4 se concentra en la creación y consulta de publicaciones.
+
+### Correspondencia con el código
+
+- Interfaz: [`publicacion_form_page.dart`](frontend/campusmarket/lib/publicaciones/publicacion_form_page.dart)
+- Cliente API: [`publicaciones_api.dart`](frontend/campusmarket/lib/publicaciones/publicaciones_api.dart)
+- Entrada Backend: [`router.py`](backend/app/publicaciones/router.py)
+- Lógica: [`service.py`](backend/app/publicaciones/service.py)
+- Persistencia SQLite: [`repository.py`](backend/app/publicaciones/repository.py)
+
+## Pruebas automatizadas
+
+Desde la raíz del repositorio:
+
+```bash
+python -m pytest backend/tests -q
+```
+
+La prueba principal del corte vertical es:
+
+[`backend/tests/test_publicaciones_vertical.py`](backend/tests/test_publicaciones_vertical.py)
+
+La prueba crea una publicación mediante HTTP, verifica su persistencia en SQLite y posteriormente consulta el registro almacenado.
+
+## Integración continua
+
+Las pruebas del backend se ejecutan mediante GitHub Actions con:
+
+[`.github/workflows/backend-tests.yml`](.github/workflows/backend-tests.yml)
+
+Evidencia de ejecución exitosa en `master`:
+
+- Workflow: **Pruebas del backend**
+- Run: **#12**
+- Resultado: **success**
+- [GitHub Actions - Run #12](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/33219659253)
+
+## Documentación arc42
+
+- Secciones 1 a 4: [`ARC42.md`](docs/arc42/ARC42.md)
+- Sección 2: [`02-restricciones.md`](docs/arc42/02-restricciones.md)
+- Sección 3: [`03-contexto.md`](docs/arc42/03-contexto.md)
+- Sección 4: [`04-estrategia-de-solucion.md`](docs/arc42/04-estrategia-de-solucion.md)
+- Sección 5: [`05-bloques-de-construccion.md`](docs/arc42/05-bloques-de-construccion.md)
+- Sección 6: [`06-vista-ejecucion.md`](docs/arc42/06-vista-ejecucion.md)
+- Sección 9: [`09-decisiones.md`](docs/arc42/09-decisiones.md)
+- Sección 10: [`10-escenarios-de-calidad.md`](docs/arc42/10-escenarios-de-calidad.md)
+- Sección 12: [`12-glosario.md`](docs/arc42/12-glosario.md)
+
+## Diagramas C4
+
+### Nivel 1 - Contexto
+
+- [Documentación](docs/c4/01-contexto.md)
+- [Fuente PlantUML](docs/c4/01-contexto.puml)
+
+### Nivel 2 - Contenedores
+
+- [Documentación](docs/c4/02-contenedores.md)
+- [Fuente PlantUML](docs/c4/02-contenedores.puml)
+
+Para la Evidencia S4 se documentan C4 Nivel 1 y Nivel 2. No se requiere C4 Nivel 3.
+
+## Trazabilidad
+
+La trazabilidad del proyecto está documentada en:
+
+[`docs/aspectos.md`](docs/aspectos.md)
+
+Para la Evidencia S4, la fila **ASP-05 - Creación de publicaciones** está completa hasta la columna **Pruebas** y relaciona:
+
+**Aspecto → Requisito → C4 → ADR → Código → Pruebas → Evidencia**
+
+## Alcance de la Evidencia S4
+
+El corte vertical verificable de S4 corresponde principalmente a la creación y consulta de publicaciones.
+
+Actualmente no se documentan como implementados:
+
+- pagos electrónicos;
+- procesamiento bancario;
+- envíos y logística;
+- integraciones con empresas de transporte.
