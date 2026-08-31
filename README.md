@@ -145,3 +145,47 @@ Actualmente no se documentan como implementados:
 - procesamiento bancario;
 - envíos y logística;
 - integraciones con empresas de transporte.
+
+## Evidencia explícita para revisión S4
+
+### Glosario de dominio
+
+El glosario completo de CampusMarket se encuentra en:
+
+[`docs/arc42/12-glosario.md`](docs/arc42/12-glosario.md)
+
+Incluye términos propios del dominio del sistema:
+
+- **Publicación:** registro mediante el cual un estudiante ofrece un producto.
+- **Producto:** artículo que un estudiante desea vender o alquilar.
+- **Modalidad:** forma en que se ofrece un producto: venta o alquiler.
+- **Estado del producto:** condición del artículo: nuevo, usado o reacondicionado.
+- **Estudiante:** usuario principal que publica o consulta productos.
+- **Administrador:** usuario que supervisa publicaciones y contenido.
+- **Catálogo:** conjunto consultable de publicaciones de CampusMarket.
+
+### Trazabilidad verificable ASP-05
+
+La fila completa utilizada como evidencia S4 es:
+
+| ID | Aspecto | Requisito | C4 | ADR | Código | Pruebas | Evidencia |
+|---|---|---|---|---|---|---|---|
+| ASP-05 | Creación de publicaciones | [Alcance funcional - Gestión de publicaciones](docs/arc42/ARC42.md#32-alcance-funcional) | [C4 Nivel 2](docs/c4/02-contenedores.md) | [ADR-0001 - Monolito modular](docs/adr/0001-usar-monolito-modular.md) | [`publicacion_form_page.dart`](frontend/campusmarket/lib/publicaciones/publicacion_form_page.dart), [`publicaciones_api.dart`](frontend/campusmarket/lib/publicaciones/publicaciones_api.dart), [`router.py`](backend/app/publicaciones/router.py), [`service.py`](backend/app/publicaciones/service.py), [`repository.py`](backend/app/publicaciones/repository.py) | [`test_publicaciones_vertical.py`](backend/tests/test_publicaciones_vertical.py) | Evidencia S4 |
+
+La tabla completa de trazabilidad está disponible en:
+
+[`docs/aspectos.md`](docs/aspectos.md)
+
+### Registro de uso de IA
+
+El registro actualizado de herramientas de IA se encuentra en:
+
+[`docs/ia.md`](docs/ia.md)
+
+El registro documenta para cada uso:
+
+- fecha;
+- herramienta utilizada;
+- uso realizado;
+- verificación del equipo;
+- qué se rechazó y la justificación técnica.
