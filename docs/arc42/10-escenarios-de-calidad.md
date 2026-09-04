@@ -1,8 +1,29 @@
+
 # Escenarios de calidad - CampusMarket
 
 Los siguientes escenarios permiten convertir los atributos de calidad del proyecto en condiciones observables y verificables.
 
 Los valores utilizados como medidas fueron definidos inicialmente por el equipo y podrán ser ajustados posteriormente mediante pruebas y evidencia del prototipo.
+
+## Tensiones entre atributos de calidad
+
+CampusMarket presenta tensiones arquitectónicas que deben considerarse al tomar decisiones sobre la evolución del sistema.
+
+### Mantenibilidad vs rapidez de desarrollo
+
+Una mayor separación entre módulos, responsabilidades y contratos internos favorece la mantenibilidad porque permite realizar cambios con menor impacto sobre funcionalidades no relacionadas.
+
+Sin embargo, introducir más abstracciones, validaciones y fronteras internas requiere mayor esfuerzo inicial de implementación. Por esta razón, existe una tensión entre mantener una arquitectura modular y avanzar rápidamente en el desarrollo del prototipo.
+
+En CampusMarket se prioriza conservar fronteras claras entre capacidades del negocio, aceptando un costo inicial moderado de desarrollo para reducir el impacto de cambios futuros.
+
+### Rendimiento vs mantenibilidad
+
+Técnicas como índices adicionales, caché o lógica especializada pueden reducir los tiempos de respuesta de las consultas y favorecer el rendimiento.
+
+Sin embargo, estas optimizaciones también incrementan la complejidad del código y el esfuerzo necesario para mantenerlo y modificarlo.
+
+En el estado actual de CampusMarket se prioriza una implementación simple y modular mientras se cumpla el umbral definido en EC-01. Las optimizaciones adicionales deberán justificarse mediante mediciones antes de incorporarse.
 
 ---
 
