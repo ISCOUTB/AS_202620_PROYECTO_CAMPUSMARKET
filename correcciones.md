@@ -45,24 +45,29 @@ hallazgos:
 - Se actualizó la identificación del equipo a tres integrantes.
 - Actualmente existen contribuciones de los tres integrantes en el
   historial del repositorio.
+- Se hicieron explícitas dos tensiones entre atributos de calidad en
+  `docs/arc42/10-escenarios-de-calidad.md`:
+  - mantenibilidad vs rapidez de desarrollo;
+  - rendimiento vs mantenibilidad.
 
 ### Evidencia
 
 - `docs/aspectos.md`
 - `docs/ia.md`
 - `docs/arc42/`
+- `docs/arc42/10-escenarios-de-calidad.md`
 - `docs/adr/`
 - `docs/c4/`
 - historial de commits del repositorio
 
 ### Estado
 
-**Parcialmente saneado.**
+**Saneado.**
 
-La estructura, trazabilidad, registro de IA y contribución fueron corregidos.
-
-Queda pendiente hacer explícitas en la documentación las tensiones entre
-atributos de calidad identificadas para el proyecto.
+Los hallazgos identificados en S1 fueron atendidos. La estructura documental,
+la tabla de trazabilidad, el registro de IA, la contribución del equipo y las
+dos tensiones entre atributos de calidad se encuentran documentados en el
+estado actual del repositorio.
 
 ---
 
@@ -204,11 +209,16 @@ coherencia entre la documentación, el código y las evidencias.
 - Se verificó la integración mediante el Run #29 de GitHub Actions,
   donde tanto `pytest` como el análisis de SonarQube Cloud finalizaron
   correctamente con resultado `success`.
+- Se enlazó ADR-0001 con su primera materialización en código mediante el
+  PR #5 y el commit de integración `4dd857a`.
+- La evidencia se documentó en `docs/arc42/09-decisiones.md` sin reescribir
+  el ADR aceptado.
 
 ### Evidencia
 
 - `README.md`
 - `docs/arc42/`
+- `docs/arc42/09-decisiones.md`
 - `docs/c4/01-contexto.md`
 - `docs/c4/02-contenedores.md`
 - `docs/adr/0001-usar-monolito-modular.md`
@@ -217,6 +227,8 @@ coherencia entre la documentación, el código y las evidencias.
 - `backend/tests/test_publicaciones_vertical.py`
 - `.github/workflows/backend-tests.yml`
 - `sonar-project.properties`
+- PR #5 - Completar esqueleto ejecutable de Evidencia S3
+- Commit de integración `4dd857a`
 - GitHub Actions Run #29:
   `https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/33847799874`
 
@@ -226,19 +238,26 @@ coherencia entre la documentación, el código y las evidencias.
 
 Los criterios principales de la Evidencia S4 fueron atendidos.
 
-El pendiente relacionado con SonarCloud fue resuelto el 04/09/2026:
+El pendiente relacionado con SonarQube Cloud fue resuelto el 04/09/2026:
 
 - ✅ SonarQube Cloud integrado al pipeline.
 - ✅ Pruebas automatizadas ejecutadas correctamente.
 - ✅ Análisis estático ejecutado correctamente en `master`.
 - ✅ GitHub Actions Run #29 con resultado `success`.
 
-Se mantienen abiertos los siguientes pendientes:
+El pendiente relacionado con la trazabilidad entre ADR-0001 y su
+implementación también fue resuelto el 04/09/2026:
+
+- ✅ ADR-0001 enlazado con el PR #5.
+- ✅ Commit de integración `4dd857a` identificado como primera
+  materialización de la decisión.
+- ✅ Evidencia registrada en `docs/arc42/09-decisiones.md`.
+
+Se mantienen abiertos únicamente los siguientes pendientes:
 
 1. Dejar evidencia verificable de la ejecución del arranque con un solo
    comando.
-2. Enlazar ADR-0001 con el commit que materializa la decisión.
-3. Obtener una medición de línea base reproducible para el primer corte.
+2. Obtener una medición de línea base reproducible para el primer corte.
 
 ---
 
@@ -246,10 +265,10 @@ Se mantienen abiertos los siguientes pendientes:
 
 | Semana | Estado |
 |---|---|
-| S1 | Parcialmente saneado |
+| S1 | Saneado |
 | S2 | Saneado |
 | S3 | Saneado |
-| S4 | Parcialmente saneado; SonarQube Cloud resuelto y tres pendientes abiertos |
+| S4 | Parcialmente saneado; SonarQube Cloud y trazabilidad ADR→commit resueltos; dos pendientes abiertos |
 
 Los elementos todavía abiertos se atenderán antes de consolidar la
 evidencia final del primer corte.
