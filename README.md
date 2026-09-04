@@ -34,7 +34,6 @@ En S4, SQLite es la persistencia realmente implementada.
 
 ```bash
 pip install -r backend/requirements.txt
-
 ```
 
 ## Arranque con un solo comando
@@ -86,18 +85,33 @@ La prueba principal del corte vertical es:
 
 La prueba crea una publicación mediante HTTP, verifica su persistencia en SQLite y posteriormente consulta el registro almacenado.
 
-## Integración continua
+## Integración continua y análisis estático
 
-Las pruebas del backend se ejecutan mediante GitHub Actions con:
+Las pruebas automatizadas del backend y el análisis estático se ejecutan mediante GitHub Actions con:
 
 [`.github/workflows/backend-tests.yml`](.github/workflows/backend-tests.yml)
 
-Evidencia de ejecución exitosa en `master`:
+La configuración de SonarQube Cloud se encuentra en:
+
+[`sonar-project.properties`](sonar-project.properties)
+
+El pipeline realiza:
+
+1. Obtención del repositorio.
+2. Configuración de Python 3.12.
+3. Instalación de dependencias.
+4. Ejecución de pruebas automatizadas con `pytest`.
+5. Análisis estático con SonarQube Cloud en los `push` a `master`.
+
+### Evidencia de ejecución exitosa
 
 - Workflow: **Pruebas del backend**
-- Run: **#12**
-- Resultado: **success**
-- [GitHub Actions - Run #12](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/33219659253)
+- Run: **#29**
+- Rama: `master`
+- Resultado general: **success**
+- Pruebas automatizadas: **success**
+- Análisis de SonarQube Cloud: **success**
+- [GitHub Actions - Run #29](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/33847799874)
 
 ## Documentación arc42
 
