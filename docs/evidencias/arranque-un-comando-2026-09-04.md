@@ -97,6 +97,29 @@ powershell -ExecutionPolicy Bypass -File .\scripts\run_s4.ps1
 5. Comprobar el frontend en `http://localhost:3000`.
 6. Comprobar el backend mediante `http://localhost:8000/health`.
 
+## Evidencias visuales
+
+### Backend iniciado
+
+![Backend FastAPI iniciado correctamente](./arranque-terminal-2026-09-04.png)
+
+La terminal confirma que Uvicorn inició el backend y muestra
+`Application startup complete.`
+
+### Frontend iniciado
+
+![Frontend CampusMarket en localhost 3000](./arranque-frontend-2026-09-04.png)
+
+La interfaz Flutter Web quedó disponible correctamente en
+`http://localhost:3000`.
+
+### Endpoint de salud
+
+![Respuesta del endpoint health](./arranque-health-2026-09-04.png)
+
+La consulta a `http://localhost:8000/health` respondió con estado `ok`,
+confirmando la disponibilidad del backend.
+
 ## Resultado de la verificación
 
 **Resultado: exitoso.**
