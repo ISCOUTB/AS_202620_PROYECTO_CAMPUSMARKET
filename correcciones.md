@@ -213,6 +213,17 @@ coherencia entre la documentación, el código y las evidencias.
   PR #5 y el commit de integración `4dd857a`.
 - La evidencia se documentó en `docs/arc42/09-decisiones.md` sin reescribir
   el ADR aceptado.
+- Se ejecutó localmente el arranque completo de CampusMarket en Windows
+  mediante un único comando:
+  `powershell -ExecutionPolicy Bypass -File .\scripts\run_s4.ps1`.
+- La ejecución inició correctamente el backend FastAPI y el frontend
+  Flutter Web.
+- Se verificó el frontend en `http://localhost:3000`.
+- Se verificó el backend mediante `http://localhost:8000/health`, obteniendo
+  la respuesta `{"status":"ok","service":"campusmarket-api"}`.
+- Se documentó el procedimiento reproducible y se incorporaron capturas
+  de la terminal, el frontend y el endpoint de salud en
+  `docs/evidencias/arranque-un-comando-2026-09-04.md`.
 
 ### Evidencia
 
@@ -227,6 +238,11 @@ coherencia entre la documentación, el código y las evidencias.
 - `backend/tests/test_publicaciones_vertical.py`
 - `.github/workflows/backend-tests.yml`
 - `sonar-project.properties`
+- `scripts/run_s4.ps1`
+- [`docs/evidencias/arranque-un-comando-2026-09-04.md`](docs/evidencias/arranque-un-comando-2026-09-04.md)
+- `docs/evidencias/arranque-terminal-2026-09-04.png`
+- `docs/evidencias/arranque-frontend-2026-09-04.png`
+- `docs/evidencias/arranque-health-2026-09-04.png`
 - PR #5 - Completar esqueleto ejecutable de Evidencia S3
 - Commit de integración `4dd857a`
 - GitHub Actions Run #29:
@@ -234,9 +250,10 @@ coherencia entre la documentación, el código y las evidencias.
 
 ### Estado
 
-**Saneado parcialmente, con pendientes para el primer corte.**
+**Saneado.**
 
-Los criterios principales de la Evidencia S4 fueron atendidos.
+Los criterios y pendientes identificados específicamente en la
+retroalimentación de S4 fueron atendidos.
 
 El pendiente relacionado con SonarQube Cloud fue resuelto el 04/09/2026:
 
@@ -253,11 +270,15 @@ implementación también fue resuelto el 04/09/2026:
   materialización de la decisión.
 - ✅ Evidencia registrada en `docs/arc42/09-decisiones.md`.
 
-Se mantienen abiertos únicamente los siguientes pendientes:
+El pendiente relacionado con el arranque mediante un solo comando fue
+resuelto el 04/09/2026:
 
-1. Dejar evidencia verificable de la ejecución del arranque con un solo
-   comando.
-2. Obtener una medición de línea base reproducible para el primer corte.
+- ✅ `scripts/run_s4.ps1` ejecutado desde la raíz del repositorio.
+- ✅ Backend FastAPI iniciado correctamente.
+- ✅ Frontend Flutter Web iniciado correctamente en `localhost:3000`.
+- ✅ Endpoint `/health` respondió con estado `ok`.
+- ✅ Procedimiento reproducible y capturas almacenados en
+  `docs/evidencias/`.
 
 ---
 
@@ -268,12 +289,14 @@ Se mantienen abiertos únicamente los siguientes pendientes:
 | S1 | Saneado |
 | S2 | Saneado |
 | S3 | Saneado |
-| S4 | Parcialmente saneado; SonarQube Cloud y trazabilidad ADR→commit resueltos; dos pendientes abiertos |
+| S4 | Saneado; SonarQube Cloud, ADR→commit y arranque con un comando verificados |
 
-Los elementos todavía abiertos se atenderán antes de consolidar la
-evidencia final del primer corte.
+El saneamiento acumulado de las evidencias S1-S4 queda completado.
+
+Antes de consolidar el primer corte permanece pendiente obtener una
+**medición de línea base reproducible** y desarrollar la respuesta
+arquitectónica correspondiente a la nueva restricción asignada en S5.
 
 Este archivo documenta únicamente correcciones sobre las evidencias
 acumuladas S1-S4. El reto arquitectónico específico de la Semana 5 se
-documentará separadamente una vez aplicada la nueva restricción asignada
-al equipo.
+documentará separadamente.
