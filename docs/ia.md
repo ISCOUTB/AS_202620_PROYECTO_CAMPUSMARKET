@@ -36,6 +36,13 @@ Este documento registra el uso de herramientas de IA como apoyo al proyecto. Tod
 | 29/08/2026 | GitHub Copilot | Generación automática de sugerencias para mensajes y descripciones de commits durante la actualización documental del repositorio. | El equipo revisó las sugerencias antes de confirmar los cambios y mantuvo únicamente las que resultaban coherentes con el cambio realizado. | Se rechazaron mensajes genéricos sugeridos automáticamente y se reemplazaron por mensajes específicos como `Completar README con evidencia verificable de S4`, para mantener mayor trazabilidad en el historial del repositorio. |
 | 29/08/2026 | ChatGPT | Auditoría final de la Evidencia S4 y apoyo para completar el README con arranque, corte vertical, pruebas, GitHub Actions, arc42, C4 y trazabilidad. | Se verificó en `master` que el README estuviera completo y que el pipeline ejecutara correctamente las pruebas del backend. | Se rechazó introducir SonarCloud apresuradamente en este cierre y modificar nuevamente el ADR-0001, porque no eran cambios necesarios para resolver los hallazgos principales de la ficha S4 y podían introducir inconsistencias innecesarias. |
 | 30/08/2026 | ChatGPT | Revisión de la última retroalimentación automática de S4 y apoyo para hacer explícitas en el README las evidencias que el agente no había podido verificar: glosario de dominio y trazabilidad ASP-05. | El equipo comprobó que `docs/arc42/12-glosario.md` y `docs/aspectos.md` ya contenían la información requerida y expuso esa evidencia en el README sin modificar la arquitectura ni el código. | Se rechazó alterar nuevamente los documentos arquitectónicos solo para satisfacer la extracción del agente; se mantuvo la información original y únicamente se hizo más visible y navegable desde el README. |
+
+## Evidencia S5
+
+| Fecha | Herramienta | Uso realizado | Verificación del equipo | Qué se rechazó y por qué |
+|---|---|---|---|---|
+| 04/09/2026 | ChatGPT | Revisión de la retroalimentación acumulada de S1-S4 y apoyo para estructurar `correcciones.md` con los hallazgos, correcciones realizadas y pendientes antes del primer corte. | El equipo contrastó cada punto con los archivos actuales del repositorio y con la retroalimentación oficial antes de incorporar el documento. | Se rechazó marcar todas las semanas como completamente saneadas porque todavía existen pendientes reales, como SonarCloud, la evidencia del arranque, el enlace ADR-0001 → commit y la medición de línea base. |
+
 ## Criterio de uso
 
 La IA se utiliza como apoyo para análisis, documentación, organización y revisión. El equipo mantiene la responsabilidad de ejecutar las pruebas, revisar los cambios, interpretar los resultados y defender las decisiones arquitectónicas.
