@@ -42,6 +42,7 @@ Este documento registra el uso de herramientas de IA como apoyo al proyecto. Tod
 | Fecha | Herramienta | Uso realizado | Verificación del equipo | Qué se rechazó y por qué |
 |---|---|---|---|---|
 | 04/09/2026 | ChatGPT | Revisión de la retroalimentación acumulada de S1-S4 y apoyo para estructurar `correcciones.md` con los hallazgos, correcciones realizadas y pendientes antes del primer corte. | El equipo contrastó cada punto con los archivos actuales del repositorio y con la retroalimentación oficial antes de incorporar el documento. | Se rechazó marcar todas las semanas como completamente saneadas porque todavía existen pendientes reales, como SonarCloud, la evidencia del arranque, el enlace ADR-0001 → commit y la medición de línea base. |
+| 04/09/2026 | ChatGPT | Apoyo para configurar SonarQube Cloud e integrarlo con el workflow existente de GitHub Actions. | El equipo verificó la configuración mediante el Run #29 en `master`, donde las pruebas automatizadas y el análisis de SonarQube Cloud finalizaron correctamente con resultado `success`. | Se rechazó mantener el análisis de Sonar sobre los pull requests porque el proyecto de Sonar no estaba vinculado directamente al repositorio oficial de ISCOUTB y se produjo el error `Could not find the pull request with key '17'`. Se optó por ejecutar el análisis en los `push` a `master`, donde fue verificado correctamente. |
 
 ## Criterio de uso
 
