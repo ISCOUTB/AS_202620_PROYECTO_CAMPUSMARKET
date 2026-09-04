@@ -195,6 +195,15 @@ coherencia entre la documentación, el código y las evidencias.
   corte vertical y trazabilidad.
 - Se actualizó `docs/ia.md` con las decisiones y propuestas rechazadas
   durante S4.
+- Se configuró SonarQube Cloud para el análisis estático del backend.
+- Se agregó el archivo `sonar-project.properties` con la configuración
+  del proyecto.
+- Se integró SonarQube Cloud al workflow existente de GitHub Actions.
+- El análisis estático se ejecuta después de las pruebas automatizadas
+  en los `push` a `master`.
+- Se verificó la integración mediante el Run #29 de GitHub Actions,
+  donde tanto `pytest` como el análisis de SonarQube Cloud finalizaron
+  correctamente con resultado `success`.
 
 ### Evidencia
 
@@ -207,6 +216,9 @@ coherencia entre la documentación, el código y las evidencias.
 - `docs/ia.md`
 - `backend/tests/test_publicaciones_vertical.py`
 - `.github/workflows/backend-tests.yml`
+- `sonar-project.properties`
+- GitHub Actions Run #29:
+  `https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/33847799874`
 
 ### Estado
 
@@ -214,13 +226,19 @@ coherencia entre la documentación, el código y las evidencias.
 
 Los criterios principales de la Evidencia S4 fueron atendidos.
 
-Se mantienen como pendientes acumulados:
+El pendiente relacionado con SonarCloud fue resuelto el 04/09/2026:
 
-1. Integrar SonarCloud al pipeline.
-2. Dejar evidencia verificable de la ejecución del arranque con un solo
+- ✅ SonarQube Cloud integrado al pipeline.
+- ✅ Pruebas automatizadas ejecutadas correctamente.
+- ✅ Análisis estático ejecutado correctamente en `master`.
+- ✅ GitHub Actions Run #29 con resultado `success`.
+
+Se mantienen abiertos los siguientes pendientes:
+
+1. Dejar evidencia verificable de la ejecución del arranque con un solo
    comando.
-3. Enlazar ADR-0001 con el commit que materializa la decisión.
-4. Obtener una medición de línea base reproducible para el primer corte.
+2. Enlazar ADR-0001 con el commit que materializa la decisión.
+3. Obtener una medición de línea base reproducible para el primer corte.
 
 ---
 
@@ -231,7 +249,7 @@ Se mantienen como pendientes acumulados:
 | S1 | Parcialmente saneado |
 | S2 | Saneado |
 | S3 | Saneado |
-| S4 | Saneado parcialmente; pendientes transversales |
+| S4 | Parcialmente saneado; SonarQube Cloud resuelto y tres pendientes abiertos |
 
 Los elementos todavía abiertos se atenderán antes de consolidar la
 evidencia final del primer corte.
