@@ -200,15 +200,6 @@ coherencia entre la documentación, el código y las evidencias.
   corte vertical y trazabilidad.
 - Se actualizó `docs/ia.md` con las decisiones y propuestas rechazadas
   durante S4.
-- Se configuró SonarQube Cloud para el análisis estático del backend.
-- Se agregó el archivo `sonar-project.properties` con la configuración
-  del proyecto.
-- Se integró SonarQube Cloud al workflow existente de GitHub Actions.
-- El análisis estático se ejecuta después de las pruebas automatizadas
-  en los `push` a `master`.
-- Se verificó la integración mediante el Run #29 de GitHub Actions,
-  donde tanto `pytest` como el análisis de SonarQube Cloud finalizaron
-  correctamente con resultado `success`.
 - Se enlazó ADR-0001 con su primera materialización en código mediante el
   PR #5 y el commit de integración `4dd857a`.
 - La evidencia se documentó en `docs/arc42/09-decisiones.md` sin reescribir
@@ -225,6 +216,56 @@ coherencia entre la documentación, el código y las evidencias.
   de la terminal, el frontend y el endpoint de salud en
   `docs/evidencias/arranque-un-comando-2026-09-04.md`.
 
+### Saneamiento de SonarQube Cloud
+
+Como parte del saneamiento de S4, el equipo realizó inicialmente una
+integración manual de SonarQube Cloud mediante un proyecto temporal asociado
+a una cuenta personal.
+
+Esta primera integración utilizó:
+
+- un archivo `sonar-project.properties`;
+- un paso adicional dentro de GitHub Actions;
+- una variable `SONAR_TOKEN`;
+- ejecución del análisis después de las pruebas automatizadas.
+
+La primera integración fue verificada mediante el Run #29 de GitHub Actions,
+en el cual tanto `pytest` como el análisis estático finalizaron correctamente.
+
+Posteriormente, el 05/09/2026, el docente habilitó el proyecto oficial de
+CampusMarket en SonarQube Cloud. A partir de ese momento se realizó la
+migración hacia la configuración oficial del curso.
+
+La configuración final quedó de la siguiente manera:
+
+- el análisis estático se ejecuta automáticamente mediante el proyecto
+  oficial de SonarQube Cloud;
+- GitHub Actions se mantiene dedicado únicamente a las pruebas automatizadas;
+- se utiliza `.sonarcloud.properties` como configuración complementaria;
+- se define Python 3.12;
+- `backend/app` y `frontend/campusmarket/lib` se identifican como código
+  fuente;
+- `backend/tests` se identifica como código de pruebas;
+- se eliminó el archivo `sonar-project.properties`;
+- se retiró del workflow el análisis manual con `SONAR_TOKEN`.
+
+Durante la primera ejecución de la configuración oficial se detectó una
+superposición entre rutas de código fuente y pruebas. El problema se corrigió
+delimitando explícitamente `sonar.sources` y `sonar.tests`.
+
+Después de la corrección se verificó el análisis oficial sobre `master` con
+los siguientes resultados:
+
+- Quality Gate: **Passed**
+- Issues nuevos: **0**
+- Security Hotspots nuevos: **0**
+- Duplicación en código nuevo: **0.0 %**
+- Pruebas automatizadas del backend: **success**
+
+El proyecto oficial utilizado es:
+
+`ISCOUTB_AS_202620_PROYECTO_CAMPUSMARKET`
+
 ### Evidencia
 
 - `README.md`
@@ -237,7 +278,7 @@ coherencia entre la documentación, el código y las evidencias.
 - `docs/ia.md`
 - `backend/tests/test_publicaciones_vertical.py`
 - `.github/workflows/backend-tests.yml`
-- `sonar-project.properties`
+- `.sonarcloud.properties`
 - `scripts/run_s4.ps1`
 - [`docs/evidencias/arranque-un-comando-2026-09-04.md`](docs/evidencias/arranque-un-comando-2026-09-04.md)
 - `docs/evidencias/arranque-terminal-2026-09-04.png`
@@ -245,8 +286,12 @@ coherencia entre la documentación, el código y las evidencias.
 - `docs/evidencias/arranque-health-2026-09-04.png`
 - PR #5 - Completar esqueleto ejecutable de Evidencia S3
 - Commit de integración `4dd857a`
-- GitHub Actions Run #29:
-  `https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/33847799874`
+- GitHub Actions Run #29 como evidencia de la primera integración de SonarQube Cloud
+- PR #24 - Configurar análisis automático oficial de Sonar
+- PR #25 - Corregir rutas de fuentes y pruebas en Sonar
+- PR #26 - Limpiar configuración SonarCloud personal
+- Proyecto oficial de SonarQube Cloud:
+  `ISCOUTB_AS_202620_PROYECTO_CAMPUSMARKET`
 
 ### Estado
 
@@ -255,12 +300,19 @@ coherencia entre la documentación, el código y las evidencias.
 Los criterios y pendientes identificados específicamente en la
 retroalimentación de S4 fueron atendidos.
 
-El pendiente relacionado con SonarQube Cloud fue resuelto el 04/09/2026:
+El pendiente relacionado con SonarQube Cloud quedó completamente saneado
+el 05/09/2026:
 
-- ✅ SonarQube Cloud integrado al pipeline.
-- ✅ Pruebas automatizadas ejecutadas correctamente.
-- ✅ Análisis estático ejecutado correctamente en `master`.
-- ✅ GitHub Actions Run #29 con resultado `success`.
+- ✅ Proyecto oficial de CampusMarket habilitado en SonarQube Cloud.
+- ✅ Análisis automático asociado al repositorio de ISCOUTB.
+- ✅ `.sonarcloud.properties` configurado.
+- ✅ Python 3.12 definido.
+- ✅ Rutas de código fuente y pruebas separadas correctamente.
+- ✅ Configuración SonarCloud personal retirada.
+- ✅ GitHub Actions conserva únicamente las pruebas automatizadas.
+- ✅ Quality Gate oficial en `master`: **Passed**.
+- ✅ 0 issues nuevos.
+- ✅ 0 security hotspots nuevos.
 
 El pendiente relacionado con la trazabilidad entre ADR-0001 y su
 implementación también fue resuelto el 04/09/2026:
@@ -289,13 +341,14 @@ resuelto el 04/09/2026:
 | S1 | Saneado |
 | S2 | Saneado |
 | S3 | Saneado |
-| S4 | Saneado; SonarQube Cloud, ADR→commit y arranque con un comando verificados |
+| S4 | Saneado; SonarQube Cloud oficial, ADR→commit y arranque con un comando verificados |
 
 El saneamiento acumulado de las evidencias S1-S4 queda completado.
 
 Antes de consolidar el primer corte permanece pendiente obtener una
 **medición de línea base reproducible** y desarrollar la respuesta
-arquitectónica correspondiente a la nueva restricción asignada en S5.
+arquitectónica correspondiente a la restricción definida por el equipo
+para la Semana 5.
 
 Este archivo documenta únicamente correcciones sobre las evidencias
 acumuladas S1-S4. El reto arquitectónico específico de la Semana 5 se
