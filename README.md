@@ -55,6 +55,10 @@ El comando inicia:
 - Backend FastAPI: `http://localhost:8000`
 - Frontend Flutter Web: `http://localhost:3000`
 
+La ejecución reproducible del arranque fue verificada y documentada en:
+
+[`docs/evidencias/arranque-un-comando-2026-09-04.md`](docs/evidencias/arranque-un-comando-2026-09-04.md)
+
 ## Corte vertical S4
 
 El corte vertical implementado recorre:
@@ -87,31 +91,46 @@ La prueba crea una publicación mediante HTTP, verifica su persistencia en SQLit
 
 ## Integración continua y análisis estático
 
-Las pruebas automatizadas del backend y el análisis estático se ejecutan mediante GitHub Actions con:
+Las pruebas automatizadas del backend se ejecutan mediante GitHub Actions con:
 
 [`.github/workflows/backend-tests.yml`](.github/workflows/backend-tests.yml)
 
-La configuración de SonarQube Cloud se encuentra en:
-
-[`sonar-project.properties`](sonar-project.properties)
-
-El pipeline realiza:
+El workflow realiza:
 
 1. Obtención del repositorio.
 2. Configuración de Python 3.12.
 3. Instalación de dependencias.
 4. Ejecución de pruebas automatizadas con `pytest`.
-5. Análisis estático con SonarQube Cloud en los `push` a `master`.
 
-### Evidencia de ejecución exitosa
+El análisis estático se realiza mediante el proyecto oficial de CampusMarket en **SonarQube Cloud**, integrado automáticamente con el repositorio de ISCOUTB.
 
-- Workflow: **Pruebas del backend**
-- Run: **#29**
-- Rama: `master`
-- Resultado general: **success**
-- Pruebas automatizadas: **success**
-- Análisis de SonarQube Cloud: **success**
-- [GitHub Actions - Run #29](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/33847799874)
+La configuración complementaria del análisis automático se encuentra en:
+
+[`.sonarcloud.properties`](.sonarcloud.properties)
+
+Actualmente SonarQube Cloud identifica como código fuente:
+
+- `backend/app`
+- `frontend/campusmarket/lib`
+
+y como código de pruebas:
+
+- `backend/tests`
+
+### Evidencia del análisis oficial
+
+El análisis oficial de SonarQube Cloud sobre la rama `master` fue verificado el 05/09/2026.
+
+Resultados:
+
+- Proyecto: `ISCOUTB_AS_202620_PROYECTO_CAMPUSMARKET`
+- Quality Gate: **Passed**
+- Issues nuevos: **0**
+- Security Hotspots nuevos: **0**
+- Duplicación en código nuevo: **0.0 %**
+- Pruebas automatizadas del backend: **success**
+
+La configuración SonarCloud personal utilizada inicialmente durante el saneamiento de S4 fue retirada una vez que el docente habilitó el proyecto oficial del curso. Actualmente el repositorio utiliza únicamente el análisis automático oficial de SonarQube Cloud y GitHub Actions permanece dedicado a las pruebas automatizadas.
 
 ## Documentación arc42
 
