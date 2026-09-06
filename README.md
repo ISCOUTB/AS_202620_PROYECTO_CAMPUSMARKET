@@ -694,7 +694,7 @@ Las respuestas de IA no se utilizan por sí mismas como evidencia del sistema.
 - [Línea base S5](docs/evidencias/linea-base-bloqueo-sqlite-2026-09-05.md)
 - [Medición final S5](docs/evidencias/medicion-bloqueo-sqlite-2026-09-06.md)
 - [Prueba automatizada](backend/tests/test_publicaciones_vertical.py)
-- [Script de medición](scripts/medir_bloqueo-sqlite.py)
+- [Script de medición](scripts/medir_bloqueo_sqlite.py)
 
 ---
 
