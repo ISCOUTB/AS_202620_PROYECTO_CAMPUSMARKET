@@ -5,53 +5,43 @@
 **Decisión:** Aplicar espera acotada y degradación controlada ante bloqueo temporal de SQLite  
 **Escenario principal:** EC-05 - Degradación ante bloqueo temporal de persistencia  
 **Restricción principal:** R-07 - Persistencia sin nueva infraestructura durante el primer corte  
-**Aspecto relacionado:** Creación de publicaciones  
+**Aspecto relacionado:** ASP-06 - Degradación controlada ante bloqueo de persistencia  
 
 ---
 
 ## 1. Contexto
 
-CampusMarket implementa actualmente el corte vertical de creación de
-publicaciones mediante:
+CampusMarket implementa el corte vertical de creación de publicaciones mediante:
 
-`Flutter Web → FastAPI → módulo publicaciones → SQLite`
+**Flutter Web → FastAPI → módulo `publicaciones` → SQLite**
 
-La persistencia se encuentra implementada dentro del módulo
-`publicaciones`, conservando las fronteras definidas por ADR-0001 y una
-única unidad de despliegue.
-
-Para la evaluación arquitectónica de S5, el equipo definió la restricción:
+Para la evaluación arquitectónica de S5, el equipo definió:
 
 **R-07 - Persistencia sin nueva infraestructura durante el primer corte.**
 
-Esta restricción establece que CampusMarket debe mantener SQLite como
-mecanismo de persistencia y conservar una única unidad de despliegue. No se
-incorporarán bases de datos externas, colas, cachés distribuidas ni nuevos
-servicios desplegables como respuesta al reto.
+R-07 exige mantener SQLite como mecanismo de persistencia y conservar el
+backend como una única aplicación monolítica modular, sin dividirlo en nuevos
+servicios desplegables. Como respuesta al reto no se incorporarán bases de
+datos externas, colas ni cachés distribuidas.
 
-La condición adversa seleccionada para evaluar la arquitectura es un bloqueo
-temporal de escritura sobre SQLite durante la creación de una publicación.
+La condición adversa seleccionada es un bloqueo temporal de escritura sobre
+SQLite durante la creación de una publicación.
 
 El escenario relacionado es:
 
 **EC-05 - Degradación ante bloqueo temporal de persistencia.**
 
-EC-05 establece que, mientras SQLite se encuentra bloqueada, CampusMarket
-debe:
+EC-05 establece que, mientras SQLite se encuentra bloqueada, CampusMarket debe:
 
-- rechazar temporalmente la creación de forma controlada;
-- responder en un tiempo máximo de 2 segundos;
-- utilizar HTTP `503`;
+- responder mediante HTTP `503`;
+- finalizar la solicitud en un máximo de `2 s`;
 - no producir escrituras parciales;
-- informar que la persistencia se encuentra temporalmente no disponible;
+- informar la indisponibilidad temporal;
 - recuperar la creación normal después de liberar SQLite.
 
-### Línea base previa a la decisión
+### Línea base
 
-Antes de modificar la implementación se realizó una medición reproducible
-bloqueando SQLite deliberadamente.
-
-Los resultados fueron:
+Antes de aplicar cambios se obtuvo:
 
 | Métrica | Línea base |
 |---|---:|
@@ -61,137 +51,114 @@ Los resultados fueron:
 | HTTP después de liberar SQLite | `201` |
 | Tiempo de recuperación | `0.007 s` |
 
-La evidencia se encuentra en:
+Evidencia:
 
-[`../evidencias/linea-base-bloqueo-sqlite-2026-09-05.md`](../evidencias/linea-base-bloqueo-sqlite-2026-09-05.md)
+[Línea base de bloqueo SQLite](../evidencias/linea-base-bloqueo-sqlite-2026-09-05.md)
 
-La línea base demuestra que la implementación conservaba la integridad
-de los datos y se recuperaba después de liberar SQLite, pero presentaba dos
-problemas relevantes:
+La línea base mostró que el sistema preservaba la integridad y se recuperaba
+después de liberar SQLite, pero presentaba dos problemas:
 
-1. devolvía HTTP `500`, tratando una indisponibilidad temporal de
-   persistencia como un error interno genérico;
-2. mantenía la solicitud esperando `7.323 s`, superando ampliamente el
-   umbral de 2 segundos definido en EC-05.
+1. trataba la indisponibilidad temporal como un error interno HTTP `500`;
+2. mantenía la solicitud esperando `7.323 s`, superando el umbral de `2 s`.
 
-Por lo tanto, se necesitaba una decisión que mejorara el comportamiento ante
-el bloqueo sin violar R-07.
+Se requería, por tanto, mejorar el comportamiento observable sin violar R-07.
 
 ---
 
 ## 2. Fuerzas arquitectónicas
 
-La decisión está condicionada por las siguientes fuerzas:
+La decisión está condicionada por:
 
-- **Disponibilidad / resiliencia:** el bloqueo temporal debe producir una
-  degradación controlada y observable.
-- **Tiempo de respuesta:** EC-05 establece un máximo de 2 segundos durante
-  la condición adversa.
-- **Integridad:** un intento fallido no debe dejar registros parciales.
-- **Simplicidad operativa:** R-07 impide agregar nueva infraestructura.
-- **Mantenibilidad:** la solución debe respetar las fronteras del módulo
-  `publicaciones`.
-- **Trazabilidad:** la respuesta debe poder verificarse mediante una prueba
-  automatizada y una medición reproducible.
-- **Reversibilidad:** la solución no debe impedir sustituir SQLite en una
-  evolución futura del sistema.
+- **Disponibilidad / resiliencia:** degradar de forma controlada ante el bloqueo.
+- **Tiempo de respuesta:** cumplir el umbral de `≤ 2 s` definido en EC-05.
+- **Integridad:** evitar escrituras parciales.
+- **Simplicidad operativa:** no incorporar nueva infraestructura.
+- **Mantenibilidad:** conservar las fronteras del módulo `publicaciones`.
+- **Trazabilidad:** permitir pruebas y mediciones reproducibles.
+- **Reversibilidad:** no impedir una futura sustitución de SQLite.
 
 ---
 
 ## 3. Alternativas evaluadas
 
-### 3.1 Alternativa A - Mantener el comportamiento actual
+### 3.1 Alternativa A - Mantener el comportamiento existente
 
-Consiste en conservar la conexión SQLite y el manejo de errores existentes,
-sin introducir un límite específico para el tiempo de espera ni traducir el
-bloqueo a una respuesta controlada.
+Mantener la configuración y manejo de errores existentes.
 
 **Ventajas:**
 
-- no requiere cambios de implementación;
-- mantiene el código actual;
+- no requiere cambios;
 - no introduce lógica adicional.
 
 **Desventajas:**
 
-- la línea base devuelve HTTP `500`;
-- el intento bloqueado tarda `7.323 s`;
-- no diferencia una indisponibilidad temporal de un error interno;
-- no cumple el umbral de 2 segundos de EC-05;
-- ofrece poca información al cliente sobre la condición ocurrida.
+- devuelve HTTP `500`;
+- tarda `7.323 s` durante el bloqueo;
+- no diferencia una indisponibilidad temporal;
+- incumple el umbral de EC-05.
 
-**Decisión sobre la alternativa:**
-
-Se descarta porque existe evidencia reproducible de que no cumple EC-05.
+**Resultado:** descartada porque la línea base demuestra que no cumple EC-05.
 
 ---
 
-### 3.2 Alternativa B - Espera acotada y respuesta HTTP 503
+### 3.2 Alternativa B - Espera acotada y degradación mediante HTTP 503
 
-Consiste en mantener SQLite y establecer un tiempo máximo corto de espera
-para adquirir el bloqueo de persistencia.
+Mantener SQLite y configurar un tiempo de espera corto para adquirir el
+bloqueo de persistencia.
 
-Si SQLite continúa bloqueada después de ese intervalo, el repositorio
-identifica la condición de indisponibilidad temporal y la aplicación la
-traduce a una respuesta HTTP `503 Service Unavailable`.
+Si SQLite continúa bloqueada, el sistema identifica específicamente la
+condición y responde mediante HTTP `503 Service Unavailable`.
 
-Para esta etapa se utiliza un tiempo de espera de **0.5 segundos** para las
-conexiones SQLite involucradas en el corte vertical.
+Para el primer corte se adopta un timeout SQLite de **`0.5 s`**.
 
-No se incorporan reintentos automáticos adicionales durante esta etapa.
+No se incorporan reintentos automáticos.
 
 **Ventajas:**
 
-- permite cumplir el umbral máximo de 2 segundos;
+- permite cumplir el umbral de EC-05;
 - diferencia una indisponibilidad temporal de un error interno;
-- conserva SQLite;
-- conserva una única unidad de despliegue;
+- mantiene SQLite;
+- conserva el backend como una única aplicación monolítica modular;
 - no agrega infraestructura;
-- mantiene la integridad transaccional existente;
-- permite una prueba reproducible del comportamiento adverso;
-- conserva las fronteras del módulo `publicaciones`.
+- conserva la integridad transaccional;
+- mantiene las fronteras de `publicaciones`;
+- permite verificación reproducible.
 
-**Desventajas y costos:**
+**Desventajas:**
 
-- una operación puede ser rechazada aunque el bloqueo fuese a liberarse
-  poco después de los 0.5 segundos;
-- el cliente deberá volver a intentar la operación posteriormente;
-- se agrega lógica explícita para clasificar la indisponibilidad temporal;
-- el valor de 0.5 segundos deberá revisarse si cambian las características
-  de carga del sistema.
+- una solicitud puede ser rechazada aunque el bloqueo se libere poco después;
+- el cliente deberá volver a intentar la operación;
+- se agrega lógica específica para clasificar el bloqueo;
+- el timeout deberá reconsiderarse si cambia la carga.
 
-**Decisión sobre la alternativa:**
-
-Se acepta para el primer corte.
+**Resultado:** aceptada.
 
 ---
 
-### 3.3 Alternativa C - Migrar la persistencia a PostgreSQL u otra base externa
+### 3.3 Alternativa C - Migrar a PostgreSQL u otra base externa
 
-Consiste en sustituir SQLite por un motor de base de datos externo con
-mayores capacidades de concurrencia.
+Sustituir SQLite por un motor de persistencia con mayores capacidades de
+concurrencia.
 
 **Ventajas:**
 
-- mayor capacidad para manejar concurrencia;
-- mejores mecanismos para escenarios con múltiples escritores;
-- facilita una evolución hacia cargas mayores.
+- mayor capacidad para múltiples escritores;
+- mejores mecanismos de concurrencia;
+- mayor capacidad de evolución ante cargas superiores.
 
 **Desventajas:**
 
 - introduce nueva infraestructura;
-- aumenta la complejidad de despliegue y configuración;
-- requiere migración y configuración adicional;
-- aumenta el costo operativo del prototipo;
-- cambia más elementos de la arquitectura de los necesarios para responder
-  al escenario actual;
-- viola directamente R-07 durante el primer corte.
+- aumenta la complejidad de configuración y despliegue;
+- requiere migración;
+- incrementa el costo operativo;
+- modifica más elementos de los necesarios;
+- incumple R-07 durante el primer corte.
 
-**Decisión sobre la alternativa:**
+**Resultado:** descartada para S5.
 
-Se descarta para S5 porque incumple la restricción arquitectónica establecida.
-
-No se descarta como posible evolución futura de CampusMarket.
+Esta alternativa puede reconsiderarse posteriormente si existe evidencia que
+justifique la migración.
 
 ---
 
@@ -203,190 +170,144 @@ controlada mediante HTTP `503`.**
 La implementación:
 
 1. mantiene SQLite como persistencia;
-2. mantiene una única unidad de despliegue;
-3. configura un tiempo de espera SQLite de `0.5 s`;
-4. detecta específicamente la condición de base temporalmente bloqueada;
-5. evita exponer directamente errores internos de SQLite al cliente;
+2. conserva el backend como una única aplicación monolítica modular;
+3. configura un timeout SQLite de `0.5 s`;
+4. detecta específicamente `SQLITE_BUSY` y `SQLITE_LOCKED`;
+5. diferencia el bloqueo temporal de otros errores de persistencia;
 6. traduce la indisponibilidad temporal a HTTP `503 Service Unavailable`;
-7. devuelve un mensaje comprensible para el cliente;
-8. conserva la ausencia de escrituras parciales;
-9. permite la creación normal después de liberar la base;
-10. verifica el comportamiento mediante una prueba automatizada y una
-    medición reproducible.
+7. devuelve un mensaje explícito al cliente;
+8. evita escrituras parciales;
+9. permite la recuperación normal después de liberar SQLite;
+10. verifica el comportamiento mediante prueba automatizada y medición reproducible.
 
-No se implementaron reintentos automáticos en esta decisión.
+No se implementan reintentos automáticos.
 
-El cliente puede volver a intentar posteriormente la operación cuando la
-persistencia vuelva a estar disponible.
+El cliente puede volver a intentar la operación cuando la persistencia se
+encuentre nuevamente disponible.
 
 ---
 
 ## 5. Justificación
 
-La alternativa seleccionada proporciona el mejor equilibrio entre
-disponibilidad, simplicidad operativa, mantenibilidad y cumplimiento de la
-restricción R-07.
+La alternativa seleccionada ofrece el mejor equilibrio entre disponibilidad,
+simplicidad operativa, mantenibilidad y cumplimiento de R-07.
 
-La línea base demostró que CampusMarket ya conservaba la integridad y se
-recuperaba una vez liberada SQLite. El principal problema no requería
-sustituir el mecanismo de persistencia, sino controlar cuánto tiempo esperaba
-la aplicación y cómo comunicaba el fallo temporal.
+La línea base demostró que el problema principal no era la pérdida de
+integridad, sino el tiempo de espera y la forma en que la indisponibilidad
+temporal era comunicada.
 
-Se configuró una espera SQLite de `0.5 s`, manteniendo margen frente al
-umbral máximo de 2 segundos establecido por EC-05.
+El timeout de `0.5 s` deja margen frente al umbral máximo de `2 s` definido
+por EC-05.
 
-La medición posterior confirmó que la solicitud completa bajo bloqueo
-respondió en `1.283 s`, cumpliendo el umbral arquitectónico.
+La medición posterior confirmó una respuesta HTTP `503` en `1.283 s`, sin
+escrituras parciales y con recuperación posterior mediante HTTP `201`.
 
-La respuesta HTTP `503` representa explícitamente una indisponibilidad
-temporal del servicio necesario para completar la operación, en lugar de
-presentarla como un HTTP `500` genérico.
-
-La solución tampoco modifica la estrategia definida por ADR-0001: el cambio
-permanece dentro del módulo `publicaciones` y no introduce servicios
-distribuidos.
+Además, la solución permanece dentro del módulo `publicaciones`, no modifica
+la topología C4 y no introduce servicios distribuidos.
 
 ---
 
 ## 6. Tácticas arquitectónicas
 
-Las tácticas utilizadas son:
+### Espera acotada
 
-### Tiempo de espera acotado
+Se limita el tiempo de espera por SQLite.
 
-Limitar cuánto tiempo la operación espera por la disponibilidad de SQLite.
+**Objetivo:** evitar tiempos prolongados como los `7.323 s` de la línea base.
 
-**Objetivo:** evitar una espera prolongada como los `7.323 s` observados en
-la línea base.
+### Detección explícita del bloqueo
 
-**Resultado observado:** la solicitud completa durante el bloqueo respondió
-en `1.283 s`.
+Se identifican específicamente las condiciones `SQLITE_BUSY` y
+`SQLITE_LOCKED`.
 
-### Detección explícita de fallo temporal
-
-Distinguir el bloqueo temporal de SQLite de otros errores inesperados de
-persistencia.
-
-La detección se realiza específicamente sobre las condiciones
-`SQLITE_BUSY`, `SQLITE_LOCKED` y los mensajes asociados al bloqueo de la
-base.
-
-**Objetivo:** no convertir todos los errores de base de datos en HTTP `503`.
+**Objetivo:** evitar convertir cualquier error de persistencia en HTTP `503`.
 
 ### Degradación controlada
 
-Traducir específicamente la indisponibilidad temporal a HTTP `503`.
+La indisponibilidad temporal se traduce a HTTP `503`.
 
-**Objetivo:** proporcionar al cliente una respuesta semánticamente adecuada
-y permitir un reintento posterior.
-
-El mensaje retornado durante la medición fue:
+Mensaje utilizado:
 
 `La persistencia está temporalmente no disponible. Intenta nuevamente.`
 
-### Preservación de la transacción
+### Preservación de integridad
 
-No confirmar escrituras cuando la operación no logra completarse.
+Una operación fallida no confirma escrituras parciales.
 
-**Objetivo:** conservar la propiedad ya observada en la línea base de cero
-escrituras parciales.
+### Recuperación
 
-**Resultado observado:** los registros permanecieron en `0` antes y después
-del intento bloqueado.
-
-### Recuperación después de liberar el recurso
-
-No mantener un estado de fallo permanente dentro de la aplicación.
-
-**Objetivo:** permitir que una nueva solicitud funcione normalmente cuando
-SQLite deje de estar bloqueada.
-
-**Resultado observado:** después de liberar SQLite, la nueva creación
-respondió HTTP `201` en `0.006 s` y dejó `1` registro persistido.
+Después de liberar SQLite, una nueva solicitud puede ejecutarse normalmente.
 
 ---
 
 ## 7. Consecuencias
 
-### Consecuencias positivas
+### Positivas
 
-- la solicitud bloqueada deja de esperar varios segundos;
-- el cliente puede distinguir una indisponibilidad temporal;
+- la solicitud bloqueada responde dentro del umbral;
+- el cliente distingue una indisponibilidad temporal;
 - se conserva SQLite;
 - no se incorpora infraestructura adicional;
-- se mantiene una sola unidad de despliegue;
-- se conservan las fronteras del monolito modular;
-- el escenario adverso puede verificarse automáticamente;
-- se mantiene la posibilidad de sustituir SQLite posteriormente;
-- la conexión SQLite se cierra explícitamente después de cada operación,
-  evitando mantener recursos abiertos innecesariamente.
+- se conserva el backend monolítico modular;
+- se mantienen las fronteras de `publicaciones`;
+- el escenario puede verificarse automáticamente;
+- se conserva la posibilidad de sustituir SQLite posteriormente;
+- las conexiones SQLite se cierran explícitamente después de cada operación.
 
-### Consecuencias negativas
+### Negativas
 
-- un bloqueo superior al tiempo tolerado provoca el rechazo temporal de la
-  operación;
-- el usuario puede necesitar volver a intentar la creación;
-- se introduce lógica adicional de manejo de errores;
-- el valor del timeout constituye una política que deberá revisarse si
-  cambia la carga del sistema.
+- una operación puede ser rechazada temporalmente;
+- el usuario puede necesitar volver a intentar;
+- se incorpora lógica adicional de manejo de errores;
+- el timeout se convierte en una política que deberá revisarse si cambia la carga.
 
-### Riesgos aceptados
+### Riesgo aceptado
 
-El equipo acepta que una operación pueda ser rechazada temporalmente en lugar
-de esperar indefinidamente.
-
-Para el prototipo actual se prioriza una respuesta rápida y controlada sobre
-mantener una solicitud bloqueada durante varios segundos.
+El equipo acepta rechazar temporalmente una operación en lugar de mantenerla
+bloqueada durante varios segundos.
 
 ---
 
 ## 8. Criterio de reconsideración
 
-Esta decisión deberá reconsiderarse si aparece evidencia de que SQLite deja
-de ser suficiente para la carga real del sistema.
+ADR-0002 deberá reconsiderarse si aparece evidencia de que SQLite deja de ser
+suficiente.
 
-En particular, se revisará ADR-0002 si ocurre cualquiera de las siguientes
-condiciones:
+Se revisará la decisión si ocurre alguna de estas condiciones:
 
 - más del **5 % de 100 intentos de creación** bajo una carga representativa
-  terminan en indisponibilidad por contención de escritura;
-- CampusMarket necesita ejecutar múltiples instancias del backend escribiendo
+  termina en indisponibilidad por contención de escritura;
+- CampusMarket requiere múltiples instancias del backend escribiendo
   concurrentemente sobre la misma persistencia;
-- los requisitos futuros exigen una concurrencia de escritura que no pueda
-  satisfacerse manteniendo EC-05;
+- los requisitos futuros demandan una concurrencia incompatible con EC-05;
 - una nueva restricción elimina la obligación de mantener SQLite.
 
-En ese caso se volverá a evaluar una base de datos con mayor capacidad de
-concurrencia, como PostgreSQL.
+En ese caso se volverán a evaluar alternativas como PostgreSQL.
 
 ---
 
-## 9. Costo de reversión aceptado
+## 9. Costo de reversión
 
 El costo de reversión se considera **moderado**.
 
-La decisión introduce una política específica para SQLite, pero la lógica
-queda localizada dentro del módulo `publicaciones` y no modifica las
-fronteras generales definidas por ADR-0001.
+La lógica específica de SQLite se encuentra localizada dentro del módulo
+`publicaciones` y no modifica las fronteras generales establecidas por
+ADR-0001.
 
 Una futura sustitución de SQLite requeriría principalmente:
 
 - reemplazar o adaptar el mecanismo de persistencia;
 - retirar la detección específica de bloqueo SQLite;
-- conservar o redefinir la excepción de indisponibilidad de persistencia;
+- conservar o redefinir la excepción de indisponibilidad;
 - ejecutar nuevamente las pruebas del corte vertical;
 - volver a medir EC-05 con la nueva tecnología.
 
 El equipo acepta este costo porque evita introducir infraestructura adicional
-antes de que exista evidencia que la justifique.
+antes de contar con evidencia que la justifique.
 
 ---
 
 ## 10. Impacto sobre la implementación
-
-La decisión fue materializada sobre el corte vertical de `publicaciones`,
-manteniendo las fronteras arquitectónicas existentes y sin introducir nueva
-infraestructura.
 
 Los cambios principales se localizaron en:
 
@@ -400,68 +321,53 @@ backend/tests/test_publicaciones_vertical.py
 scripts/medir_bloqueo_sqlite.py
 ```
 
-La responsabilidad de cada elemento dentro de la respuesta arquitectónica es:
+Responsabilidades:
 
-- `repository.py`: configura la espera SQLite de `0.5 s`, identifica
-  `SQLITE_BUSY` y `SQLITE_LOCKED`, preserva la transacción y traduce el
-  bloqueo a una indisponibilidad temporal de persistencia.
-- `service.py`: mantiene la traducción de la indisponibilidad dentro de la
-  frontera de la capacidad `publicaciones`.
-- `router.py`: expone la condición controlada mediante HTTP
-  `503 Service Unavailable`.
-- `publicaciones_api.dart`: identifica específicamente el HTTP `503` y
-  conserva el mensaje devuelto por el backend.
+- `repository.py`: configura el timeout de `0.5 s`, identifica
+  `SQLITE_BUSY` y `SQLITE_LOCKED` y traduce el bloqueo a indisponibilidad
+  temporal.
+- `service.py`: mantiene la traducción dentro de la frontera funcional de
+  `publicaciones`.
+- `router.py`: responde mediante HTTP `503 Service Unavailable`.
+- `publicaciones_api.dart`: identifica específicamente HTTP `503`.
 - `publicacion_form_page.dart`: informa al usuario sobre la indisponibilidad
-  temporal sin confundirla con un error genérico.
-- `test_publicaciones_vertical.py`: verifica la respuesta `503`, el umbral
-  máximo de `2 s`, la ausencia de escritura parcial y la recuperación
-  posterior.
-- `medir_bloqueo_sqlite.py`: reproduce el escenario adverso y permite
-  contrastar el resultado con la línea base.
+  temporal.
+- `test_publicaciones_vertical.py`: verifica respuesta, tiempo, integridad y
+  recuperación.
+- `medir_bloqueo_sqlite.py`: reproduce y mide el escenario adverso.
 
-La implementación conserva el recorrido:
+La implementación conserva:
 
 **Flutter Web → FastAPI → módulo `publicaciones` → SQLite**
 
-El cambio modifica el comportamiento ante una condición adversa de
-persistencia, pero no cambia la topología de contenedores ni divide el backend
-en nuevos servicios desplegables.
+El cambio modifica el comportamiento ante la condición adversa, pero no
+cambia la topología de contenedores ni divide el backend en nuevos servicios
+desplegables.
 
 ---
 
 ## 11. Verificación y resultados
 
-La línea base previa a la implementación registró:
+La comparación reproducible es:
 
-| Métrica | Línea base |
-|---|---:|
-| HTTP durante bloqueo | `500` |
-| Tiempo durante bloqueo | `7.323 s` |
-| Escritura parcial | `No` |
-| HTTP después de liberar SQLite | `201` |
-| Tiempo de recuperación | `0.007 s` |
+| Métrica | Línea base | Después de ADR-0002 | Umbral EC-05 | Resultado |
+|---|---:|---:|---:|---|
+| HTTP durante bloqueo | `500` | `503` | `503` | Cumple |
+| Tiempo durante bloqueo | `7.323 s` | `1.283 s` | `≤ 2 s` | Cumple |
+| Escritura parcial | `No` | `No` | `No` | Cumple |
+| HTTP después de liberar SQLite | `201` | `201` | `201` | Cumple |
+| Tiempo de recuperación | `0.007 s` | `0.006 s` | Informativo | Correcto |
 
-Después de aplicar ADR-0002, la medición formal obtuvo:
+Una ejecución posterior confirmó nuevamente:
 
-| Métrica | Resultado |
-|---|---:|
-| HTTP durante bloqueo | `503` |
-| Tiempo durante bloqueo | `1.283 s` |
-| Escritura parcial | `No` |
-| HTTP después de liberar SQLite | `201` |
-| Tiempo de recuperación | `0.006 s` |
+- HTTP `503`;
+- `1.138 s` durante el bloqueo;
+- ninguna escritura parcial;
+- recuperación HTTP `201`.
 
-El resultado cumple EC-05 porque:
+La medición formal utilizada como evidencia es la ejecución de **`1.283 s`**.
 
-- la indisponibilidad se comunica mediante HTTP `503`;
-- `1.283 s` se encuentra por debajo del umbral de `2 s`;
-- no se produce una escritura parcial;
-- la creación normal se recupera después de liberar SQLite.
-
-Una ejecución posterior volvió a comprobar el comportamiento con HTTP `503`
-en `1.138 s` y recuperación HTTP `201`.
-
-Las evidencias reproducibles son:
+Evidencias:
 
 - [Línea base](../evidencias/linea-base-bloqueo-sqlite-2026-09-05.md)
 - [Medición posterior](../evidencias/medicion-bloqueo-sqlite-2026-09-06.md)
@@ -472,17 +378,14 @@ Las evidencias reproducibles son:
 
 ## 12. Trazabilidad de implementación
 
-La decisión fue consolidada en el repositorio mediante:
+La respuesta arquitectónica de S5 fue consolidada mediante:
 
 - Pull Request:
   [#28 - Completar reto arquitectónico S5 del primer corte](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/pull/28)
 - Commit de integración:
   [`ff68cf2`](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/commit/ff68cf255b90340634e0760f056870f9a19e9abd)
 
-El PR #28 reúne la implementación, las pruebas, las mediciones y la
-documentación utilizadas para verificar ADR-0002 en `master`.
-
-La cadena de trazabilidad principal es:
+La cadena principal es:
 
 **ASP-06 → R-07 / EC-05 → C4 Nivel 2 → ADR-0002 → código → prueba → medición → evidencia**
 
@@ -494,5 +397,6 @@ Elementos relacionados:
 - [ASP-06](../aspectos.md)
 - [Registro de IA](../ia.md)
 
-Con estas evidencias, ADR-0002 queda asociado tanto con la decisión
-arquitectónica como con su materialización verificable en el repositorio.
+ADR-0002 queda así asociado explícitamente con:
+
+**restricción → escenario de calidad → decisión → implementación → prueba → medición → evidencia**
