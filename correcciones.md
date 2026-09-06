@@ -396,9 +396,10 @@ La restricción definida para el reto es:
 
 **R-07 - Persistencia sin nueva infraestructura durante el primer corte.**
 
-Esta restricción mantiene SQLite como persistencia y conserva una única
-unidad de despliegue durante el primer corte, sin introducir bases de datos
-externas, colas, cachés distribuidas ni nuevos servicios desplegables.
+Esta restricción mantiene SQLite como persistencia y conserva el backend como
+una única aplicación monolítica modular durante el primer corte, sin
+introducir bases de datos externas, colas, cachés distribuidas ni nuevos
+servicios desplegables.
 
 ### Diagnóstico y línea base
 
