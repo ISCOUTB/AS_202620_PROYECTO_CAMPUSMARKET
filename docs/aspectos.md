@@ -108,9 +108,9 @@ La cadena completa es:
 
 **ASP-06 → R-07 / EC-05 → C4 Nivel 2 → ADR-0002 → código → prueba automatizada → evidencia antes/después**
 
-La restricción **R-07** mantiene SQLite y una única unidad de despliegue,
-sin incorporar una base de datos externa, colas, cachés distribuidas ni
-nuevos servicios desplegables.
+La restricción **R-07** mantiene SQLite y conserva el backend como una única
+aplicación monolítica modular, sin incorporar una base de datos externa,
+colas, cachés distribuidas ni nuevos servicios desplegables.
 
 El escenario **EC-05** verifica la respuesta del corte vertical ante un
 bloqueo temporal de persistencia.

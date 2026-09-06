@@ -352,7 +352,7 @@ La restricción se encuentra documentada en:
 R-07 establece que durante el primer corte:
 
 - se mantiene SQLite como persistencia;
-- se conserva una única unidad de despliegue;
+-se conserva el backend como una única aplicación monolítica modular;
 - no se incorporan bases de datos externas;
 - no se agregan colas;
 - no se agregan cachés distribuidas;

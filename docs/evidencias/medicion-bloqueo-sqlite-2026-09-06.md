@@ -128,8 +128,9 @@ Ante un bloqueo temporal de SQLite, CampusMarket:
 - recupera la operación normal después de liberar SQLite;
 - crea y persiste posteriormente la publicación con HTTP `201`.
 
-La solución mantiene SQLite, conserva una única unidad de despliegue y no
-incorpora bases externas, colas, cachés distribuidas ni nuevos servicios.
+La solución mantiene SQLite, conserva el backend como una única aplicación
+monolítica modular y no incorpora bases externas, colas, cachés distribuidas
+ni nuevos servicios desplegables.
 
 Por lo tanto, también se mantiene el cumplimiento de R-07.
 
