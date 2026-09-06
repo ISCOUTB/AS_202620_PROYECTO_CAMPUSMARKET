@@ -49,10 +49,9 @@ Sin embargo, estas alternativas también incrementan el costo operativo, la
 complejidad de despliegue y el esfuerzo de mantenimiento.
 
 Para el reto arquitectónico de S5, CampusMarket prioriza conservar SQLite y
-una única unidad de despliegue, de acuerdo con R-07, y mejorar primero el
-comportamiento ante fallos mediante mecanismos internos y medibles antes de
-considerar infraestructura adicional.
-
+mantener el backend como una única aplicación monolítica modular, de acuerdo
+con R-07, y mejorar primero el comportamiento ante fallos mediante mecanismos
+internos y medibles antes de considerar infraestructura adicional.
 ---
 
 ## EC-01 - Consulta de productos
@@ -211,8 +210,8 @@ superando el umbral máximo de 2 segundos.
 
 Para responder al escenario se adoptó ADR-0002.
 
-La decisión mantiene SQLite y una única unidad de despliegue, de acuerdo con
-R-07, y aplica los siguientes mecanismos:
+La decisión mantiene SQLite y conserva el backend como una única aplicación
+monolítica modular, de acuerdo con R-07, y aplica los siguientes mecanismos:
 
 - espera SQLite acotada mediante timeout de `0.5 s`;
 - detección específica de condiciones `SQLITE_BUSY` y `SQLITE_LOCKED`;
