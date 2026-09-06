@@ -96,8 +96,9 @@ La restricción:
 
 **R-07 - Persistencia sin nueva infraestructura durante el primer corte**
 
-mantiene SQLite como mecanismo de persistencia y conserva una única unidad de
-despliegue.
+mantiene SQLite como mecanismo de persistencia y conserva el backend como una
+única aplicación monolítica modular, sin dividirlo en nuevos servicios
+desplegables.
 
 Por esta razón, la respuesta arquitectónica de S5 **no modifica la topología
 del C4 Nivel 2**.
