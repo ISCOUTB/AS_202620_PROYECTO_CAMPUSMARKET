@@ -105,29 +105,57 @@ semestre.
 **Origen:** Restricción definida por el equipo para la evaluación arquitectónica S5
 
 Durante el primer corte, CampusMarket debe mantener SQLite como mecanismo
-de persistencia y conservar una única unidad de despliegue. La respuesta
-arquitectónica al reto no incorporará una base de datos externa, colas,
-cachés distribuidas ni nuevos servicios desplegables.
+de persistencia y conservar el backend como una única aplicación monolítica
+modular, sin dividirlo en nuevos servicios desplegables.
+
+La respuesta arquitectónica al reto no incorporará una base de datos externa,
+colas, cachés distribuidas ni nuevos servicios desplegables.
+
+Esta restricción no implica que el frontend, el backend y la persistencia sean
+un único contenedor C4. La topología del sistema se mantiene como:
+
+**Frontend Web → Backend API → SQLite**
+
+El límite impuesto por R-07 consiste en evitar que el backend monolítico
+modular sea dividido o reemplazado por nueva infraestructura como respuesta
+al reto arquitectónico del primer corte.
 
 **Justificación:** La restricción limita deliberadamente el espacio de
 solución para evaluar si el corte vertical puede responder de manera
 controlada ante una condición adversa de persistencia sin resolver el
 problema mediante infraestructura adicional.
 
-La solución deberá conservar las fronteras del monolito modular y mejorar
-el comportamiento observable del sistema utilizando mecanismos disponibles
-dentro de la arquitectura actual.
+La solución deberá conservar las fronteras definidas por el monolito modular,
+mantener la topología actual del sistema y mejorar su comportamiento
+observable utilizando mecanismos disponibles dentro de la arquitectura
+existente.
 
 La línea base medida antes de aplicar cualquier cambio mostró que, ante un
 bloqueo temporal de SQLite, la creación de una publicación respondió con
-HTTP `500` después de `7.323 s`, sin producir una escritura parcial. Después
-de liberar la base, el sistema recuperó la operación normal con HTTP `201`.
+HTTP `500` después de `7.323 s`, sin producir una escritura parcial.
 
-Esta evidencia motiva el análisis arquitectónico de S5 sin modificar la
-restricción de mantener SQLite y una única unidad de despliegue.
+Después de liberar SQLite, el sistema recuperó la operación normal mediante
+HTTP `201` en `0.007 s`.
+
+Esta evidencia permitió localizar el problema en el comportamiento de la
+relación entre el Backend API y SQLite, sin justificar una modificación de la
+topología ni la incorporación de nueva infraestructura.
+
+La respuesta arquitectónica posterior mantiene SQLite, conserva el backend
+como una única aplicación monolítica modular y aplica mecanismos internos de
+degradación controlada definidos en ADR-0002.
+
+**Escenario de calidad relacionado:**  
+[EC-05 - Degradación ante bloqueo temporal de persistencia](./10-escenarios-de-calidad.md#ec-05---degradación-ante-bloqueo-temporal-de-persistencia)
+
+**Decisión arquitectónica relacionada:**  
+[ADR-0002 - Manejo de bloqueo temporal de SQLite](../adr/0002-manejo-bloqueo-sqlite.md)
 
 **Evidencia de línea base:**  
-[`../evidencias/linea-base-bloqueo-sqlite-2026-09-05.md`](../evidencias/linea-base-bloqueo-sqlite-2026-09-05.md)
+[Línea base de bloqueo SQLite](../evidencias/linea-base-bloqueo-sqlite-2026-09-05.md)
+
+**Evidencia posterior:**  
+[Medición posterior a ADR-0002](../evidencias/medicion-bloqueo-sqlite-2026-09-06.md)
 
 ---
 
