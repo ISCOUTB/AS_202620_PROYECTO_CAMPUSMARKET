@@ -183,3 +183,214 @@ Repositorio de Publicaciones
      | SQL / sqlite3
      v
 SQLite
+
+
+```
+
+La composición inicial ocurre de la siguiente manera:
+
+```text
+main.py
+   |
+   | registra
+   v
+router.py
+```
+
+Estas dependencias mantienen una dirección explícita:
+
+```text
+Router → Service → Repository → SQLite
+```
+
+No existe una dependencia inversa desde Repository hacia Service o Router.
+
+---
+
+## 5. Correspondencia entre C4 Nivel 3 y código
+
+| Elemento del C4 Nivel 3 | Evidencia en el repositorio |
+|---|---|
+| Entrada de aplicación | `backend/app/main.py` |
+| API de Publicaciones | `backend/app/publicaciones/router.py` |
+| Servicio de Publicaciones | `backend/app/publicaciones/service.py` |
+| Repositorio de Publicaciones | `backend/app/publicaciones/repository.py` |
+| Gestión de Usuarios | `backend/app/usuarios/` |
+| Catálogo | `backend/app/catalogo/` |
+| Administración | `backend/app/administracion/` |
+| Persistencia SQLite | acceso encapsulado en `backend/app/publicaciones/repository.py` |
+
+La presencia de un límite estructural en el repositorio no implica que su
+funcionalidad esté completamente implementada.
+
+Por ello Usuarios, Catálogo y Administración se representan como límites
+arquitectónicos definidos, pero no se documentan como componentes funcionales
+ya materializados.
+
+---
+
+## 6. Propiedad de datos
+
+La Evidencia S6 adopta la regla:
+
+> Cada dato de dominio tiene un único módulo responsable de escribirlo.
+
+En el estado actual del sistema, la entidad persistida de dominio
+materializada es:
+
+`publicaciones`
+
+Su propietario es:
+
+**Gestión de Publicaciones**
+
+La escritura se encuentra encapsulada en:
+
+`backend/app/publicaciones/repository.py`
+
+Los campos actualmente persistidos son:
+
+| Campo | Propietario |
+|---|---|
+| `id` | Gestión de Publicaciones |
+| `titulo` | Gestión de Publicaciones |
+| `descripcion` | Gestión de Publicaciones |
+| `precio` | Gestión de Publicaciones |
+| `modalidad` | Gestión de Publicaciones |
+| `estado` | Gestión de Publicaciones |
+
+Ningún otro contexto debe ejecutar directamente operaciones de escritura sobre
+esta entidad.
+
+---
+
+## 7. Reglas entre contextos
+
+### Gestión de Usuarios y Gestión de Publicaciones
+
+Cuando Gestión de Usuarios sea materializada, deberá proporcionar la identidad
+del estudiante mediante un contrato explícito.
+
+Gestión de Publicaciones podrá utilizar una referencia al propietario, pero no
+deberá modificar directamente los datos internos de Usuarios.
+
+### Gestión de Publicaciones y Catálogo
+
+Catálogo podrá utilizar publicaciones para implementar búsqueda, consulta y
+filtrado.
+
+Consumir esos datos no convierte a Catálogo en propietario de
+`publicaciones`.
+
+Catálogo no deberá ejecutar directamente operaciones `INSERT`, `UPDATE` o
+`DELETE` sobre dicha entidad.
+
+### Gestión de Publicaciones y Administración
+
+Administración podrá solicitar acciones de moderación sobre publicaciones.
+
+La operación deberá realizarse mediante un contrato explícito de Gestión de
+Publicaciones.
+
+Administración no deberá depender directamente del repositorio ni escribir en
+la tabla `publicaciones`.
+
+La separación documentada en S6 prevé utilizar una capa anticorrupción en este
+límite cuando las capacidades de Administración sean materializadas.
+
+---
+
+## 8. Coherencia con C4 Nivel 2
+
+El C4 Nivel 2 representa:
+
+```text
+Frontend Web → Backend API → SQLite
+```
+
+El C4 Nivel 3 no reemplaza esa representación.
+
+Realiza únicamente un acercamiento al interior del contenedor:
+
+**Backend API**
+
+y muestra los componentes actualmente verificables responsables del corte
+vertical de publicaciones.
+
+Por tanto:
+
+- Nivel 1 muestra CampusMarket y sus actores externos;
+- Nivel 2 muestra los contenedores ejecutables;
+- Nivel 3 muestra la estructura interna del Backend API.
+
+---
+
+## 9. Coherencia con ADR-0001
+
+El C4 Nivel 3 no introduce un nuevo estilo arquitectónico.
+
+CampusMarket continúa utilizando el **monolito modular** definido en:
+
+[`ADR-0001 - Adoptar un monolito modular`](../adr/0001-usar-monolito-modular.md)
+
+Los límites principales continúan siendo:
+
+- `usuarios`;
+- `publicaciones`;
+- `catalogo`;
+- `administracion`.
+
+S6 hace explícitos sus contextos, relaciones y propiedad de datos, pero no
+reemplaza, fusiona ni divide estos límites.
+
+Por esta razón, la elaboración de este C4 Nivel 3 constituye una
+profundización de la arquitectura existente y no un reajuste de los límites
+que requiera reemplazar ADR-0001.
+
+---
+
+## 10. Relación con la Evidencia S6
+
+Este C4 Nivel 3 debe interpretarse junto con:
+
+- [Sección 8 de arc42 - Conceptos transversales](../arc42/08-conceptos-transversales.md)
+- [Auditoría de modularidad S6](../evidencias/auditoria-modularidad-s6-2026-09-12.md)
+- [ADR-0001 - Monolito modular](../adr/0001-usar-monolito-modular.md)
+- [C4 Nivel 2 - Contenedores](./02-contenedores.md)
+- [Fuente PlantUML del C4 Nivel 3](./03-componentes-backend.puml)
+
+La sección 8 define los contextos y las relaciones de dominio.
+
+La auditoría verifica esas reglas contra el código existente.
+
+El C4 Nivel 3 permite visualizar cómo dichos límites se materializan
+actualmente dentro del Backend API.
+
+---
+
+## 11. Estado actual y evolución
+
+El componente con mayor materialización funcional en el backend es Gestión de
+Publicaciones.
+
+Usuarios, Catálogo y Administración mantienen sus fronteras estructurales,
+pero sus capacidades todavía deberán desarrollarse progresivamente.
+
+Cuando esos contextos sean implementados se deberá conservar la regla de
+propiedad única y actualizar este C4 Nivel 3 si aparecen nuevos componentes o
+cambian relaciones internas verificables.
+
+Si una evolución futura modifica realmente los límites establecidos por
+ADR-0001, el cambio deberá documentarse mediante un nuevo ADR y la
+actualización correspondiente de los diagramas C4.
+
+---
+
+## Fuente canónica
+
+La fuente versionada del diagrama es:
+
+[`03-componentes-backend.puml`](./03-componentes-backend.puml)
+
+Este archivo Markdown explica y aporta trazabilidad al diagrama, pero no
+sustituye su fuente PlantUML.
