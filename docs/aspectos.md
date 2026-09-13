@@ -155,3 +155,35 @@ y no introduce infraestructura adicional.
 
 De esta forma ASP-06 queda trazado desde la restricción arquitectónica hasta
 una evidencia reproducible y contrastada con su umbral.
+
+## Trazabilidad S6 — Dominio y modularidad
+
+Durante S6 se hicieron explícitos los límites de dominio del monolito modular
+de CampusMarket y la propiedad de los datos.
+
+Los contextos delimitados identificados son:
+
+| Contexto delimitado | Aspectos relacionados | Responsabilidad |
+|---|---|---|
+| Gestión de Usuarios | ASP-02 | Identidad, autenticación y propiedad de las publicaciones cuando esta capacidad sea materializada. |
+| Gestión de Publicaciones | ASP-02, ASP-03, ASP-05, ASP-06 | Ciclo de vida de las publicaciones y propiedad exclusiva de la entidad persistida `publicaciones`. |
+| Catálogo | ASP-01 | Consulta, búsqueda y filtrado de publicaciones sin adquirir propiedad de sus datos. |
+| Administración | ASP-02 | Supervisión y moderación mediante contratos con Publicaciones, sin escritura directa sobre su persistencia. |
+
+La correspondencia con la evidencia S6 queda documentada en:
+
+- [`arc42/08-conceptos-transversales.md`](./arc42/08-conceptos-transversales.md)
+- [`evidencias/auditoria-modularidad-s6-2026-09-12.md`](./evidencias/auditoria-modularidad-s6-2026-09-12.md)
+
+La auditoría determinó que la única entidad de dominio persistida actualmente
+es `publicaciones` y que su único escritor productivo pertenece al contexto
+Gestión de Publicaciones.
+
+No se detectaron escrituras compartidas entre los contextos actuales.
+
+De esta forma, la trazabilidad de S6 extiende la cadena existente:
+
+**Aspecto → contexto delimitado → propietario del dato → código → auditoría**
+
+sin modificar los límites principales definidos previamente por el
+**ADR-0001 - Monolito modular**.
