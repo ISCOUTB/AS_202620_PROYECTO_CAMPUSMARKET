@@ -1,0 +1,100 @@
+@startuml
+
+title CampusMarket - C4 Nivel 3 · Componentes del Backend API
+caption Semana 6 · Dominio y modularidad · Equipo CampusMarket
+
+left to right direction
+
+skinparam shadowing false
+skinparam defaultTextAlignment center
+skinparam packageStyle rectangle
+
+rectangle "Frontend Web\n\nFlutter / Dart" as frontend
+
+package "Backend API\nFastAPI / Python" {
+
+    rectangle "Entrada de aplicación\n\nmain.py\n\nConfigura FastAPI y registra\nlos routers disponibles" as main
+
+    package "Contexto: Gestión de Publicaciones" {
+
+        rectangle "API de Publicaciones\n\nrouter.py\n\nExpone endpoints HTTP,\nvalida payloads y traduce\nerrores a respuestas HTTP" as router
+
+        rectangle "Servicio de Publicaciones\n\nservice.py\n\nNormaliza datos y coordina\nlas reglas de aplicación" as service
+
+        rectangle "Repositorio de Publicaciones\n\nrepository.py\n\nÚnico componente productivo\nque escribe y consulta\nla entidad publicaciones" as repository
+    }
+
+    rectangle "Gestión de Usuarios\n\nLímite definido\nNo materializado actualmente" as usuarios
+
+    rectangle "Catálogo\n\nLímite definido\nNo materializado actualmente" as catalogo
+
+    rectangle "Administración\n\nLímite definido\nNo materializado actualmente" as administracion
+}
+
+database "Persistencia local\n\nSQLite\n\nTabla: publicaciones" as sqlite
+
+frontend --> router : Crear y consultar publicaciones\n[HTTP / JSON]
+
+main --> router : Registra router
+
+router --> service : crear_publicacion()\nlistar_publicaciones()
+
+service --> repository : create_publication()\nlist_publications()
+
+repository --> sqlite : INSERT / SELECT\n[sqlite3 / SQL]
+
+usuarios -[hidden]-> router
+catalogo -[hidden]-> service
+administracion -[hidden]-> repository
+
+note right of usuarios
+**Estado S6**
+El contexto está delimitado,
+pero su funcionalidad todavía
+no está materializada.
+end note
+
+note right of catalogo
+**Regla de propiedad**
+Catálogo podrá leer o solicitar
+información de publicaciones,
+pero no escribir directamente
+la tabla publicaciones.
+end note
+
+note right of administracion
+**Regla de comunicación**
+Administración deberá solicitar
+operaciones mediante contratos
+de Publicaciones y no acceder
+directamente a su persistencia.
+end note
+
+note bottom of repository
+**PROPIEDAD DE DATOS**
+
+Gestión de Publicaciones es el
+único dueño de escritura de:
+
+- publicaciones.id
+- publicaciones.titulo
+- publicaciones.descripcion
+- publicaciones.precio
+- publicaciones.modalidad
+- publicaciones.estado
+
+La escritura productiva está
+encapsulada en repository.py.
+end note
+
+legend bottom
+|= Elemento |= Significado |
+| Backend API | Contenedor ampliado en este C4 Nivel 3 |
+| Gestión de Publicaciones | Contexto actualmente materializado |
+| API / Servicio / Repositorio | Componentes internos verificables en código |
+| Usuarios / Catálogo / Administración | Límites definidos aún no materializados |
+| SQLite | Contenedor de persistencia del C4 Nivel 2 |
+| Flecha | Dependencia o comunicación observable |
+endlegend
+
+@enduml
