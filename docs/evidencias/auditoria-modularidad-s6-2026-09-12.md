@@ -325,3 +325,25 @@ Gestión de Publicaciones, Catálogo y Administración.
 La incorporación del C4 Nivel 3 no modifica los límites arquitectónicos
 establecidos por ADR-0001; los hace explícitos a nivel de componentes.
 Por esta razón no se registra un nuevo ADR de reajuste para S6.
+
+### Referencia de comparación con el primer corte
+
+La línea base utilizada para comprobar la estabilidad de los límites
+arquitectónicos corresponde a la etiqueta `corte-1`:
+
+`8044215811e53b111888f75b30fc175fb889dc56`
+
+En esa línea base, ADR-0001 ya establece los módulos:
+
+- `usuarios`;
+- `publicaciones`;
+- `catalogo`;
+- `administracion`.
+
+S6 conserva estos mismos límites.
+
+La incorporación del C4 Nivel 3 documenta la estructura interna actualmente
+verificable del Backend API, pero no representa una división, fusión o
+reemplazo de dichos límites.
+
+Por tanto, no se activa la condición que exigiría un nuevo ADR de reajuste.
