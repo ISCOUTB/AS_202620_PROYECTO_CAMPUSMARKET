@@ -279,3 +279,49 @@ funcionalidad.
 
 La auditoría confirma que el monolito modular actual constituye una base válida
 para continuar creciendo sin introducir escrituras compartidas entre contextos.
+
+## 12. Verificación automática de las reglas de modularidad
+
+Además de la auditoría manual del repositorio, S6 incorpora una verificación
+automatizada de las reglas de propiedad y dependencias:
+
+`backend/tests/test_modularidad_s6.py`
+
+La prueba verifica actualmente que:
+
+- `backend/app/publicaciones/repository.py` sea el único escritor productivo de
+  la entidad `publicaciones`;
+- `usuarios`, `catalogo` y `administracion` no accedan directamente a SQLite;
+- dichos contextos no importen directamente el repositorio interno de
+  Publicaciones;
+- el flujo implementado mantenga la dirección
+  `router → service → repository → SQLite`;
+- la creación y consulta de `publicaciones` permanezcan encapsuladas en el
+  repositorio propietario.
+
+Estas comprobaciones se ejecutan junto con el resto de pruebas del backend en
+GitHub Actions.
+
+En la integración correspondiente a S6, las pruebas del backend finalizaron
+correctamente y el análisis de SonarCloud superó el Quality Gate.
+
+---
+
+## 13. Correspondencia con C4 Nivel 3
+
+La estructura interna auditada se encuentra representada en:
+
+- `docs/c4/03-componentes-backend.md`
+- `docs/c4/03-componentes-backend.puml`
+
+El C4 Nivel 3 amplía el contenedor Backend API y representa la materialización
+actual del flujo:
+
+`Frontend Web → API de Publicaciones → Servicio de Publicaciones → Repositorio de Publicaciones → SQLite`
+
+El diagrama mantiene explícitos los límites de Gestión de Usuarios,
+Gestión de Publicaciones, Catálogo y Administración.
+
+La incorporación del C4 Nivel 3 no modifica los límites arquitectónicos
+establecidos por ADR-0001; los hace explícitos a nivel de componentes.
+Por esta razón no se registra un nuevo ADR de reajuste para S6.
