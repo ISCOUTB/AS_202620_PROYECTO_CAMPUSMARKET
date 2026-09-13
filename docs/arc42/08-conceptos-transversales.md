@@ -340,3 +340,57 @@ el monolito modular evolucione hacia un sistema altamente acoplado.
 
 La auditoría de código de S6 complementa esta sección verificando si las
 escrituras observadas en el repositorio respetan estas reglas.
+
+---
+
+## 8.7 Correspondencia con C4 Nivel 3 y verificación automática
+
+Los límites y reglas de modularidad definidos en esta sección se complementan
+con el C4 Nivel 3 del Backend API:
+
+- [`C4 Nivel 3 - Componentes del Backend`](../c4/03-componentes-backend.md)
+- [`Fuente PlantUML del C4 Nivel 3`](../c4/03-componentes-backend.puml)
+
+El C4 Nivel 3 amplía el contenedor Backend API definido previamente en el
+Nivel 2 y muestra la materialización actualmente verificable de Gestión de
+Publicaciones mediante:
+
+`API de Publicaciones → Servicio de Publicaciones → Repositorio de Publicaciones → SQLite`
+
+Los contextos Gestión de Usuarios, Catálogo y Administración permanecen
+representados como límites arquitectónicos definidos, pero todavía no se
+declaran como capacidades funcionales materializadas.
+
+La propiedad única de los datos se verifica adicionalmente mediante:
+
+[`backend/tests/test_modularidad_s6.py`](../../backend/tests/test_modularidad_s6.py)
+
+Esta prueba comprueba que:
+
+- `backend/app/publicaciones/repository.py` sea el único escritor productivo de
+  la entidad `publicaciones`;
+- otros contextos no accedan directamente a SQLite;
+- otros contextos no dependan directamente del repositorio interno de
+  Publicaciones;
+- el flujo implementado conserve la dirección
+  `router → service → repository → SQLite`.
+
+La auditoría detallada se encuentra en:
+
+[`Auditoría de modularidad S6`](../evidencias/auditoria-modularidad-s6-2026-09-12.md)
+
+### Coherencia con el primer corte
+
+Los límites principales continúan siendo los definidos por ADR-0001:
+
+- `usuarios`;
+- `publicaciones`;
+- `catalogo`;
+- `administracion`.
+
+La incorporación del C4 Nivel 3 hace explícita la estructura interna del
+Backend API, pero no reemplaza, divide ni fusiona dichos límites.
+
+Por esta razón no se registra un nuevo ADR de reajuste en S6. Un nuevo ADR
+será necesario únicamente si una evolución posterior modifica realmente estas
+fronteras arquitectónicas.
