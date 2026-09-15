@@ -270,3 +270,39 @@ La ejecución final del backend produjo:
 
 ```text
 3 passed, 1 warning in 1.51s
+```
+
+---
+
+## EC-06 - Compatibilidad del contrato de API
+
+**Atributo de calidad:** Compatibilidad / mantenibilidad.
+
+**Fuente:** Equipo de desarrollo o proveedor de la API.
+
+**Estímulo:** Se elimina, renombra o cambia el tipo de una ruta, operación,
+campo o respuesta que consume el frontend.
+
+**Artefacto:** Contrato OpenAPI y proveedor FastAPI de CampusMarket.
+
+**Entorno:** Pipeline de integración continua antes de fusionar el cambio a la
+rama principal.
+
+**Respuesta:** La prueba compara la especificación OpenAPI versionada con la
+superficie generada por el proveedor, detecta la incompatibilidad y hace fallar
+el pipeline antes de que el cambio llegue al consumidor.
+
+**Medida verificable:** El 100 % de los cambios incompatibles controlados
+introducidos en la demostración S7 debe producir un resultado de prueba fallido
+y una salida distinta de cero; después de restaurar la compatibilidad, el
+conjunto completo debe volver a verde.
+
+**Prioridad:** Alta.
+
+**Decisión arquitectónica relacionada:**
+
+[ADR-0003 - Integración síncrona HTTP/JSON](../adr/0003-usar-integracion-sincrona-http-json.md)
+
+**Evidencia:**
+
+[Demostración de cambio incompatible S7](../evidencias/fallo-contrato-s7-2026-09-15.md)

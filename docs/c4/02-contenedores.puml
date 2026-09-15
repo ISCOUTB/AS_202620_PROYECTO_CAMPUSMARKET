@@ -21,13 +21,13 @@ package "CampusMarket" {
     database "Persistencia local\n\nSQLite\n\nAlmacena y recupera los datos\ndel corte vertical" as sqlite
 }
 
-estudiante --> frontend : Publica y consulta productos\n[Navegador web]
+estudiante --> frontend : Publica y consulta productos\n[HTTP / HTML-CSS-JavaScript]
 
-administrador --> frontend : Accede para supervisar contenido\n[Navegador web]
+administrador --> frontend : Accede para supervisar contenido\n[HTTP / HTML-CSS-JavaScript]
 
-frontend --> backend : Crea y consulta publicaciones\n[HTTP / JSON · REST]
+frontend --> backend : Crea y consulta publicaciones\n[HTTP/1.1 REST / application/json]
 
-backend --> sqlite : Guarda y recupera publicaciones\n[SQL · sqlite3]
+backend --> sqlite : Guarda y recupera publicaciones\n[SQL / filas SQLite mediante sqlite3]
 
 legend right
 |= Elemento |= Significado |

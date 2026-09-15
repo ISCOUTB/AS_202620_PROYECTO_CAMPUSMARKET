@@ -151,6 +151,7 @@ Las pruebas principales del proyecto incluyen:
 - [`backend/tests/test_health.py`](backend/tests/test_health.py)
 - [`backend/tests/test_publicaciones_vertical.py`](backend/tests/test_publicaciones_vertical.py)
 - [`backend/tests/test_modularidad_s6.py`](backend/tests/test_modularidad_s6.py)
+- [`backend/tests/test_contrato_openapi.py`](backend/tests/test_contrato_openapi.py)
 
 El conjunto de pruebas verifica actualmente:
 
@@ -162,6 +163,8 @@ El conjunto de pruebas verifica actualmente:
 - propiedad única de la entidad `publicaciones`;
 - ausencia de acceso directo a SQLite desde otros contextos;
 - dirección de dependencias `router → service → repository → SQLite`.
+- correspondencia exacta entre el contrato OpenAPI versionado y el proveedor
+  FastAPI.
 
 Las pruebas se ejecutan automáticamente mediante GitHub Actions.
 
@@ -915,6 +918,7 @@ La documentación arquitectónica principal se encuentra en:
 
 - [ADR-0001 - Usar monolito modular](docs/adr/0001-usar-monolito-modular.md)
 - [ADR-0002 - Manejo de bloqueo temporal de SQLite](docs/adr/0002-manejo-bloqueo-sqlite.md)
+- [ADR-0003 - Integración síncrona HTTP/JSON](docs/adr/0003-usar-integracion-sincrona-http-json.md)
 
 No se crea un ADR adicional durante S6 porque los límites definidos por
 ADR-0001 permanecen vigentes.
@@ -992,6 +996,16 @@ Las respuestas de IA no se utilizan por sí mismas como evidencia del sistema.
 - [Trazabilidad de aspectos](docs/aspectos.md)
 - [Registro de IA](docs/ia.md)
 
+## Evidencia S7
+
+- [Contrato OpenAPI 3.1 versionado](contracts/openapi-v1.json)
+- [Guía de verificación y generación de cliente](contracts/README.md)
+- [Prueba de contrato](backend/tests/test_contrato_openapi.py)
+- [ADR-0003 - Integración síncrona HTTP/JSON](docs/adr/0003-usar-integracion-sincrona-http-json.md)
+- [arc42 sección 6 - Flujos de interacción](docs/arc42/06-vista-ejecucion.md)
+- [C4 Nivel 2 con protocolo y formato](docs/c4/02-contenedores.md)
+- [Demostración de cambio incompatible](docs/evidencias/fallo-contrato-s7-2026-09-15.md)
+
 ---
 
 # Estado actual del proyecto
@@ -1044,3 +1058,22 @@ La arquitectura continúa siendo un **monolito modular**.
 La evolución realizada durante S6 fortalece sus fronteras internas y la
 propiedad de los datos sin introducir microservicios, nueva infraestructura o
 límites de dominio artificiales.
+
+La Evidencia S7 cuenta con:
+
+- contrato OpenAPI `3.1.0` y versión de API `1.0.0`;
+- rutas y esquemas correspondientes a las tres operaciones implementadas;
+- identificadores de operación estables para generación de clientes;
+- prueba de contrato que compara el documento con el proveedor FastAPI;
+- paso explícito de contrato en GitHub Actions;
+- demostración controlada de fallo al renombrar `titulo` como `nombre`;
+- restauración del proveedor y conjunto completo en verde;
+- ADR-0003 con comparación síncrona/asíncrona, acoplamiento temporal y modos
+  de fallo;
+- arc42 sección 6 con flujos exitosos y de indisponibilidad;
+- C4 Nivel 2 con protocolo y formato en cada relación;
+- trazabilidad ASP-07 y registro actualizado del uso de IA.
+
+S7 conserva la topología del monolito modular. La relación Flutter-FastAPI se
+formaliza como **HTTP/1.1 REST / `application/json`** y queda protegida frente a
+cambios incompatibles antes de la integración.

@@ -9,6 +9,7 @@ en el repositorio.
 |---|---|---|---|
 | [ADR-0001](../adr/0001-usar-monolito-modular.md) | Aceptado | Adoptar un monolito modular como estrategia arquitectónica inicial. | EC-03 - Modificación del sistema |
 | [ADR-0002](../adr/0002-manejo-bloqueo-sqlite.md) | Aceptado | Aplicar espera acotada y degradación controlada ante bloqueo temporal de SQLite. | EC-05 - Degradación ante bloqueo temporal de persistencia |
+| [ADR-0003](../adr/0003-usar-integracion-sincrona-http-json.md) | Aceptado | Mantener integración síncrona HTTP/JSON y protegerla con un contrato OpenAPI versionado. | EC-06 - Compatibilidad del contrato de API |
 
 ---
 

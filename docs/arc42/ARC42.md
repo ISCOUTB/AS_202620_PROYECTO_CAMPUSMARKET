@@ -414,6 +414,12 @@ SQLite
 La vista de ejecución también documenta los comportamientos verificables
 relacionados con el corte vertical y su evolución arquitectónica.
 
+Durante S7 la vista incorpora los flujos síncronos de creación y consulta con
+su protocolo y formato (`HTTP/1.1 REST` y `application/json`), además del modo
+de fallo `503` ante persistencia temporalmente no disponible. La
+correspondencia con el proveedor se protege mediante el contrato OpenAPI
+`1.0.0` y una prueba ejecutada en el pipeline.
+
 ---
 
 ## 8. Conceptos transversales
@@ -650,7 +656,6 @@ El lenguaje ubicuo específico formalizado durante S6 se encuentra además en:
 
 Ambos documentos deben mantenerse coherentes durante la evolución de
 CampusMarket.
-
 
 
 
