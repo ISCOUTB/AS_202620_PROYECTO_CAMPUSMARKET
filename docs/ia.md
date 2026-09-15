@@ -68,6 +68,18 @@ Este documento registra el uso de herramientas de IA como apoyo al proyecto. Tod
 
 
 
+## Evidencia S7
+
+**Fecha:** 15/09/2026
+
+| Herramienta | Uso realizado | Verificación del equipo | Qué se rechazó y por qué |
+|---|---|---|---|
+| ChatGPT | Apoyo para contrastar la ficha S7 con la API realmente implementada y definir el alcance del contrato. | Se localizaron `GET /health`, `GET /publicaciones` y `POST /publicaciones` en FastAPI y se comprobaron sus consumidores y pruebas existentes. | Se rechazó inventar endpoints, mensajería o eventos porque no existen en el código actual y no corresponden al alcance de S7. |
+| ChatGPT | Apoyo para estructurar OpenAPI 3.1, la prueba de correspondencia y el escenario EC-06. | Se ejecutaron las 11 pruebas y se confirmó la igualdad entre el contrato `1.0.0` y el esquema del proveedor, además de las necesidades del consumidor Flutter. | Se rechazó considerar la documentación automática de Swagger como prueba suficiente; por sí sola no bloquea cambios incompatibles. |
+| OpenAPI Generator | Generación reproducible de un cliente Dart a partir de `contracts/openapi-v1.json`. | OpenAPI Generator 7.25.0 produjo las operaciones `crearPublicacion`, `listarPublicaciones` y `consultarSalud` a partir de los `operationId` del contrato. | Se rechazó incorporar un segundo cliente productivo al frontend porque `publicaciones_api.dart` ya cubre el corte actual y mantener ambos duplicaría responsabilidades. |
+| ChatGPT | Apoyo para comparar integración síncrona y asíncrona y redactar ADR-0003. | La decisión se contrastó con el flujo Flutter-FastAPI, EC-05, EC-06 y la ausencia de infraestructura de mensajería. | Se descartó la integración asíncrona para crear/listar publicaciones porque eliminaría la confirmación inmediata y obligaría a diseñar estados pendientes, reintentos, idempotencia y consistencia eventual sin evidencia que lo justifique. |
+| ChatGPT | Apoyo para diseñar y documentar la mutación incompatible `titulo` → `nombre`. | La prueba de contrato produjo `exit code 1` con `1 failed, 2 passed`; tras restaurar `titulo`, el conjunto completo volvió a verde. | Se rechazó conservar el cambio incompatible o debilitar la prueba para hacerla pasar, porque rompería al consumidor Flutter. |
+
 ## Criterio de uso
 
 La IA se utiliza como apoyo para análisis, documentación, organización, comparación de alternativas y revisión técnica.

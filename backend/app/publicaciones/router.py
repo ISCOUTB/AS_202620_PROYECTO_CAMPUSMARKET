@@ -25,7 +25,23 @@ class Publicacion(PublicacionCreate):
     id: int
 
 
-@router.post("", response_model=Publicacion, status_code=status.HTTP_201_CREATED)
+class ErrorResponse(BaseModel):
+    detail: str
+
+
+@router.post(
+    "",
+    response_model=Publicacion,
+    status_code=status.HTTP_201_CREATED,
+    operation_id="crearPublicacion",
+    summary="Crear una publicación",
+    responses={
+        status.HTTP_503_SERVICE_UNAVAILABLE: {
+            "model": ErrorResponse,
+            "description": "Persistencia temporalmente no disponible",
+        }
+    },
+)
 def crear(payload: PublicacionCreate):
     try:
         return crear_publicacion(payload.model_dump())
@@ -36,6 +52,11 @@ def crear(payload: PublicacionCreate):
         ) from error
 
 
-@router.get("", response_model=list[Publicacion])
+@router.get(
+    "",
+    response_model=list[Publicacion],
+    operation_id="listarPublicaciones",
+    summary="Listar publicaciones",
+)
 def listar():
     return listar_publicaciones()

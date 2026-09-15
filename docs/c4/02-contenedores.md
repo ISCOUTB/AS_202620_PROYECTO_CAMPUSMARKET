@@ -58,14 +58,15 @@ repositorio.
 
 Las relaciones principales son:
 
-- **Estudiante → Frontend Web:** publica y consulta productos mediante un
-  navegador web.
-- **Administrador → Frontend Web:** accede mediante navegador web para
-  supervisar contenido.
+- **Estudiante → Frontend Web:** publica y consulta productos mediante
+  **HTTP** y recursos **HTML/CSS/JavaScript** en el prototipo local.
+- **Administrador → Frontend Web:** accede mediante **HTTP** y recursos
+  **HTML/CSS/JavaScript** para supervisar contenido.
 - **Frontend Web → Backend API:** crea y consulta publicaciones mediante
-  **HTTP/JSON REST**.
+  **HTTP/1.1 REST** con formato **`application/json`**, conforme a
+  [`contracts/openapi-v1.json`](../../contracts/openapi-v1.json).
 - **Backend API → Persistencia local:** guarda y recupera publicaciones
-  mediante **SQL utilizando `sqlite3`**.
+  mediante protocolo **SQL** y filas SQLite utilizando `sqlite3`.
 
 El frontend no accede directamente a SQLite.
 
@@ -161,6 +162,21 @@ La decisión de S5 conserva:
 La respuesta específica al bloqueo se encuentra registrada en:
 
 [ADR-0002 - Manejo de bloqueo temporal de SQLite](../adr/0002-manejo-bloqueo-sqlite.md)
+
+## Impacto arquitectónico de S7
+
+S7 no agrega contenedores ni cambia la topología. Hace explícito y verificable
+el contrato de la relación:
+
+**Frontend Web → Backend API: HTTP/1.1 REST / `application/json` / OpenAPI 1.0.0**
+
+La estrategia síncrona, su acoplamiento temporal y sus modos de fallo se
+registran en:
+
+[ADR-0003 - Integración síncrona HTTP/JSON](../adr/0003-usar-integracion-sincrona-http-json.md)
+
+El flujo detallado se encuentra en la
+[sección 6 de arc42](../arc42/06-vista-ejecucion.md).
 
 ## Evidencia del cambio S5
 
