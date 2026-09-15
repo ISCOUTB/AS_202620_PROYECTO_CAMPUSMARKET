@@ -33,7 +33,7 @@ class ErrorResponse(BaseModel):
     "",
     response_model=Publicacion,
     status_code=status.HTTP_201_CREATED,
-    operation_id="registrarPublicacion",
+    operation_id="crearPublicacion",
     summary="Crear una publicación",
     responses={
         status.HTTP_503_SERVICE_UNAVAILABLE: {
