@@ -179,3 +179,4 @@ cambios incompatibles.
 ## Cadena de trazabilidad
 
 **ASP-07 → EC-06 → C4 Nivel 2 → ADR-0003 → OpenAPI 1.0.0 → FastAPI/Flutter → prueba de contrato → pipeline → fallo controlado → restauración verde**
+
