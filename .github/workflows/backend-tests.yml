@@ -6,6 +6,8 @@ on:
       - master
       - S3-esqueleto-ejecutable
       - S4-corte-vertical
+      - S7-interfaces-contratos
+      - S7-ajustes-finales-contrato
   pull_request:
     branches:
       - master
@@ -28,5 +30,10 @@ jobs:
       - name: Instalar dependencias
         run: pip install -r backend/requirements.txt
 
-      - name: Ejecutar pruebas
-        run: python -m pytest backend/tests -q
+      - name: Ejecutar pruebas funcionales y arquitectónicas
+        run: >-
+          python -m pytest backend/tests -q
+          --ignore=backend/tests/test_contrato_openapi.py
+
+      - name: Ejecutar prueba de contrato OpenAPI
+        run: python -m pytest backend/tests/test_contrato_openapi.py -q
