@@ -21,9 +21,9 @@ package "CampusMarket" {
     database "Persistencia\n\nMySQL\n\nBase: campusmarket\nAlmacena publicaciones" as mysql
 }
 
-estudiante --> frontend : Publica y consulta productos
+estudiante --> frontend : Publica y consulta productos\n[HTTPS / HTML-CSS-JS]
 
-administrador --> frontend : Supervisa contenido
+administrador --> frontend : Supervisa contenido\n[HTTPS / HTML-CSS-JS]
 
 frontend --> backend : GET /publicaciones\nPOST /publicaciones\n[HTTP/JSON síncrono]
 
@@ -69,6 +69,7 @@ legend right
 | Frontend | Contenedor de interfaz · Flutter / Dart |
 | Backend API | Contenedor de aplicación · FastAPI / Python |
 | MySQL | Contenedor de persistencia vigente |
+| HTTPS | Acceso web del usuario al frontend |
 | HTTP/JSON | Comunicación síncrona basada en contrato |
 | OpenAPI | Especificación del contrato de API |
 | Flecha | Comunicación con propósito y tecnología |
