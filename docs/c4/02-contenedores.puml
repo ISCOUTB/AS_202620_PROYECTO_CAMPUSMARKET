@@ -1,7 +1,7 @@
 @startuml
 
 title CampusMarket - C4 Nivel 2 · Contenedores
-caption Primer corte · 06/09/2026 · Equipo CampusMarket
+caption Semana 7 · API-first y persistencia MySQL · Equipo CampusMarket
 
 left to right direction
 
@@ -14,67 +14,76 @@ actor "Administrador" as administrador
 
 package "CampusMarket" {
 
-    rectangle "Frontend Web\n\nFlutter / Dart\n\nInterfaz web para publicar,\nconsultar y gestionar productos" as frontend
+    rectangle "Frontend Web\n\nFlutter / Dart\n\nInterfaz para publicar,\nconsultar y gestionar productos" as frontend
 
-    rectangle "Backend API\n\nFastAPI / Python\n\nRecibe solicitudes, valida datos\ny coordina la lógica de aplicación" as backend
+    rectangle "Backend API\n\nFastAPI / Python\n\nExpone el contrato HTTP/JSON,\nvalida solicitudes y coordina\nla lógica de aplicación" as backend
 
-    database "Persistencia local\n\nSQLite\n\nAlmacena y recupera los datos\ndel corte vertical" as sqlite
+    database "Persistencia\n\nMySQL\n\nBase: campusmarket\nAlmacena publicaciones" as mysql
 }
 
-estudiante --> frontend : Publica y consulta productos\n[HTTP / HTML-CSS-JavaScript]
+estudiante --> frontend : Publica y consulta productos
 
-administrador --> frontend : Accede para supervisar contenido\n[HTTP / HTML-CSS-JavaScript]
+administrador --> frontend : Supervisa contenido
 
-frontend --> backend : Crea y consulta publicaciones\n[HTTP/1.1 REST / application/json]
+frontend --> backend : GET /publicaciones\nPOST /publicaciones\n[HTTP/JSON síncrono]
 
-backend --> sqlite : Guarda y recupera publicaciones\n[SQL / filas SQLite mediante sqlite3]
+backend --> mysql : Guarda y consulta publicaciones\n[PyMySQL / SQL]
+
+note bottom of backend
+**API-FIRST**
+
+El Backend API expone un contrato
+HTTP/JSON documentado mediante OpenAPI.
+
+La integración Frontend → Backend
+es síncrona:
+
+solicitud HTTP → procesamiento →
+respuesta HTTP en la misma interacción.
+
+Las pruebas de contrato verifican
+automáticamente que la implementación
+cumpla el contrato OpenAPI versionado.
+end note
+
+note right of mysql
+**PERSISTENCIA VIGENTE**
+
+MySQL es la tecnología de persistencia
+actual de CampusMarket.
+
+La tabla publicaciones es propiedad
+del contexto Gestión de Publicaciones.
+
+El acceso productivo se realiza únicamente
+desde repository.py mediante PyMySQL.
+
+SQLite corresponde al Corte 1 y se
+mantiene únicamente como evidencia
+histórica de decisiones anteriores.
+end note
 
 legend right
 |= Elemento |= Significado |
 | Persona | Actor externo a CampusMarket |
-| Frontend Web | Contenedor de interfaz · Flutter / Dart |
+| Frontend | Contenedor de interfaz · Flutter / Dart |
 | Backend API | Contenedor de aplicación · FastAPI / Python |
-| Persistencia local | Contenedor de datos · SQLite |
+| MySQL | Contenedor de persistencia vigente |
+| HTTP/JSON | Comunicación síncrona basada en contrato |
+| OpenAPI | Especificación del contrato de API |
 | Flecha | Comunicación con propósito y tecnología |
 endlegend
 
-note bottom of backend
-**ALCANCE DEL NIVEL 2**
+note bottom of frontend
+**ALCANCE C4 NIVEL 2**
 
-Se muestran:
-- contenedores ejecutables;
-- responsabilidad principal;
-- tecnología utilizada;
-- comunicación entre contenedores.
+Este diagrama muestra los contenedores
+ejecutables y sus comunicaciones.
 
-No se muestran:
-- módulos internos;
-- routers;
-- services;
-- repositories;
-- clases.
+El detalle interno del Backend:
+router → service → repository
 
-Ese detalle corresponde al C4 Nivel 3.
-end note
-
-note right of sqlite
-**PRIMER CORTE · R-07 / ADR-0002**
-
-SQLite se mantiene como persistencia.
-
-La respuesta arquitectónica de S5
-no modifica la topología del sistema.
-
-No se agregaron:
-- bases de datos externas;
-- colas;
-- cachés distribuidas;
-- nuevos servicios desplegables.
-
-Ante un bloqueo temporal de SQLite,
-el Backend API responde de forma
-controlada con HTTP 503 y el frontend
-informa la indisponibilidad al usuario.
+se documenta en el C4 Nivel 3.
 end note
 
 @enduml

@@ -13,3 +13,4 @@ backend/data/*.sqlite3
 # Flutter
 frontend/campusmarket/.dart_tool/
 frontend/campusmarket/build/
+.env

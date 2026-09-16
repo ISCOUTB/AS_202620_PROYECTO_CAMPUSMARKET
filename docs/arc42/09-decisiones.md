@@ -1,83 +1,140 @@
+
 # 9. Decisiones arquitectónicas
 
-Las decisiones arquitectónicas de CampusMarket se mantienen en registros ADR
-independientes. Esta sección no repite todo su contenido; funciona como índice
-trazable entre las decisiones, los escenarios de calidad y su materialización
-en el repositorio.
+Las decisiones arquitectónicas de CampusMarket se mantienen mediante registros
+ADR independientes.
 
-| ADR | Estado | Decisión | Escenario principal |
-|---|---|---|---|
-| [ADR-0001](../adr/0001-usar-monolito-modular.md) | Aceptado | Adoptar un monolito modular como estrategia arquitectónica inicial. | EC-03 - Modificación del sistema |
-| [ADR-0002](../adr/0002-manejo-bloqueo-sqlite.md) | Aceptado | Aplicar espera acotada y degradación controlada ante bloqueo temporal de SQLite. | EC-05 - Degradación ante bloqueo temporal de persistencia |
-| [ADR-0003](../adr/0003-usar-integracion-sincrona-http-json.md) | Aceptado | Mantener integración síncrona HTTP/JSON y protegerla con un contrato OpenAPI versionado. | EC-06 - Compatibilidad del contrato de API |
+Esta sección funciona como índice y mecanismo de trazabilidad entre:
+
+- decisiones;
+- restricciones;
+- escenarios de calidad;
+- código;
+- pruebas;
+- evidencias;
+- evolución arquitectónica.
+
+Las decisiones históricas no se eliminan cuando cambia la arquitectura. Se
+conservan para mostrar por qué el sistema tuvo una determinada forma en cada
+etapa del proyecto.
 
 ---
 
-## Evidencia de implementación de ADR-0001
+## 9.1 Índice de decisiones
 
-La decisión definida en ADR-0001 se materializó inicialmente durante la
-construcción del esqueleto ejecutable de la Evidencia S3.
+| ADR | Estado | Decisión | Alcance |
+|---|---|---|---|
+| [ADR-0001](../adr/0001-usar-monolito-modular.md) | Aceptado | Adoptar un monolito modular como estrategia arquitectónica inicial. | Arquitectura general |
+| [ADR-0002](../adr/0002-manejo-bloqueo-sqlite.md) | Histórico para la persistencia actual | Aplicar espera acotada y degradación controlada ante bloqueo temporal de SQLite durante el primer corte. | Persistencia del primer corte / EC-05 |
+| [ADR-0003](../adr/0003-usar-integracion-sincrona-http-json.md) | Aceptado | Mantener integración síncrona HTTP/JSON y protegerla mediante un contrato OpenAPI versionado. | Integración Frontend → Backend |
+| [ADR-0004](../adr/0004-migrar-persistencia-a-mysql.md) | Aceptado | Migrar la persistencia vigente de SQLite a MySQL a partir de la observación recibida del docente. | Persistencia vigente |
 
-La implementación introdujo una única aplicación backend en FastAPI
-organizada mediante módulos asociados con capacidades del negocio:
+La arquitectura actual combina las decisiones vigentes de la siguiente forma:
 
-- `usuarios`
-- `publicaciones`
-- `catalogo`
-- `administracion`
+```text
+ADR-0001
+Monolito modular
+        ↓
+Flutter
+        ↓
+ADR-0003
+HTTP/JSON síncrono + OpenAPI
+        ↓
+FastAPI
+        ↓
+router → service → repository
+        ↓
+ADR-0004
+PyMySQL → MySQL
+````
 
-La incorporación del esqueleto ejecutable fue consolidada mediante:
+ADR-0002 se conserva como evidencia histórica de la arquitectura utilizada
+durante el primer corte.
 
-- Pull Request:
+---
+
+# ADR-0001 - Monolito modular
+
+## 9.2 Evidencia de implementación
+
+ADR-0001 se materializó inicialmente durante la construcción del esqueleto
+ejecutable de S3.
+
+La implementación introdujo una única aplicación backend FastAPI organizada
+mediante módulos asociados a capacidades del negocio:
+
+* `usuarios`;
+* `publicaciones`;
+* `catalogo`;
+* `administracion`.
+
+La incorporación inicial del esqueleto fue consolidada mediante:
+
+* Pull Request:
   [#5 - Completar esqueleto ejecutable de Evidencia S3](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/pull/5)
-- Commit de integración:
+* Commit de integración:
   [`4dd857a`](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/commit/4dd857a1e238e50956facd7156b967f03ae30db0)
 
-Este commit constituye la evidencia trazable de la primera materialización
-de la decisión arquitectónica adoptada en ADR-0001.
+Las evoluciones posteriores conservan estos límites.
 
-La implementación de S4 y S5 conserva posteriormente las mismas fronteras.
+La sustitución de SQLite por MySQL no convierte los módulos en servicios
+independientes ni modifica la decisión de utilizar un monolito modular.
 
-El corte vertical continúa implementándose dentro del módulo
-`publicaciones` y no convierte los módulos internos en servicios
-distribuidos independientes.
+Actualmente la capacidad con mayor materialización funcional continúa siendo:
+
+`publicaciones`
 
 ---
 
-## Evidencia de implementación de ADR-0002
+# ADR-0002 - Manejo de bloqueo temporal de SQLite
 
-ADR-0002 responde a la restricción:
+## 9.3 Contexto histórico
 
-**R-07 - Persistencia sin nueva infraestructura durante el primer corte.**
+ADR-0002 corresponde específicamente al **primer corte**.
 
-La condición adversa seleccionada se formalizó mediante:
+En ese momento estaba vigente la restricción:
 
-**EC-05 - Degradación ante bloqueo temporal de persistencia.**
+**R-07 - Persistencia sin nueva infraestructura durante el primer corte**
 
-El reto consiste en responder de forma controlada cuando SQLite se encuentra
-temporalmente bloqueada durante la creación de una publicación, sin resolver
-el problema mediante nueva infraestructura.
+y CampusMarket utilizaba:
 
-### Línea base previa
+```text
+Flutter Web
+    ↓
+FastAPI
+    ↓
+Gestión de Publicaciones
+    ↓
+SQLite
+```
 
-Antes de aplicar ADR-0002 se realizó una medición reproducible.
+La condición adversa seleccionada fue:
 
-| Métrica | Línea base |
-|---|---:|
-| HTTP durante bloqueo | `500` |
-| Tiempo durante bloqueo | `7.323 s` |
-| Escritura parcial | `No` |
-| HTTP de recuperación | `201` |
-| Tiempo de recuperación | `0.007 s` |
+**EC-05 - Degradación ante bloqueo temporal de persistencia**
 
-La línea base mostró que CampusMarket preservaba la integridad de los datos y
-recuperaba la operación normal después de liberar SQLite.
+El objetivo era responder de forma controlada cuando SQLite permanecía
+temporalmente bloqueada durante la creación de una publicación.
 
-Sin embargo:
+---
 
-- la indisponibilidad temporal se manifestaba como HTTP `500`;
-- la solicitud permanecía bloqueada durante `7.323 s`;
-- el resultado superaba el umbral máximo de `2 s` definido en EC-05.
+## 9.4 Línea base de ADR-0002
+
+Antes de aplicar la decisión se obtuvo:
+
+| Métrica                | Línea base |
+| ---------------------- | ---------: |
+| HTTP durante bloqueo   |      `500` |
+| Tiempo durante bloqueo |  `7.323 s` |
+| Escritura parcial      |       `No` |
+| HTTP de recuperación   |      `201` |
+| Tiempo de recuperación |  `0.007 s` |
+
+La línea base demostró que el sistema preservaba los datos y podía recuperarse,
+pero la indisponibilidad:
+
+* se manifestaba mediante HTTP `500`;
+* mantenía la solicitud bloqueada durante `7.323 s`;
+* superaba el umbral de `2 s` definido en EC-05.
 
 Evidencia:
 
@@ -85,38 +142,72 @@ Evidencia:
 
 ---
 
-## Decisión aplicada
+## 9.5 Decisión aplicada en ADR-0002
 
-La decisión se materializó manteniendo SQLite y conservando el backend como
-una única aplicación monolítica modular, sin crear nuevos servicios
-desplegables.
+Durante el primer corte se mantuvo SQLite y se implementaron:
 
-Los principales cambios fueron:
+* timeout SQLite acotado a `0.5 s`;
+* detección de `SQLITE_BUSY`;
+* detección de `SQLITE_LOCKED`;
+* traducción controlada de indisponibilidad;
+* HTTP `503 Service Unavailable`;
+* ausencia de escrituras parciales;
+* preservación de la transacción;
+* cierre controlado de conexiones;
+* recuperación posterior.
 
-- timeout SQLite acotado a `0.5 s`;
-- detección específica de `SQLITE_BUSY` y `SQLITE_LOCKED`;
-- traducción controlada de la indisponibilidad temporal;
-- respuesta HTTP `503 Service Unavailable`;
-- mensaje explícito de indisponibilidad temporal para el cliente;
-- ausencia de reintentos automáticos;
-- preservación de la transacción;
-- cierre explícito de conexiones SQLite;
-- propagación de la condición controlada hasta Flutter;
-- recuperación normal después de liberar el bloqueo.
+En ese momento el recorrido era:
 
-La solución conserva el recorrido arquitectónico:
+```text
+Flutter
+   ↓
+FastAPI
+   ↓
+router
+   ↓
+service
+   ↓
+repository
+   ↓
+SQLite
+```
 
-**Flutter Web → FastAPI → módulo `publicaciones` → SQLite**
-
-Por lo tanto, ADR-0002 modifica el comportamiento frente a una condición
-adversa, pero no cambia la topología del sistema ni introduce nueva
-infraestructura.
+ADR-0002 modificó el comportamiento ante fallos, pero no cambió la topología
+del sistema.
 
 ---
 
-## Correspondencia con la implementación
+## 9.6 Resultado histórico de ADR-0002
 
-Los archivos principales afectados son:
+Después de implementar la decisión:
+
+| Métrica                | Línea base | Después de ADR-0002 | Umbral EC-05 |
+| ---------------------- | ---------: | ------------------: | -----------: |
+| HTTP durante bloqueo   |      `500` |               `503` |        `503` |
+| Tiempo durante bloqueo |  `7.323 s` |           `1.283 s` |      `≤ 2 s` |
+| Escritura parcial      |       `No` |                `No` |         `No` |
+| HTTP de recuperación   |      `201` |               `201` |        `201` |
+| Tiempo de recuperación |  `0.007 s` |           `0.006 s` |  Informativo |
+
+La solicitud pasó de:
+
+**HTTP `500` en `7.323 s`**
+
+a:
+
+**HTTP `503` en `1.283 s`**
+
+sin escrituras parciales.
+
+Evidencia:
+
+[Medición posterior a ADR-0002](../evidencias/medicion-bloqueo-sqlite-2026-09-06.md)
+
+---
+
+## 9.7 Evidencia histórica de implementación de ADR-0002
+
+En el estado correspondiente a S5, la decisión involucró:
 
 ```text
 backend/app/publicaciones/repository.py
@@ -128,149 +219,362 @@ backend/tests/test_publicaciones_vertical.py
 scripts/medir_bloqueo_sqlite.py
 ```
 
-La responsabilidad principal de cada elemento es:
+En aquella versión:
 
-- `repository.py`: configura la espera SQLite de `0.5 s`, identifica
-  `SQLITE_BUSY` y `SQLITE_LOCKED`, preserva la transacción y traduce el
-  bloqueo a una indisponibilidad temporal de persistencia.
-- `service.py`: mantiene la traducción de la indisponibilidad dentro de la
-  frontera funcional del módulo `publicaciones`.
-- `router.py`: expone la condición controlada mediante HTTP
-  `503 Service Unavailable`.
-- `publicaciones_api.dart`: identifica específicamente HTTP `503` y conserva
-  el mensaje proporcionado por el backend.
-- `publicacion_form_page.dart`: informa al usuario sobre la indisponibilidad
-  temporal mediante un mensaje específico.
-- `test_publicaciones_vertical.py`: verifica el bloqueo, el HTTP `503`, el
-  umbral temporal, la integridad y la recuperación.
-- `medir_bloqueo_sqlite.py`: reproduce la condición adversa y genera las
-  métricas utilizadas como evidencia.
+* `repository.py` controlaba las condiciones específicas de SQLite;
+* `service.py` propagaba la indisponibilidad dentro del contexto;
+* `router.py` respondía HTTP `503`;
+* Flutter informaba la condición al usuario;
+* `test_publicaciones_vertical.py` verificaba el comportamiento sobre SQLite;
+* `medir_bloqueo_sqlite.py` reproducía experimentalmente el bloqueo.
 
----
+**Importante:** `test_publicaciones_vertical.py` evolucionó posteriormente y
+actualmente verifica la persistencia MySQL. Por tanto, las afirmaciones
+anteriores describen el estado histórico de S5 y no el contenido vigente de
+la prueba.
 
-## Resultado posterior a ADR-0002
-
-Después de aplicar la decisión se repitió el escenario de forma reproducible.
-
-| Métrica | Línea base | Después de ADR-0002 | Umbral EC-05 |
-|---|---:|---:|---:|
-| HTTP durante bloqueo | `500` | `503` | `503` |
-| Tiempo durante bloqueo | `7.323 s` | `1.283 s` | `≤ 2 s` |
-| Escritura parcial | `No` | `No` | `No` |
-| HTTP de recuperación | `201` | `201` | `201` |
-| Tiempo de recuperación | `0.007 s` | `0.006 s` | Informativo |
-
-La solicitud bloqueada pasó de:
-
-**HTTP `500` en `7.323 s`**
-
-a:
-
-**HTTP `503` en `1.283 s`**
-
-sin producir escrituras parciales.
-
-Después de liberar SQLite, una nueva creación respondió HTTP `201` y persistió
-correctamente la publicación.
-
-Por lo tanto, el resultado satisface EC-05.
-
-Una ejecución posterior volvió a confirmar el comportamiento con:
-
-- HTTP `503`;
-- tiempo durante bloqueo de `1.138 s`;
-- ninguna escritura parcial;
-- recuperación HTTP `201`.
-
-La medición formal utilizada como evidencia continúa siendo la ejecución de
-`1.283 s`.
-
-Evidencia:
-
-[Medición posterior a ADR-0002](../evidencias/medicion-bloqueo-sqlite-2026-09-06.md)
+La evidencia histórica permanece disponible mediante los commits, mediciones
+y documentos versionados.
 
 ---
 
-## Verificación automatizada
+## 9.8 Trazabilidad histórica de ADR-0002
 
-La prueba relevante se encuentra en:
+La respuesta arquitectónica de S5 fue consolidada mediante:
 
-[`backend/tests/test_publicaciones_vertical.py`](../../backend/tests/test_publicaciones_vertical.py)
-
-La prueba verifica:
-
-- bloqueo exclusivo de SQLite;
-- respuesta HTTP `503`;
-- tiempo máximo de `2 s`;
-- ausencia de escritura parcial;
-- mensaje explícito de indisponibilidad;
-- liberación del bloqueo;
-- recuperación mediante HTTP `201`;
-- persistencia correcta después de la recuperación.
-
-La ejecución final del backend produjo:
-
-```text
-3 passed
-```
-
-El frontend fue verificado mediante:
-
-```bash
-cd frontend/campusmarket
-flutter analyze
-```
-
-con resultado:
-
-```text
-No issues found!
-```
-
-El escenario adverso puede reproducirse mediante:
-
-```bash
-python scripts/medir_bloqueo_sqlite.py
-```
-
----
-
-## Trazabilidad de implementación de ADR-0002
-
-La respuesta arquitectónica completa de S5 fue consolidada inicialmente en
-`master` mediante:
-
-- Pull Request:
+* Pull Request:
   [#28 - Completar reto arquitectónico S5 del primer corte](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/pull/28)
-- Commit de integración:
+* Commit:
   [`ff68cf2`](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/commit/ff68cf255b90340634e0760f056870f9a19e9abd)
 
-Ese commit reúne la implementación, las pruebas, las mediciones y la
-documentación principal utilizadas para verificar ADR-0002.
+La cadena histórica es:
 
-La documentación de cierre y trazabilidad del ADR fue refinada
-posteriormente sin modificar la decisión arquitectónica ni el comportamiento
-implementado.
-
-La cadena principal es:
-
-**ASP-06 → R-07 / EC-05 → C4 Nivel 2 → ADR-0002 → código → prueba → medición → evidencia**
+```text
+ASP-06
+   ↓
+R-07 / EC-05
+   ↓
+C4 Nivel 2 del primer corte
+   ↓
+ADR-0002
+   ↓
+Código
+   ↓
+Prueba
+   ↓
+Medición
+   ↓
+Evidencia
+```
 
 Elementos relacionados:
 
-- [R-07 - Restricción arquitectónica](02-restricciones.md#r-07-persistencia-sin-nueva-infraestructura-durante-el-primer-corte)
-- [EC-05 - Escenario de calidad](10-escenarios-de-calidad.md#ec-05---degradación-ante-bloqueo-temporal-de-persistencia)
-- [ADR-0002](../adr/0002-manejo-bloqueo-sqlite.md)
-- [C4 Nivel 2](../c4/02-contenedores.md)
-- [Aspectos y trazabilidad](../aspectos.md)
-- [Registro de IA](../ia.md)
-- [Línea base](../evidencias/linea-base-bloqueo-sqlite-2026-09-05.md)
-- [Medición posterior](../evidencias/medicion-bloqueo-sqlite-2026-09-06.md)
-- [Prueba automatizada](../../backend/tests/test_publicaciones_vertical.py)
-- [Script de medición](../../scripts/medir_bloqueo_sqlite.py)
+* [R-07](02-restricciones.md#r-07-persistencia-sin-nueva-infraestructura-durante-el-primer-corte)
+* [EC-05](10-escenarios-de-calidad.md#ec-05---degradación-ante-bloqueo-temporal-de-persistencia)
+* [ADR-0002](../adr/0002-manejo-bloqueo-sqlite.md)
+* [Línea base](../evidencias/linea-base-bloqueo-sqlite-2026-09-05.md)
+* [Medición posterior](../evidencias/medicion-bloqueo-sqlite-2026-09-06.md)
+* [Script histórico de medición](../../scripts/medir_bloqueo_sqlite.py)
 
-Con estas evidencias, ADR-0002 queda asociado explícitamente con:
+---
 
-**restricción → escenario de calidad → decisión → implementación → prueba → medición → evidencia**
+# ADR-0003 - Integración síncrona HTTP/JSON
 
-y conserva la trazabilidad requerida para el primer corte.
+## 9.9 Decisión de integración
+
+ADR-0003 documenta la forma de integración entre:
+
+**Frontend Flutter → Backend FastAPI**
+
+La comunicación actualmente materializada utiliza:
+
+* HTTP;
+* JSON;
+* estilo REST;
+* comportamiento síncrono.
+
+Cada solicitud espera una respuesta en la misma interacción.
+
+Los endpoints materializados incluyen:
+
+* `POST /publicaciones`;
+* `GET /publicaciones`;
+* `GET /health`.
+
+---
+
+## 9.10 Contrato OpenAPI
+
+La interfaz del Backend API se mantiene mediante un contrato versionado:
+
+`contracts/openapi-v1.json`
+
+La relación es:
+
+```text
+Frontend Flutter
+       ↓
+HTTP/JSON
+       ↓
+Contrato OpenAPI
+       ↓
+FastAPI
+```
+
+La correspondencia entre contrato e implementación se verifica mediante:
+
+`backend/tests/test_contrato_openapi.py`
+
+De esta forma OpenAPI no se utiliza únicamente como documentación, sino como
+contrato verificable.
+
+---
+
+## 9.11 Consecuencias de ADR-0003
+
+La integración síncrona simplifica el corte vertical actual porque:
+
+* el consumidor recibe la respuesta dentro de la misma interacción;
+* no se requieren colas;
+* no se requieren brokers;
+* no se requiere correlación de mensajes asíncronos.
+
+Como consecuencia existe acoplamiento temporal: frontend y backend deben estar
+disponibles durante la interacción.
+
+En el alcance actual esta decisión se considera compatible con las necesidades
+del prototipo.
+
+---
+
+# ADR-0004 - Migración de SQLite a MySQL
+
+## 9.12 Origen de la decisión
+
+Durante una revisión posterior al primer corte, el docente realizó la
+observación de que la persistencia del proyecto debía evolucionar de SQLite
+hacia MySQL.
+
+Por tanto, esta migración no corresponde únicamente a una preferencia
+tecnológica del equipo.
+
+Es una corrección arquitectónica realizada a partir de la retroalimentación
+académica recibida.
+
+Mantener SQLite como persistencia vigente habría producido una inconsistencia
+entre:
+
+* la observación recibida;
+* el código;
+* C4;
+* arc42;
+* las pruebas;
+* la arquitectura presentada por el equipo.
+
+La decisión completa está registrada en:
+
+[ADR-0004 - Migrar la persistencia de SQLite a MySQL](../adr/0004-migrar-persistencia-a-mysql.md)
+
+---
+
+## 9.13 Decisión vigente de persistencia
+
+La persistencia actual utiliza:
+
+**MySQL**
+
+El acceso desde Python se realiza mediante:
+
+**PyMySQL**
+
+La dependencia tecnológica se encuentra encapsulada en:
+
+`backend/app/publicaciones/repository.py`
+
+La dirección vigente es:
+
+```text
+Flutter
+   ↓ HTTP/JSON
+FastAPI
+   ↓
+router
+   ↓
+service
+   ↓
+repository
+   ↓ PyMySQL
+MySQL
+```
+
+La migración no cambia:
+
+* ADR-0001;
+* los límites del monolito modular;
+* la propiedad de `publicaciones`;
+* la separación router / service / repository;
+* ADR-0003;
+* el contrato HTTP/JSON del frontend.
+
+---
+
+## 9.14 Implementación de ADR-0004
+
+Los principales elementos relacionados con la migración son:
+
+```text
+backend/app/publicaciones/repository.py
+backend/requirements.txt
+backend/tests/test_publicaciones_vertical.py
+backend/tests/test_modularidad_s6.py
+.gitignore
+```
+
+La configuración de conexión se proporciona mediante variables de entorno.
+
+Las credenciales no deben almacenarse en el repositorio.
+
+El archivo local `.env` permanece excluido mediante `.gitignore`.
+
+---
+
+## 9.15 Verificación vigente de MySQL
+
+La integración con MySQL se verifica mediante:
+
+[`backend/tests/test_publicaciones_vertical.py`](../../backend/tests/test_publicaciones_vertical.py)
+
+La prueba vigente comprueba:
+
+* creación mediante `POST /publicaciones`;
+* respuesta HTTP `201`;
+* persistencia real en MySQL;
+* recuperación posterior mediante `GET /publicaciones`;
+* igualdad entre los datos escritos y recuperados;
+* degradación controlada mediante HTTP `503` cuando MySQL no está disponible.
+
+La modularidad se verifica mediante:
+
+[`backend/tests/test_modularidad_s6.py`](../../backend/tests/test_modularidad_s6.py)
+
+que comprueba, entre otros aspectos:
+
+* un único escritor productivo de `publicaciones`;
+* ausencia de acceso directo desde otros contextos;
+* dirección:
+
+  `router → service → repository → MySQL`.
+
+El contrato HTTP continúa verificándose mediante:
+
+[`backend/tests/test_contrato_openapi.py`](../../backend/tests/test_contrato_openapi.py)
+
+---
+
+## 9.16 Relación ADR-0002 → ADR-0004
+
+ADR-0002 y ADR-0004 no representan decisiones contradictorias si se considera
+su momento arquitectónico.
+
+### Primer corte
+
+```text
+SQLite
+   ↓
+ADR-0002
+   ↓
+Manejo controlado de bloqueo
+```
+
+### Estado vigente
+
+```text
+Observación docente
+   ↓
+ADR-0004
+   ↓
+PyMySQL
+   ↓
+MySQL
+```
+
+ADR-0002 conserva valor como evidencia histórica.
+
+ADR-0004 determina la tecnología de persistencia vigente.
+
+Por tanto:
+
+> SQLite pertenece a la historia arquitectónica del primer corte; MySQL
+> representa la persistencia actual de CampusMarket.
+
+---
+
+## 9.17 Trazabilidad vigente
+
+La trazabilidad actual puede representarse como:
+
+```text
+Observación docente
+        ↓
+ADR-0004
+        ↓
+C4 Nivel 2
+        ↓
+C4 Nivel 3
+        ↓
+arc42
+        ↓
+repository.py
+        ↓
+PyMySQL / MySQL
+        ↓
+pruebas automatizadas
+```
+
+A esto se suma la integración definida por ADR-0003:
+
+```text
+Frontend
+   ↓
+OpenAPI
+   ↓
+FastAPI
+   ↓
+Gestión de Publicaciones
+   ↓
+MySQL
+```
+
+---
+
+## 9.18 Estado arquitectónico actual
+
+Las decisiones vigentes producen actualmente la siguiente arquitectura:
+
+```text
+Flutter Web
+    ↓ HTTP/JSON síncrono
+    ↓ contrato OpenAPI
+FastAPI
+    ↓
+router.py
+    ↓
+service.py
+    ↓
+repository.py
+    ↓ PyMySQL / SQL
+MySQL
+```
+
+La estructura conserva:
+
+* monolito modular;
+* contextos delimitados;
+* propietario único de datos;
+* API contractual;
+* aislamiento de persistencia;
+* degradación controlada;
+* pruebas automatizadas.
+
+La documentación histórica de SQLite permanece versionada para conservar la
+evolución arquitectónica del proyecto.

@@ -1,4 +1,4 @@
-# Aspectos del proyecto - CampusMarket
+﻿# Aspectos del proyecto - CampusMarket
 
 Este documento mantiene la trazabilidad de los aspectos de CampusMarket desde
 los requisitos y decisiones arquitectónicas hasta su implementación y evidencia
@@ -12,219 +12,198 @@ A partir de S6, la trazabilidad de dominio se complementa con:
 
 **Aspecto → Contexto delimitado → Propietario del dato → C4 Nivel 3 → Código → Auditoría → Prueba automática**
 
+A partir de S7, la trazabilidad de integración incorpora además:
+
+**Aspecto → Contrato OpenAPI → Proveedor FastAPI → Prueba de contrato**
+
+La evolución de persistencia se registra mediante:
+
+**Observación docente → ADR-0004 → C4 → Código → MySQL → Pruebas**
+
 ---
 
 ## Matriz general de trazabilidad
 
 | ID | Aspecto | Requisito | C4 | ADR | Código | Pruebas | Evidencia |
 |---|---|---|---|---|---|---|---|
-| ASP-01 | Consulta y búsqueda de productos | [EC-01 - Consulta de productos](./arc42/10-escenarios-de-calidad.md#ec-01---consulta-de-productos) | [C4 Nivel 2](./c4/02-contenedores.md) | Sin ADR específico: escenario aún no materializado | No materializado en el corte vertical actual | Sin prueba específica de EC-01 todavía | Escenario definido en S2; asociado en S6 al contexto Catálogo, todavía no materializado funcionalmente |
-| ASP-02 | Gestión segura de publicaciones | [EC-02 - Protección de publicaciones](./arc42/10-escenarios-de-calidad.md#ec-02---protección-de-publicaciones) | [C4 Nivel 1](./c4/01-contexto.md) | Sin ADR específico: escenario aún no materializado | No materializado completamente en el corte vertical actual | Sin prueba específica de EC-02 todavía | Escenario definido en S2; relacionado en S6 con Usuarios, Publicaciones y Administración |
-| ASP-03 | Evolución de la gestión de productos | [EC-03 - Modificación del sistema](./arc42/10-escenarios-de-calidad.md#ec-03---modificación-del-sistema) | [C4 Nivel 2](./c4/02-contenedores.md) / [C4 Nivel 3](./c4/03-componentes-backend.md) | [ADR-0001 - Monolito modular](./adr/0001-usar-monolito-modular.md) | [`backend/app/publicaciones/`](../backend/app/publicaciones/), [`publicacion_form_page.dart`](../frontend/campusmarket/lib/publicaciones/publicacion_form_page.dart) | [`test_publicaciones_vertical.py`](../backend/tests/test_publicaciones_vertical.py) | Evidencia S3/S4 y profundización modular en S6 |
-| ASP-04 | Recuperación del prototipo | [EC-04 - Recuperación del prototipo](./arc42/10-escenarios-de-calidad.md#ec-04---recuperación-del-prototipo) | [C4 Nivel 1](./c4/01-contexto.md) | [ADR-0001 - Monolito modular](./adr/0001-usar-monolito-modular.md) | [`scripts/run_s4.ps1`](../scripts/run_s4.ps1) | [`test_health.py`](../backend/tests/test_health.py) | [Evidencia de arranque con un comando](./evidencias/arranque-un-comando-2026-09-04.md) |
-| ASP-05 | Creación de publicaciones | [Alcance funcional - Gestión de publicaciones](./arc42/ARC42.md#32-alcance-funcional) | [C4 Nivel 2](./c4/02-contenedores.md) / [C4 Nivel 3](./c4/03-componentes-backend.md) | [ADR-0001 - Monolito modular](./adr/0001-usar-monolito-modular.md) | [`publicacion_form_page.dart`](../frontend/campusmarket/lib/publicaciones/publicacion_form_page.dart), [`publicaciones_api.dart`](../frontend/campusmarket/lib/publicaciones/publicaciones_api.dart), [`router.py`](../backend/app/publicaciones/router.py), [`service.py`](../backend/app/publicaciones/service.py), [`repository.py`](../backend/app/publicaciones/repository.py) | [`test_publicaciones_vertical.py`](../backend/tests/test_publicaciones_vertical.py) | Evidencia funcional S4 y correspondencia de componentes S6 |
-| ASP-06 | Degradación controlada ante bloqueo de persistencia | [R-07 - Persistencia sin nueva infraestructura](./arc42/02-restricciones.md#r-07-persistencia-sin-nueva-infraestructura-durante-el-primer-corte) / [EC-05 - Degradación ante bloqueo temporal](./arc42/10-escenarios-de-calidad.md#ec-05---degradación-ante-bloqueo-temporal-de-persistencia) | [C4 Nivel 2](./c4/02-contenedores.md) / [C4 Nivel 3](./c4/03-componentes-backend.md) | [ADR-0002 - Manejo de bloqueo SQLite](./adr/0002-manejo-bloqueo-sqlite.md) | [`repository.py`](../backend/app/publicaciones/repository.py), [`service.py`](../backend/app/publicaciones/service.py), [`router.py`](../backend/app/publicaciones/router.py), [`publicaciones_api.dart`](../frontend/campusmarket/lib/publicaciones/publicaciones_api.dart), [`publicacion_form_page.dart`](../frontend/campusmarket/lib/publicaciones/publicacion_form_page.dart) | [`test_publicaciones_vertical.py`](../backend/tests/test_publicaciones_vertical.py) | [Línea base](./evidencias/linea-base-bloqueo-sqlite-2026-09-05.md) / [Medición posterior](./evidencias/medicion-bloqueo-sqlite-2026-09-06.md) |
-| ASP-07 | Contrato ejecutable de la API de publicaciones | [EC-06 - Compatibilidad del contrato](./arc42/10-escenarios-de-calidad.md#ec-06---compatibilidad-del-contrato-de-api) | [C4 Nivel 2](./c4/02-contenedores.md) / [Vista de ejecución](./arc42/06-vista-ejecucion.md) | [ADR-0003 - Integración síncrona HTTP/JSON](./adr/0003-usar-integracion-sincrona-http-json.md) | [`openapi-v1.json`](../contracts/openapi-v1.json), [`main.py`](../backend/app/main.py), [`router.py`](../backend/app/publicaciones/router.py), [`publicaciones_api.dart`](../frontend/campusmarket/lib/publicaciones/publicaciones_api.dart) | [`test_contrato_openapi.py`](../backend/tests/test_contrato_openapi.py) | [Demostración de cambio incompatible](./evidencias/fallo-contrato-s7-2026-09-15.md) / paso explícito en GitHub Actions |
+| ASP-01 | Consulta y búsqueda de productos | [EC-01 - Consulta de productos](./arc42/10-escenarios-de-calidad.md#ec-01---consulta-de-productos) | [C4 Nivel 2](./c4/02-contenedores.md) | Sin ADR específico: escenario aún no materializado | No materializado completamente | Sin prueba específica de EC-01 | Escenario definido y asociado al contexto Catálogo |
+| ASP-02 | Gestión segura de publicaciones | [EC-02 - Protección de publicaciones](./arc42/10-escenarios-de-calidad.md#ec-02---protección-de-publicaciones) | [C4 Nivel 1](./c4/01-contexto.md) | Sin ADR específico: escenario aún no materializado | No materializado completamente | Sin prueba específica de EC-02 | Relacionado con Usuarios, Publicaciones y Administración |
+| ASP-03 | Evolución de la gestión de productos | [EC-03 - Modificación del sistema](./arc42/10-escenarios-de-calidad.md#ec-03---modificación-del-sistema) | [C4 Nivel 2](./c4/02-contenedores.md) / [C4 Nivel 3](./c4/03-componentes-backend.md) | [ADR-0001 - Monolito modular](./adr/0001-usar-monolito-modular.md) | [`backend/app/publicaciones/`](../backend/app/publicaciones/) | [`test_publicaciones_vertical.py`](../backend/tests/test_publicaciones_vertical.py) | Evidencia S3/S4 y profundización modular S6 |
+| ASP-04 | Recuperación del prototipo | [EC-04 - Recuperación del prototipo](./arc42/10-escenarios-de-calidad.md#ec-04---recuperación-del-prototipo) | [C4 Nivel 1](./c4/01-contexto.md) | [ADR-0001](./adr/0001-usar-monolito-modular.md) | [`scripts/run_s4.ps1`](../scripts/run_s4.ps1) | [`test_health.py`](../backend/tests/test_health.py) | [Evidencia de arranque](./evidencias/arranque-un-comando-2026-09-04.md) |
+| ASP-05 | Creación de publicaciones | [Alcance funcional](./arc42/ARC42.md#32-alcance-funcional) | [C4 Nivel 2](./c4/02-contenedores.md) / [C4 Nivel 3](./c4/03-componentes-backend.md) | [ADR-0001](./adr/0001-usar-monolito-modular.md) / [ADR-0004](./adr/0004-migrar-persistencia-a-mysql.md) | [`router.py`](../backend/app/publicaciones/router.py), [`service.py`](../backend/app/publicaciones/service.py), [`repository.py`](../backend/app/publicaciones/repository.py) | [`test_publicaciones_vertical.py`](../backend/tests/test_publicaciones_vertical.py) | Corte vertical vigente con MySQL |
+| ASP-06 | Degradación controlada de persistencia | [EC-05](./arc42/10-escenarios-de-calidad.md#ec-05---degradación-ante-bloqueo-temporal-de-persistencia) | [C4 Nivel 2](./c4/02-contenedores.md) / [Vista de ejecución](./arc42/06-vista-ejecucion.md) | [ADR-0002](./adr/0002-manejo-bloqueo-sqlite.md) histórico / [ADR-0004](./adr/0004-migrar-persistencia-a-mysql.md) vigente | [`repository.py`](../backend/app/publicaciones/repository.py), [`service.py`](../backend/app/publicaciones/service.py), [`router.py`](../backend/app/publicaciones/router.py) | [`test_publicaciones_vertical.py`](../backend/tests/test_publicaciones_vertical.py) | Evidencia histórica SQLite + verificación vigente MySQL |
+| ASP-07 | Contrato ejecutable de API | [EC-06 - Compatibilidad del contrato](./arc42/10-escenarios-de-calidad.md#ec-06---compatibilidad-del-contrato-de-api) | [C4 Nivel 2](./c4/02-contenedores.md) / [Vista de ejecución](./arc42/06-vista-ejecucion.md) | [ADR-0003](./adr/0003-usar-integracion-sincrona-http-json.md) | [`openapi-v1.json`](../contracts/openapi-v1.json), [`main.py`](../backend/app/main.py), [`router.py`](../backend/app/publicaciones/router.py) | [`test_contrato_openapi.py`](../backend/tests/test_contrato_openapi.py) | Contrato OpenAPI versionado y verificable |
+| ASP-08 | Migración de persistencia a MySQL | Observación docente sobre persistencia vigente | [C4 Nivel 2](./c4/02-contenedores.md) / [C4 Nivel 3](./c4/03-componentes-backend.md) | [ADR-0004 - Migrar persistencia a MySQL](./adr/0004-migrar-persistencia-a-mysql.md) | [`repository.py`](../backend/app/publicaciones/repository.py), [`requirements.txt`](../backend/requirements.txt), [`.gitignore`](../.gitignore) | [`test_publicaciones_vertical.py`](../backend/tests/test_publicaciones_vertical.py), [`test_modularidad_s6.py`](../backend/tests/test_modularidad_s6.py) | Implementación vigente MySQL/PyMySQL |
 
 ---
 
-## Alcance de materialización de los aspectos
+## Alcance de materialización
 
-Los aspectos **ASP-01** y **ASP-02** corresponden a escenarios de calidad
-definidos durante la construcción de la línea base arquitectónica en S2.
+Los aspectos **ASP-01** y **ASP-02** continúan definidos arquitectónicamente,
+pero todavía no cuentan con una materialización funcional completa.
 
-Estos escenarios permanecen especificados y trazados hacia sus requisitos y
-vistas arquitectónicas correspondientes, pero todavía no forman parte completa
-del corte vertical implementado.
+No se asocian pruebas artificialmente a escenarios que aún no están
+implementados.
 
-Por esta razón, las columnas asociadas con ADR, código, pruebas y evidencia
-indican explícitamente cuando todavía no existe una materialización verificable,
-en lugar de asociar artificialmente elementos que no comprueban realmente
-EC-01 o EC-02.
+La materialización vigente se concentra principalmente en:
 
-En particular:
-
-- **ASP-01 / EC-01** define el comportamiento esperado para consulta y
-  búsqueda de productos, incluida su medida de rendimiento. El contexto
-  **Catálogo** está delimitado durante S6, pero todavía no se encuentra
-  materializada la capacidad completa de búsqueda y filtrado necesaria para
-  verificar el escenario.
-
-- **ASP-02 / EC-02** define la protección de publicaciones frente a
-  modificaciones realizadas por usuarios no propietarios. Durante S6 se
-  identifican los contextos involucrados en esa responsabilidad, pero el corte
-  actual todavía no incorpora el mecanismo completo de autenticación,
-  propiedad, autorización y moderación necesario para verificar EC-02.
-
-Estos escenarios permanecen como parte de la arquitectura prevista y podrán
-materializarse en la evolución posterior del sistema.
-
-La materialización funcional acumulada hasta S4 se concentra principalmente en
-**ASP-03, ASP-04 y ASP-05**, asociados con evolución modular, recuperación del
-prototipo y creación de publicaciones.
-
-Para S5 se incorpora **ASP-06**, relacionado con la restricción R-07 y cuya
-trazabilidad se completa de extremo a extremo:
-
-**ASP-06 → R-07 / EC-05 → C4 Nivel 2 → ADR-0002 → código → pruebas → evidencia**
-
-S6 no inventa nuevas implementaciones para ASP-01 o ASP-02. Su contribución es
-hacer explícitos los límites de dominio, la propiedad de datos y las reglas de
-comunicación necesarias para su futura materialización.
+- Gestión de Publicaciones;
+- integración Flutter → FastAPI;
+- persistencia MySQL;
+- contrato OpenAPI;
+- modularidad;
+- degradación controlada ante indisponibilidad.
 
 ---
 
-## Estado de trazabilidad S4
+# Trazabilidad histórica S4
 
-La fila **ASP-05 - Creación de publicaciones** representa el corte vertical
-implementado durante S4.
+Durante S4 se materializó el primer corte vertical funcional.
 
-La trazabilidad del corte vertical corresponde al recorrido:
+En ese momento, la arquitectura utilizada era:
 
-**Interfaz Flutter → API FastAPI → lógica del módulo `publicaciones` → persistencia SQLite**
+```text
+Flutter
+   ↓
+FastAPI
+   ↓
+Gestión de Publicaciones
+   ↓
+SQLite
+````
 
-Durante la verificación local se creó una publicación desde la interfaz Flutter
-y se comprobó posteriormente su almacenamiento en SQLite, por lo que las rutas
-indicadas corresponden al comportamiento real del prototipo.
+Esta referencia se conserva como historia arquitectónica.
 
-La recuperación del prototipo también quedó evidenciada mediante **ASP-04**,
-utilizando el script de arranque con un solo comando, la prueba de salud y las
-evidencias almacenadas en `docs/evidencias/`.
+La creación de publicaciones permitió demostrar:
 
----
+* formulario Flutter;
+* solicitud HTTP;
+* lógica de backend;
+* persistencia;
+* consulta posterior.
 
-## Verificación de EC-03 en S4
-
-Durante el ajuste final de la Evidencia S4 se incorporó el estado de producto
-`reacondicionado`, utilizado como caso concreto para verificar el escenario
-**EC-03 - Modificación del sistema**.
-
-El cambio se mantuvo dentro de la capacidad funcional de `publicaciones` y
-requirió ajustes únicamente en los elementos directamente relacionados con la
-creación, validación y persistencia de publicaciones.
-
-No fue necesario modificar los módulos de autenticación ni búsqueda,
-manteniendo las fronteras definidas por el:
-
-**ADR-0001 - Monolito modular**
-
-La prueba automatizada:
-
-[`test_publicaciones_vertical.py`](../backend/tests/test_publicaciones_vertical.py)
-
-crea una publicación con estado `reacondicionado`, verifica su persistencia en
-SQLite y posteriormente recupera el registro para comprobar que el nuevo estado
-se conserva correctamente.
-
-De esta forma queda trazada la relación:
-
-**EC-03 → ADR-0001 → módulo `publicaciones` → código → prueba automatizada**
+La arquitectura de S4 no representa el estado actual de persistencia.
 
 ---
 
-## Trazabilidad S5
+## Verificación histórica de EC-03 en S4
 
-Para la evaluación arquitectónica de S5 se incorporó el aspecto:
+Durante S4 se incorporó el estado:
+
+`reacondicionado`
+
+como modificación verificable dentro del módulo Publicaciones.
+
+El cambio se mantuvo dentro de:
+
+`backend/app/publicaciones/`
+
+sin modificar:
+
+* autenticación;
+* catálogo;
+* administración;
+* fronteras del monolito modular.
+
+En aquel momento la prueba utilizaba SQLite.
+
+Actualmente la misma prueba ha evolucionado y utiliza MySQL.
+
+Por tanto, la referencia a SQLite debe interpretarse exclusivamente dentro del
+contexto histórico de S4.
+
+---
+
+# Trazabilidad histórica S5
+
+Durante S5 se trabajó el aspecto:
 
 **ASP-06 - Degradación controlada ante bloqueo de persistencia**
 
-La cadena completa es:
+La cadena histórica fue:
 
-**ASP-06 → R-07 / EC-05 → C4 Nivel 2 → ADR-0002 → código → prueba automatizada → evidencia antes/después**
+```text
+ASP-06
+   ↓
+R-07 / EC-05
+   ↓
+C4 Nivel 2
+   ↓
+ADR-0002
+   ↓
+Código
+   ↓
+Prueba
+   ↓
+Medición
+   ↓
+Evidencia
+```
 
-La restricción **R-07** mantiene SQLite y conserva el backend como una única
-aplicación monolítica modular, sin incorporar una base de datos externa, colas,
-cachés distribuidas ni nuevos servicios desplegables.
+Durante ese corte se mantenía SQLite.
 
-El escenario **EC-05** verifica la respuesta del corte vertical ante un bloqueo
-temporal de persistencia.
+La restricción R-07 indicaba no incorporar nueva infraestructura para resolver
+el reto.
 
-### Línea base
+ADR-0002 implementó:
 
-La línea base previa al cambio registró:
+* espera SQLite acotada;
+* detección de `SQLITE_BUSY`;
+* detección de `SQLITE_LOCKED`;
+* respuesta HTTP `503`;
+* ausencia de escritura parcial;
+* recuperación posterior.
 
-- HTTP durante bloqueo: `500`;
-- tiempo durante bloqueo: `7.323 s`;
-- escritura parcial: `No`;
-- recuperación posterior: HTTP `201`.
+### Línea base histórica
 
-ADR-0002 materializa la respuesta arquitectónica mediante:
+* HTTP durante bloqueo: `500`;
+* tiempo durante bloqueo: `7.323 s`;
+* escritura parcial: `No`;
+* recuperación posterior: `201`.
 
-- espera SQLite acotada a `0.5 s`;
-- detección específica de `SQLITE_BUSY` y `SQLITE_LOCKED`;
-- traducción controlada de la indisponibilidad;
-- respuesta HTTP `503`;
-- ausencia de escritura parcial;
-- mensaje explícito al usuario;
-- recuperación normal después de liberar SQLite.
+### Resultado histórico posterior
 
-### Resultado posterior
+* HTTP durante bloqueo: `503`;
+* tiempo durante bloqueo: `1.283 s`;
+* escritura parcial: `No`;
+* recuperación posterior: `201`;
+* tiempo de recuperación: `0.006 s`.
 
-Después de aplicar la decisión, la medición formal registró:
+Estas mediciones permanecen como evidencia histórica.
 
-- HTTP durante bloqueo: `503`;
-- tiempo durante bloqueo: `1.283 s`;
-- escritura parcial: `No`;
-- recuperación posterior: HTTP `201`;
-- tiempo de recuperación: `0.006 s`.
+No representan el comportamiento técnico vigente de MySQL.
 
-El resultado cumple el umbral establecido por EC-05 de responder en un tiempo
-máximo de **2 segundos** durante el bloqueo.
+Evidencias:
 
-Una ejecución posterior de verificación volvió a confirmar el comportamiento,
-obteniendo HTTP `503` en `1.138 s`, sin escritura parcial y con recuperación
-HTTP `201`.
-
-La implementación conserva las fronteras:
-
-**Frontend Flutter → Backend FastAPI → Persistencia SQLite**
-
-y no introduce infraestructura adicional.
-
-De esta forma ASP-06 queda trazado desde la restricción arquitectónica hasta
-una evidencia reproducible y contrastada con su umbral.
+* [Línea base](./evidencias/linea-base-bloqueo-sqlite-2026-09-05.md)
+* [Medición posterior](./evidencias/medicion-bloqueo-sqlite-2026-09-06.md)
+* [ADR-0002](./adr/0002-manejo-bloqueo-sqlite.md)
 
 ---
 
 # Trazabilidad S6 — Dominio y modularidad
 
-Durante S6 se hicieron explícitos los límites de dominio del monolito modular
-de CampusMarket y la propiedad de los datos.
+Durante S6 se hicieron explícitos los límites de dominio del monolito modular y
+la propiedad de los datos.
 
-La evidencia se construye sobre el estado real del repositorio y diferencia
-entre:
+Los contextos definidos son:
 
-- contextos arquitectónicos definidos;
-- capacidades actualmente materializadas;
-- responsabilidades previstas para evolución posterior.
-
-Los contextos delimitados identificados son:
-
-| Contexto delimitado | Aspectos relacionados | Responsabilidad | Estado actual |
-|---|---|---|---|
-| Gestión de Usuarios | ASP-02 | Identidad, autenticación y propiedad de las publicaciones | Límite definido; funcionalidad todavía no materializada |
-| Gestión de Publicaciones | ASP-02, ASP-03, ASP-05, ASP-06 | Ciclo de vida de publicaciones y propiedad exclusiva de `publicaciones` | Materializado actualmente |
-| Catálogo | ASP-01 | Consulta, búsqueda y filtrado sin adquirir propiedad de `publicaciones` | Límite definido; funcionalidad todavía no materializada |
-| Administración | ASP-02 | Supervisión y moderación mediante contratos con Publicaciones | Límite definido; funcionalidad todavía no materializada |
-
-La documentación principal de S6 se encuentra en:
-
-- [`arc42/08-conceptos-transversales.md`](./arc42/08-conceptos-transversales.md)
-- [`c4/03-componentes-backend.md`](./c4/03-componentes-backend.md)
-- [`c4/03-componentes-backend.puml`](./c4/03-componentes-backend.puml)
-- [`evidencias/auditoria-modularidad-s6-2026-09-12.md`](./evidencias/auditoria-modularidad-s6-2026-09-12.md)
-- [`test_modularidad_s6.py`](../backend/tests/test_modularidad_s6.py)
+| Contexto delimitado      | Responsabilidad                | Estado actual                                   |
+| ------------------------ | ------------------------------ | ----------------------------------------------- |
+| Gestión de Usuarios      | Identidad y autenticación      | Límite definido, no materializado completamente |
+| Gestión de Publicaciones | Ciclo de vida de publicaciones | Materializado                                   |
+| Catálogo                 | Consulta, búsqueda y filtrado  | Límite definido                                 |
+| Administración           | Moderación y supervisión       | Límite definido                                 |
 
 ---
 
-## Propiedad de datos en S6
+## Propiedad de datos
 
-CampusMarket adopta como regla arquitectónica:
+CampusMarket adopta la regla:
 
 > Cada dato de dominio tiene un único módulo responsable de escribirlo.
 
-En el estado actual del prototipo se identificó una entidad persistida de
-dominio materializada:
+La entidad materializada es:
 
 `publicaciones`
 
@@ -232,97 +211,65 @@ Su propietario es:
 
 **Gestión de Publicaciones**
 
-La escritura productiva se encuentra encapsulada en:
+El escritor productivo es:
 
-[`backend/app/publicaciones/repository.py`](../backend/app/publicaciones/repository.py)
+`backend/app/publicaciones/repository.py`
 
-La correspondencia de propiedad es:
+La correspondencia vigente es:
 
-| Dato / entidad | Contexto propietario | Componente escritor | Otros contextos con escritura |
-|---|---|---|---|
-| `publicaciones` | Gestión de Publicaciones | `backend/app/publicaciones/repository.py` | Ninguno detectado |
+| Dato / entidad  | Contexto propietario     | Componente escritor                       | Otros contextos con escritura |
+| --------------- | ------------------------ | ----------------------------------------- | ----------------------------- |
+| `publicaciones` | Gestión de Publicaciones | `backend/app/publicaciones/repository.py` | Ninguno                       |
 
-Los campos actualmente persistidos son:
+Los campos persistidos son:
 
-- `id`;
-- `titulo`;
-- `descripcion`;
-- `precio`;
-- `modalidad`;
-- `estado`.
-
-No se asignan artificialmente entidades persistidas a Usuarios, Catálogo o
-Administración porque dichas estructuras todavía no existen en el código
-actual.
+* `id`;
+* `titulo`;
+* `descripcion`;
+* `precio`;
+* `modalidad`;
+* `estado`.
 
 ---
 
-## Auditoría de modularidad S6
+## Auditoría de modularidad
 
-La auditoría se encuentra en:
+La auditoría de S6 se mantiene en:
 
 [Auditoría de modularidad S6](./evidencias/auditoria-modularidad-s6-2026-09-12.md)
 
-El recorrido revisó:
+En S6 se inspeccionaron:
 
-- `backend/app/usuarios/`;
-- `backend/app/publicaciones/`;
-- `backend/app/catalogo/`;
-- `backend/app/administracion/`;
-- `backend/tests/`;
-- `scripts/`.
+* `INSERT`;
+* `UPDATE`;
+* `DELETE`;
+* repositorios;
+* servicios;
+* accesos a `publicaciones`;
+* uso de SQLite existente en ese momento.
 
-También se inspeccionaron operaciones relacionadas con:
+El resultado fue:
 
-- `INSERT`;
-- `UPDATE`;
-- `DELETE`;
-- `sqlite3`;
-- repositorios;
-- servicios;
-- accesos sobre la entidad `publicaciones`.
+**No se detectaron escrituras compartidas entre módulos de dominio.**
 
-### Resultado
-
-**No se detectaron escrituras compartidas entre módulos de dominio en el estado
-actual del repositorio.**
-
-El único escritor productivo identificado para `publicaciones` pertenece a
-Gestión de Publicaciones.
-
-Los accesos directos a SQLite identificados en pruebas o scripts de medición no
-se clasifican como segundos propietarios de dominio, ya que corresponden a
-instrumentación de prueba y permanecen fuera del código productivo de otros
-contextos.
+La evolución posterior hacia MySQL mantiene la misma regla arquitectónica.
 
 ---
 
-## Riesgos y planes de corrección
+## Riesgos vigentes
 
-Aunque actualmente no existe una escritura compartida, S6 identifica riesgos de
-evolución.
-
-| ID | Riesgo / hallazgo | Tratamiento |
-|---|---|---|
-| MOD-01 | Catálogo podría acceder o escribir directamente sobre SQLite al implementarse | Consumir capacidades de Publicaciones mediante contratos explícitos y no escribir `publicaciones` |
-| MOD-02 | Administración podría modificar directamente `publicaciones` al implementar moderación | Solicitar las operaciones mediante Gestión de Publicaciones y utilizar una capa anticorrupción |
-| MOD-03 | La relación entre propietario y publicación todavía no está materializada | Mantener Usuarios como dueño de identidad y almacenar en Publicaciones únicamente la referencia necesaria |
-| MOD-04 | Pruebas y scripts acceden directamente a SQLite para verificación experimental | Mantener estos accesos separados del código productivo y documentar su finalidad |
+| ID     | Riesgo                                                          | Tratamiento                                              |
+| ------ | --------------------------------------------------------------- | -------------------------------------------------------- |
+| MOD-01 | Catálogo podría acceder directamente a la tabla `publicaciones` | Consumir capacidades de Publicaciones mediante contratos |
+| MOD-02 | Administración podría modificar directamente `publicaciones`    | Solicitar operaciones mediante Gestión de Publicaciones  |
+| MOD-03 | Propietario de publicación aún no materializado                 | Mantener Usuarios como dueño de identidad                |
+| MOD-04 | Tests o scripts podrían acoplarse al motor de persistencia      | Mantener esos accesos fuera del código productivo        |
 
 ---
 
-## C4 Nivel 3 en S6
+## C4 Nivel 3 vigente
 
-S6 incorpora el C4 Nivel 3 del contenedor:
-
-**Backend API**
-
-Documentación:
-
-- [C4 Nivel 3 - Componentes del Backend](./c4/03-componentes-backend.md)
-- [Fuente PlantUML](./c4/03-componentes-backend.puml)
-
-La materialización actualmente verificable sigue el recorrido:
+La materialización actual sigue:
 
 ```text
 Frontend Web
@@ -333,148 +280,279 @@ Servicio de Publicaciones
      ↓
 Repositorio de Publicaciones
      ↓
-SQLite
+MySQL
 ```
 
-Su correspondencia con el código es:
+Correspondencia:
 
-| Elemento C4 Nivel 3 | Código |
-|---|---|
-| Entrada de aplicación | `backend/app/main.py` |
-| API de Publicaciones | `backend/app/publicaciones/router.py` |
-| Servicio de Publicaciones | `backend/app/publicaciones/service.py` |
+| Elemento C4 Nivel 3          | Código                                    |
+| ---------------------------- | ----------------------------------------- |
+| Entrada de aplicación        | `backend/app/main.py`                     |
+| API de Publicaciones         | `backend/app/publicaciones/router.py`     |
+| Servicio de Publicaciones    | `backend/app/publicaciones/service.py`    |
 | Repositorio de Publicaciones | `backend/app/publicaciones/repository.py` |
-| Persistencia | SQLite |
-
-Usuarios, Catálogo y Administración se representan como límites
-arquitectónicos definidos, pero no se declaran como capacidades funcionales
-materializadas.
+| Persistencia                 | MySQL                                     |
 
 ---
 
 ## Verificación automática de modularidad
 
-Además de la auditoría manual, se incorporó:
+La prueba:
 
 [`backend/tests/test_modularidad_s6.py`](../backend/tests/test_modularidad_s6.py)
 
-La prueba verifica que:
+verifica actualmente que:
 
-- `backend/app/publicaciones/repository.py` sea el único escritor productivo de
-  la entidad `publicaciones`;
-- `usuarios`, `catalogo` y `administracion` no accedan directamente a SQLite;
-- otros contextos no importen directamente el repositorio interno de
-  Publicaciones;
-- el flujo de Publicaciones mantenga la dirección:
-
-  `router → service → repository → SQLite`;
-
-- la persistencia del contexto permanezca encapsulada en su repositorio.
-
-Esta prueba se ejecuta junto con el resto de pruebas del backend mediante
-GitHub Actions.
-
-La prueba automática no reemplaza la auditoría documental; la complementa con
-una regla ejecutable que permite detectar futuras violaciones.
-
----
-
-## Relaciones entre contextos y aspectos
-
-La relación entre los aspectos existentes y los contextos de S6 es:
-
-### ASP-01 → Catálogo
-
-ASP-01 se relaciona con **Catálogo**, porque este contexto será responsable de
-consulta, búsqueda, filtrado y organización de publicaciones.
-
-El contexto está delimitado, pero EC-01 todavía no se declara materializado.
-
-### ASP-02 → Usuarios + Publicaciones + Administración
-
-ASP-02 atraviesa varios contextos:
-
-- Usuarios será dueño de la identidad;
-- Publicaciones gestionará la publicación y su relación con el propietario;
-- Administración solicitará operaciones de moderación mediante contratos.
-
-La ausencia actual de autenticación y autorización completas impide afirmar que
-EC-02 ya esté materializado.
-
-### ASP-03 → Gestión de Publicaciones
-
-La mantenibilidad y evolución modular de ASP-03 se relacionan directamente con
-el límite de Gestión de Publicaciones y con la dirección interna:
-
-`router → service → repository`
-
-### ASP-05 → Gestión de Publicaciones
-
-ASP-05 representa la capacidad actualmente materializada de creación de
-publicaciones y constituye la evidencia funcional principal del contexto.
-
-### ASP-06 → Gestión de Publicaciones
-
-ASP-06 se mantiene dentro del mismo contexto y afecta principalmente el
-repositorio, servicio y API de Publicaciones frente a indisponibilidad temporal
-de SQLite.
-
----
-
-## Coherencia con ADR-0001
-
-Los límites principales continúan siendo:
-
-- `usuarios`;
-- `publicaciones`;
-- `catalogo`;
-- `administracion`.
-
-Estos límites ya habían sido definidos por:
-
-[ADR-0001 - Monolito modular](./adr/0001-usar-monolito-modular.md)
-
-Durante S6:
-
-- no se fusionó ningún módulo;
-- no se dividió ningún módulo;
-- no se reemplazó ningún límite;
-- no se introdujeron microservicios;
-- no se incorporó nueva infraestructura.
-
-El C4 Nivel 3 profundiza en la estructura interna del Backend API y hace
-explícita la materialización actual de Publicaciones, pero no representa un
-reajuste de las fronteras establecidas por ADR-0001.
-
-Por esta razón, **no se registra un nuevo ADR de reajuste para S6**.
-
-Si una evolución posterior modifica realmente estas fronteras, deberá
-actualizarse el C4 Nivel 3 y documentarse la decisión mediante un nuevo ADR.
-
----
-
-## Cadena de trazabilidad final S6
-
-La evidencia acumulada permite seguir la cadena:
-
-**Aspecto**
-↓
-**Contexto delimitado**
-↓
-**Propietario del dato**
-↓
-**C4 Nivel 3**
-↓
-**Código**
-↓
-**Auditoría**
-↓
-**Prueba automática**
-
-Para la parte materializada de Gestión de Publicaciones:
+* `repository.py` sea el único escritor productivo de `publicaciones`;
+* otros contextos no utilicen directamente PyMySQL para escribir
+  `publicaciones`;
+* otros contextos no importen el repositorio de Publicaciones;
+* la dirección se mantenga:
 
 ```text
-ASP-03 / ASP-05 / ASP-06
+router → service → repository → MySQL
+```
+
+---
+
+# Trazabilidad S7 — API-first
+
+Durante S7 se formaliza la interfaz entre:
+
+**Frontend Flutter → Backend FastAPI**
+
+La comunicación vigente utiliza:
+
+* HTTP;
+* JSON;
+* estilo REST;
+* comportamiento síncrono.
+
+El contrato está versionado en:
+
+`contracts/openapi-v1.json`
+
+Los endpoints materializados son:
+
+* `POST /publicaciones`;
+* `GET /publicaciones`;
+* `GET /health`.
+
+La decisión se registra mediante:
+
+[ADR-0003 - Integración síncrona HTTP/JSON](./adr/0003-usar-integracion-sincrona-http-json.md)
+
+---
+
+## Verificación del contrato
+
+La prueba:
+
+[`backend/tests/test_contrato_openapi.py`](../backend/tests/test_contrato_openapi.py)
+
+compara:
+
+```text
+contracts/openapi-v1.json
+        ↕
+FastAPI
+```
+
+Esto permite detectar incompatibilidades entre:
+
+* contrato;
+* implementación;
+* proveedor.
+
+La trazabilidad de ASP-07 es:
+
+```text
+ASP-07
+   ↓
+EC-06
+   ↓
+ADR-0003
+   ↓
+OpenAPI
+   ↓
+FastAPI
+   ↓
+test_contrato_openapi.py
+```
+
+---
+
+# Trazabilidad de migración MySQL — ADR-0004
+
+La evolución de persistencia se origina en una observación realizada por el
+docente después del primer corte.
+
+La observación indicó que la persistencia debía evolucionar de SQLite hacia
+MySQL.
+
+Por tanto, la migración no corresponde únicamente a una preferencia técnica del
+equipo.
+
+La decisión se registra mediante:
+
+[ADR-0004 - Migrar persistencia a MySQL](./adr/0004-migrar-persistencia-a-mysql.md)
+
+---
+
+## Persistencia vigente
+
+La tecnología actual es:
+
+**MySQL**
+
+El mecanismo de acceso es:
+
+**PyMySQL**
+
+El acceso productivo permanece encapsulado en:
+
+`backend/app/publicaciones/repository.py`
+
+La dirección vigente es:
+
+```text
+router.py
+   ↓
+service.py
+   ↓
+repository.py
+   ↓
+PyMySQL
+   ↓
+MySQL
+```
+
+---
+
+## Consecuencias de la migración
+
+La migración modifica:
+
+* motor de persistencia;
+* driver de acceso;
+* configuración de conexión;
+* pruebas de integración;
+* documentación C4 y arc42.
+
+No modifica:
+
+* monolito modular;
+* propietario de `publicaciones`;
+* límites de contexto;
+* comunicación Flutter → FastAPI;
+* contrato OpenAPI;
+* dirección router → service → repository.
+
+---
+
+## Verificación vigente de MySQL
+
+La prueba:
+
+[`backend/tests/test_publicaciones_vertical.py`](../backend/tests/test_publicaciones_vertical.py)
+
+verifica actualmente:
+
+* `POST /publicaciones`;
+* HTTP `201`;
+* persistencia real en MySQL;
+* `GET /publicaciones`;
+* recuperación del dato;
+* respuesta `503` cuando la persistencia no está disponible.
+
+La migración también se verifica mediante:
+
+[`backend/tests/test_modularidad_s6.py`](../backend/tests/test_modularidad_s6.py)
+
+para comprobar que la sustitución tecnológica no rompa las fronteras del
+monolito modular.
+
+---
+
+## Cadena de trazabilidad de ADR-0004
+
+```text
+Observación docente
+        ↓
+ADR-0004
+        ↓
+C4 Nivel 2
+        ↓
+C4 Nivel 3
+        ↓
+arc42
+        ↓
+repository.py
+        ↓
+PyMySQL
+        ↓
+MySQL
+        ↓
+test_publicaciones_vertical.py
+```
+
+---
+
+# Estado arquitectónico vigente
+
+El recorrido actual del sistema es:
+
+```text
+Flutter Web
+    ↓ HTTP/JSON síncrono
+    ↓ OpenAPI
+FastAPI
+    ↓
+router.py
+    ↓
+service.py
+    ↓
+repository.py
+    ↓ PyMySQL / SQL
+MySQL
+```
+
+Las principales decisiones vigentes son:
+
+* ADR-0001: monolito modular;
+* ADR-0003: integración síncrona HTTP/JSON;
+* ADR-0004: persistencia MySQL.
+
+ADR-0002 permanece como evidencia histórica del primer corte.
+
+---
+
+## Cadena de trazabilidad actual
+
+```text
+Aspecto
+   ↓
+Requisito / observación
+   ↓
+ADR
+   ↓
+C4
+   ↓
+Contrato
+   ↓
+Código
+   ↓
+Persistencia
+   ↓
+Pruebas
+   ↓
+Evidencia
+```
+
+Para Gestión de Publicaciones:
+
+```text
+ASP-03 / ASP-05 / ASP-06 / ASP-07 / ASP-08
         ↓
 Gestión de Publicaciones
         ↓
@@ -484,11 +562,13 @@ C4 Nivel 3
         ↓
 router.py → service.py → repository.py
         ↓
-auditoria-modularidad-s6-2026-09-12.md
+OpenAPI + MySQL
         ↓
 test_modularidad_s6.py
+test_publicaciones_vertical.py
+test_contrato_openapi.py
 ```
 
-De esta forma, S6 no se limita a describir módulos conceptualmente:
-la documentación arquitectónica se contrasta con el código existente y se
-complementa mediante una verificación automática de las reglas de modularidad.
+De esta forma, CampusMarket mantiene trazabilidad entre la evolución histórica
+del proyecto y la arquitectura vigente, sin reescribir decisiones anteriores ni
+presentar tecnologías históricas como si continuaran activas.

@@ -1,3 +1,4 @@
+
 # C4 Nivel 2 - Contenedores de CampusMarket
 
 El diagrama de contenedores vigente de CampusMarket se mantiene como
@@ -5,11 +6,17 @@ El diagrama de contenedores vigente de CampusMarket se mantiene como
 
 [`02-contenedores.puml`](./02-contenedores.puml)
 
+---
+
 ## Propósito
 
 El C4 Nivel 2 representa los contenedores principales que conforman
-CampusMarket, indicando su responsabilidad general, la tecnología utilizada
-y las relaciones entre ellos.
+CampusMarket, indicando:
+
+- su responsabilidad general;
+- la tecnología utilizada;
+- las relaciones entre contenedores;
+- los protocolos principales de comunicación.
 
 Este nivel responde principalmente a:
 
@@ -20,235 +27,467 @@ Este nivel responde principalmente a:
 
 Los actores externos se mantienen coherentes con el C4 Nivel 1:
 
-- **Estudiante:** utiliza CampusMarket para publicar, consultar y buscar
-  productos.
+- **Estudiante:** utiliza CampusMarket para publicar y consultar productos.
 - **Administrador:** accede al sistema para funciones de supervisión.
 
-## Contenedores
+---
+
+## Contenedores actuales
 
 | Contenedor | Tecnología | Responsabilidad |
 |---|---|---|
-| Frontend Web | Flutter / Dart | Proporcionar la interfaz web mediante la cual los usuarios interactúan con CampusMarket. |
-| Backend API | FastAPI / Python | Recibir solicitudes HTTP, validar datos y coordinar la lógica de aplicación. |
-| Persistencia local | SQLite | Almacenar y recuperar los datos utilizados por el corte vertical implementado. |
+| Frontend Web | Flutter / Dart | Proporcionar la interfaz mediante la cual los usuarios interactúan con CampusMarket. |
+| Backend API | FastAPI / Python | Recibir solicitudes HTTP, validar datos, ejecutar casos de uso y coordinar el acceso a la persistencia. |
+| Persistencia | MySQL | Almacenar y recuperar los datos actualmente materializados del dominio. |
 
-La topología actual puede resumirse como:
+La topología vigente puede resumirse como:
 
-**Frontend Web → Backend API → Persistencia local SQLite**
+```text
+Frontend Web
+    ↓ HTTP/JSON
+Backend API
+    ↓ PyMySQL / SQL
+MySQL
+````
+
+La sustitución de SQLite por MySQL modifica la tecnología de persistencia, pero
+mantiene la separación arquitectónica entre:
+
+* interfaz;
+* lógica de aplicación;
+* almacenamiento.
+
+---
 
 ## Correspondencia con el código
 
-| Contenedor C4 | Evidencia en el repositorio |
-|---|---|
-| Frontend Web | `frontend/campusmarket/lib/` |
-| Backend API | `backend/app/` |
-| Persistencia local | `backend/app/publicaciones/repository.py`, que utiliza `sqlite3` para almacenar y recuperar publicaciones. |
+| Contenedor C4      | Evidencia en el repositorio                                                          |
+| ------------------ | ------------------------------------------------------------------------------------ |
+| Frontend Web       | `frontend/campusmarket/lib/`                                                         |
+| Backend API        | `backend/app/`                                                                       |
+| Persistencia MySQL | `backend/app/publicaciones/repository.py`, que utiliza PyMySQL para acceder a MySQL. |
 
-La base SQLite utilizada durante la ejecución se genera dinámicamente.
+El acceso productivo a la persistencia está encapsulado en:
 
-Por esta razón, la evidencia versionada de la persistencia se encuentra en el
-código responsable del acceso a SQLite y no en un archivo de base de datos
-almacenado en Git.
+`backend/app/publicaciones/repository.py`
 
-Esta correspondencia permite verificar que los límites representados en el
-C4 Nivel 2 tienen una materialización observable en la estructura real del
-repositorio.
+El resto del Backend API no accede directamente al motor MySQL.
+
+La configuración de conexión se proporciona mediante variables de entorno y
+las credenciales no forman parte del repositorio.
+
+La base de datos utilizada por el entorno actual se denomina:
+
+`campusmarket`
+
+La tabla actualmente materializada es:
+
+`publicaciones`
+
+---
 
 ## Relaciones entre contenedores
 
 Las relaciones principales son:
 
-- **Estudiante → Frontend Web:** publica y consulta productos mediante
-  **HTTP** y recursos **HTML/CSS/JavaScript** en el prototipo local.
-- **Administrador → Frontend Web:** accede mediante **HTTP** y recursos
-  **HTML/CSS/JavaScript** para supervisar contenido.
-- **Frontend Web → Backend API:** crea y consulta publicaciones mediante
-  **HTTP/1.1 REST** con formato **`application/json`**, conforme a
-  [`contracts/openapi-v1.json`](../../contracts/openapi-v1.json).
-- **Backend API → Persistencia local:** guarda y recupera publicaciones
-  mediante protocolo **SQL** y filas SQLite utilizando `sqlite3`.
+### Estudiante → Frontend Web
 
-El frontend no accede directamente a SQLite.
+El estudiante utiliza la interfaz Flutter para crear y consultar publicaciones.
 
-La persistencia es utilizada exclusivamente a través del backend, conservando
-la separación entre interfaz, lógica de aplicación y almacenamiento.
+### Administrador → Frontend Web
+
+El administrador utilizará el frontend para capacidades de supervisión.
+
+Las capacidades administrativas todavía no se presentan como completamente
+materializadas.
+
+### Frontend Web → Backend API
+
+El frontend crea y consulta publicaciones mediante:
+
+* HTTP;
+* JSON;
+* estilo REST;
+* comunicación síncrona.
+
+Los endpoints actualmente materializados incluyen:
+
+* `POST /publicaciones`;
+* `GET /publicaciones`;
+* `GET /health`.
+
+El contrato de esta comunicación se mantiene versionado en:
+
+[`contracts/openapi-v1.json`](../../contracts/openapi-v1.json)
+
+### Backend API → MySQL
+
+El Backend API guarda y recupera publicaciones mediante:
+
+* PyMySQL;
+* SQL;
+* conexiones controladas desde el repositorio.
+
+El frontend no accede directamente a MySQL.
+
+---
 
 ## Corte vertical implementado
 
 El corte vertical actualmente verificable recorre:
 
-**Flutter Web → FastAPI → módulo `publicaciones` → SQLite**
+```text
+Flutter Web
+    ↓
+FastAPI
+    ↓
+módulo publicaciones
+    ↓
+MySQL
+```
 
 Su materialización principal se encuentra en:
 
-- `frontend/campusmarket/lib/publicaciones/publicacion_form_page.dart`
-- `frontend/campusmarket/lib/publicaciones/publicaciones_api.dart`
-- `backend/app/publicaciones/router.py`
-- `backend/app/publicaciones/service.py`
-- `backend/app/publicaciones/repository.py`
+* `frontend/campusmarket/lib/publicaciones/publicacion_form_page.dart`
+* `frontend/campusmarket/lib/publicaciones/publicaciones_api.dart`
+* `backend/app/publicaciones/router.py`
+* `backend/app/publicaciones/service.py`
+* `backend/app/publicaciones/repository.py`
 
 La prueba automatizada asociada se encuentra en:
 
 [`backend/tests/test_publicaciones_vertical.py`](../../backend/tests/test_publicaciones_vertical.py)
 
-## Impacto arquitectónico de S5
+Esta prueba verifica actualmente:
+
+* creación mediante la API;
+* consulta posterior;
+* persistencia real en MySQL;
+* respuesta controlada ante indisponibilidad de persistencia.
+
+---
+
+## Contrato API-first en S7
+
+Durante S7 se hace explícito el contrato entre:
+
+**Frontend Web → Backend API**
+
+La integración utiliza:
+
+```text
+HTTP / JSON / REST / comunicación síncrona
+```
+
+El contrato se documenta mediante:
+
+`contracts/openapi-v1.json`
+
+La estrategia síncrona, sus consecuencias y su acoplamiento temporal se
+registran en:
+
+[ADR-0003 - Integración síncrona HTTP/JSON](../adr/0003-usar-integracion-sincrona-http-json.md)
+
+La implementación del proveedor se verifica mediante:
+
+[`backend/tests/test_contrato_openapi.py`](../../backend/tests/test_contrato_openapi.py)
+
+La relación puede resumirse como:
+
+```text
+Flutter
+   ↓
+Contrato OpenAPI
+   ↓
+FastAPI
+```
+
+La prueba de contrato evita depender únicamente de la inspección manual del
+documento OpenAPI.
+
+---
+
+## Persistencia vigente
+
+La tecnología de persistencia vigente es:
+
+**MySQL**
+
+El acceso desde Python se realiza mediante:
+
+**PyMySQL**
+
+La responsabilidad de acceso permanece encapsulada en:
+
+`backend/app/publicaciones/repository.py`
+
+Esto permite mantener:
+
+```text
+router.py
+   ↓
+service.py
+   ↓
+repository.py
+   ↓
+MySQL
+```
+
+Los detalles del repositorio y de esta descomposición interna se representan en
+el **C4 Nivel 3**, no como componentes separados del Nivel 2.
+
+---
+
+## Indisponibilidad temporal de persistencia
+
+El Backend API mantiene un comportamiento controlado ante la indisponibilidad
+de la persistencia.
+
+En el estado actual:
+
+1. el repositorio intenta acceder a MySQL;
+2. una falla de conexión o persistencia se transforma en una condición
+   controlada;
+3. la condición se propaga hacia la capa de aplicación;
+4. el Backend API responde:
+
+`503 Service Unavailable`
+
+El objetivo es evitar que detalles internos de MySQL o PyMySQL se filtren hacia
+el consumidor de la API.
+
+El comportamiento dinámico completo se documenta en:
+
+[Vista de ejecución](../arc42/06-vista-ejecucion.md)
+
+---
+
+## Propiedad de los datos
+
+La tabla:
+
+`publicaciones`
+
+pertenece al contexto:
+
+**Gestión de Publicaciones**
+
+La escritura productiva debe permanecer encapsulada en:
+
+`backend/app/publicaciones/repository.py`
+
+Otros contextos, como:
+
+* Gestión de Usuarios;
+* Catálogo;
+* Administración;
+
+no deben escribir directamente sobre esta tabla.
+
+Estas reglas se detallan en:
+
+[Conceptos transversales](../arc42/08-conceptos-transversales.md)
+
+---
+
+## Evolución respecto al primer corte
+
+Durante el primer corte, CampusMarket utilizaba **SQLite** como mecanismo de
+persistencia.
+
+En ese momento, la topología era:
+
+```text
+Frontend Web
+    ↓
+Backend API
+    ↓
+SQLite
+```
 
 La restricción:
 
 **R-07 - Persistencia sin nueva infraestructura durante el primer corte**
 
-mantiene SQLite como mecanismo de persistencia y conserva el backend como una
-única aplicación monolítica modular, sin dividirlo en nuevos servicios
-desplegables.
+motivó mantener SQLite durante ese corte.
 
-Por esta razón, la respuesta arquitectónica de S5 **no modifica la topología
-del C4 Nivel 2**.
-
-CampusMarket continúa compuesto por:
-
-**Frontend Web → Backend API → Persistencia local SQLite**
-
-No se incorporaron:
-
-- bases de datos externas;
-- colas;
-- cachés distribuidas;
-- nuevos servicios desplegables.
-
-### Impacto en Backend API → Persistencia local
-
-El principal impacto de S5 se concentra en la relación:
-
-**Backend API → Persistencia local**
-
-Ante un bloqueo temporal de SQLite, el Backend API aplica la decisión
-registrada en ADR-0002:
-
-- utiliza una espera acotada de `0.5 s`;
-- identifica específicamente las condiciones `SQLITE_BUSY` y
-  `SQLITE_LOCKED`;
-- traduce la indisponibilidad temporal de forma controlada;
-- evita producir escrituras parciales;
-- responde con HTTP `503 Service Unavailable` cuando SQLite continúa
-  bloqueada;
-- recupera la creación normal después de liberar la base de datos.
-
-### Impacto en Frontend Web → Backend API
-
-La relación:
-
-**Frontend Web → Backend API**
-
-mantiene su comunicación mediante **HTTP/JSON REST**.
-
-Cuando el backend responde HTTP `503`, el cliente Flutter identifica la
-indisponibilidad temporal y muestra al usuario un mensaje específico en lugar
-de presentar únicamente un error genérico.
-
-Por lo tanto, S5 modifica el **comportamiento observable de las relaciones**
-entre contenedores, pero no agrega contenedores ni cambia las fronteras del
-sistema.
-
-## Conservación de las fronteras arquitectónicas
-
-La decisión de S5 conserva:
-
-- la topología definida en el C4 Nivel 2;
-- SQLite como persistencia;
-- la separación entre frontend, backend y almacenamiento;
-- las fronteras establecidas mediante
-  [ADR-0001 - Monolito modular](../adr/0001-usar-monolito-modular.md).
-
-La respuesta específica al bloqueo se encuentra registrada en:
+También se documentó el comportamiento ante bloqueo temporal mediante:
 
 [ADR-0002 - Manejo de bloqueo temporal de SQLite](../adr/0002-manejo-bloqueo-sqlite.md)
 
-## Impacto arquitectónico de S7
+La respuesta implementada en ese momento:
 
-S7 no agrega contenedores ni cambia la topología. Hace explícito y verificable
-el contrato de la relación:
+* utilizaba una espera acotada;
+* detectaba `SQLITE_BUSY`;
+* detectaba `SQLITE_LOCKED`;
+* devolvía HTTP `503` ante indisponibilidad;
+* evitaba escrituras parciales;
+* permitía recuperación posterior.
 
-**Frontend Web → Backend API: HTTP/1.1 REST / `application/json` / OpenAPI 1.0.0**
+Estos elementos se mantienen como **evidencia histórica del primer corte**.
 
-La estrategia síncrona, su acoplamiento temporal y sus modos de fallo se
-registran en:
+No representan la tecnología de persistencia vigente.
 
-[ADR-0003 - Integración síncrona HTTP/JSON](../adr/0003-usar-integracion-sincrona-http-json.md)
+---
 
-El flujo detallado se encuentra en la
-[sección 6 de arc42](../arc42/06-vista-ejecucion.md).
+## Evidencia histórica de S5
 
-## Evidencia del cambio S5
+La línea base previa al cambio de S5 registró:
 
-La línea base previa al cambio registró:
+* HTTP durante bloqueo: `500`;
+* tiempo durante bloqueo: `7.323 s`;
+* escritura parcial: `No`;
+* recuperación posterior: HTTP `201`.
 
-- HTTP durante bloqueo: `500`;
-- tiempo durante bloqueo: `7.323 s`;
-- escritura parcial: `No`;
-- recuperación posterior: HTTP `201`.
+Después de aplicar ADR-0002 se obtuvo:
 
-Después de aplicar ADR-0002 se obtuvo formalmente:
+* HTTP durante bloqueo: `503`;
+* tiempo durante bloqueo: `1.283 s`;
+* escritura parcial: `No`;
+* recuperación posterior: HTTP `201`;
+* tiempo de recuperación: `0.006 s`.
 
-- HTTP durante bloqueo: `503`;
-- tiempo durante bloqueo: `1.283 s`;
-- escritura parcial: `No`;
-- recuperación posterior: HTTP `201`;
-- tiempo de recuperación: `0.006 s`.
+El resultado cumplió el umbral definido en EC-05 para ese escenario.
 
-El resultado cumple el umbral de EC-05 de responder durante el bloqueo en un
-máximo de **2 segundos**.
+Evidencias históricas:
 
-Evidencias:
+* [Línea base](../evidencias/linea-base-bloqueo-sqlite-2026-09-05.md)
+* [Medición posterior](../evidencias/medicion-bloqueo-sqlite-2026-09-06.md)
+* [EC-05](../arc42/10-escenarios-de-calidad.md#ec-05---degradación-ante-bloqueo-temporal-de-persistencia)
+* [ADR-0002](../adr/0002-manejo-bloqueo-sqlite.md)
 
-- [Línea base](../evidencias/linea-base-bloqueo-sqlite-2026-09-05.md)
-- [Medición posterior](../evidencias/medicion-bloqueo-sqlite-2026-09-06.md)
-- [EC-05](../arc42/10-escenarios-de-calidad.md#ec-05---degradación-ante-bloqueo-temporal-de-persistencia)
-- [ADR-0002](../adr/0002-manejo-bloqueo-sqlite.md)
+Estas mediciones no se reinterpretan como mediciones de MySQL.
+
+---
+
+## Evolución de la topología
+
+La arquitectura conserva tres responsabilidades principales:
+
+```text
+Frontend
+    ↓
+Backend
+    ↓
+Persistencia
+```
+
+La evolución de SQLite a MySQL no introduce nuevos límites de dominio ni
+divide el Backend API en microservicios.
+
+Sí modifica la tecnología concreta del contenedor de persistencia.
+
+Por tanto:
+
+* se mantienen las fronteras principales;
+* se mantiene el monolito modular;
+* cambia la tecnología de almacenamiento;
+* cambia el mecanismo de acceso de `sqlite3` a PyMySQL.
+
+La decisión de migración debe quedar registrada mediante un ADR independiente.
+
+---
+
+## Conservación de fronteras arquitectónicas
+
+La arquitectura vigente conserva:
+
+* Frontend separado del Backend API;
+* Backend API separado de la persistencia;
+* Gestión de Publicaciones como propietario de `publicaciones`;
+* monolito modular;
+* dirección interna `router → service → repository`;
+* contratos explícitos entre consumidor y proveedor.
+
+La decisión base continúa registrada en:
+
+[ADR-0001 - Monolito modular](../adr/0001-usar-monolito-modular.md)
+
+---
 
 ## Alcance del Nivel 2
 
 Este diagrama representa únicamente:
 
-- contenedores principales;
-- responsabilidades generales;
-- tecnologías principales;
-- relaciones entre contenedores.
+* contenedores principales;
+* responsabilidades generales;
+* tecnologías principales;
+* relaciones entre contenedores;
+* protocolos de comunicación principales.
 
 No representa:
 
-- módulos internos;
-- componentes;
-- clases;
-- routers;
-- services;
-- repositories;
-- manejo interno de excepciones.
+* módulos internos;
+* componentes;
+* clases;
+* routers;
+* services;
+* repositories;
+* excepciones internas;
+* implementación de transacciones.
 
-Ese nivel de detalle corresponde al **C4 Nivel 3** y no se representa en el
-primer corte.
+Ese nivel de detalle corresponde al **C4 Nivel 3**.
 
-Los detalles internos mencionados en la documentación de S5 se utilizan como
-evidencia de implementación, pero no se incorporan como elementos gráficos
-del C4 Nivel 2.
+---
 
 ## Relación con el C4 Nivel 1
 
-El [C4 Nivel 1](./01-contexto.md) representa CampusMarket como un único
-sistema frente a Estudiante y Administrador.
+El [C4 Nivel 1](./01-contexto.md) representa CampusMarket como un único sistema
+frente a Estudiante y Administrador.
 
-El C4 Nivel 2 realiza un acercamiento al interior de esa caja y muestra cómo
-el sistema se materializa actualmente mediante Frontend Web, Backend API y
-SQLite.
+El C4 Nivel 2 realiza un acercamiento al interior de esa caja y muestra cómo el
+sistema se materializa actualmente mediante:
+
+```text
+Frontend Web
+    ↓
+Backend API
+    ↓
+MySQL
+```
 
 Los actores y límites permanecen coherentes entre ambos niveles.
 
+---
+
+## Relación con el C4 Nivel 3
+
+El C4 Nivel 3 amplía exclusivamente el contenedor Backend API.
+
+La estructura materializada es:
+
+```text
+API de Publicaciones
+        ↓
+Servicio de Publicaciones
+        ↓
+Repositorio de Publicaciones
+        ↓
+MySQL
+```
+
+Documentación:
+
+[C4 Nivel 3 - Componentes del Backend](./03-componentes-backend.md)
+
+Fuente:
+
+[`03-componentes-backend.puml`](./03-componentes-backend.puml)
+
+---
+
 ## Fuente canónica
 
-El archivo [`02-contenedores.puml`](./02-contenedores.puml) es la fuente
-versionada y vigente del C4 Nivel 2.
+El archivo:
+
+[`02-contenedores.puml`](./02-contenedores.puml)
+
+es la fuente versionada y vigente del C4 Nivel 2.
 
 Cualquier modificación gráfica debe realizarse sobre ese archivo para evitar
 versiones contradictorias de la arquitectura.
 
 La documentación textual de este archivo complementa el diagrama, pero no
 reemplaza su fuente PlantUML.
+
+````

@@ -1,12 +1,13 @@
+
 # CampusMarket - Documentación arc42
 
 ## 1. Introducción y objetivos
 
 ### 1.1 Descripción del sistema
 
-CampusMarket es una plataforma orientada a estudiantes universitarios que
-busca facilitar la publicación, búsqueda, venta y alquiler de productos nuevos
-o usados dentro de la comunidad estudiantil.
+CampusMarket es una plataforma orientada a estudiantes universitarios que busca
+facilitar la publicación, búsqueda, venta y alquiler de productos nuevos o
+usados dentro de la comunidad estudiantil.
 
 La idea surge debido a que muchos estudiantes ofrecen productos mediante grupos
 de WhatsApp, redes sociales u otros medios informales, donde las publicaciones
@@ -204,7 +205,7 @@ El administrador utilizará CampusMarket para supervisar las publicaciones y
 apoyar la gestión general del contenido de la plataforma.
 
 La materialización actual del prototipo se concentra principalmente en la
-capacidad de Gestión de Publicaciones.
+capacidad de **Gestión de Publicaciones**.
 
 ---
 
@@ -243,8 +244,11 @@ consulta de publicaciones.
 En el estado actual del prototipo, los estudiantes acceden a CampusMarket
 mediante una interfaz desarrollada con **Flutter Web**.
 
-El frontend se comunica con el backend mediante una
-**API REST sobre HTTP/JSON**.
+El frontend se comunica con el backend mediante una **API REST sobre
+HTTP/JSON**.
+
+La integración actualmente materializada es **síncrona**: cada solicitud HTTP
+realizada por el frontend recibe su respuesta dentro de la misma interacción.
 
 Durante el desarrollo local, Flutter Web se ejecuta en:
 
@@ -254,12 +258,32 @@ y el backend FastAPI en:
 
 `localhost:8000`
 
-El backend está implementado con **FastAPI y Python** y es responsable de
-recibir las solicitudes de la interfaz, validar los datos, ejecutar la lógica
-de aplicación y coordinar el acceso a la persistencia.
+El backend está implementado con **FastAPI y Python** y es responsable de:
 
-CampusMarket utiliza actualmente **SQLite** como mecanismo de persistencia local
-para el corte vertical materializado.
+- recibir solicitudes HTTP;
+- validar los datos de entrada;
+- ejecutar la lógica de aplicación;
+- coordinar el acceso a la persistencia;
+- devolver respuestas HTTP/JSON al cliente.
+
+El contrato de integración se documenta mediante **OpenAPI** y se mantiene
+versionado en:
+
+`contracts/openapi-v1.json`
+
+Los endpoints actualmente materializados para publicaciones incluyen:
+
+- `POST /publicaciones`;
+- `GET /publicaciones`.
+
+También se expone:
+
+- `GET /health`.
+
+CampusMarket utiliza actualmente **MySQL** como mecanismo de persistencia para
+el corte vertical materializado.
+
+El acceso a MySQL se realiza desde Python mediante **PyMySQL**.
 
 El frontend no accede directamente a la persistencia.
 
@@ -267,24 +291,33 @@ El recorrido implementado mantiene la separación:
 
 ```text
 Flutter Web
-    ↓
+    ↓ HTTP/JSON síncrono
 FastAPI
     ↓
 Gestión de Publicaciones
     ↓
-SQLite
-```
+MySQL
+````
 
 La persistencia productiva de publicaciones se encuentra encapsulada en:
 
 `backend/app/publicaciones/repository.py`
 
-y la base de datos local se genera durante la ejecución en:
+La base de datos utilizada por el entorno actual se denomina:
 
-`backend/data/campusmarket.db`
+`campusmarket`
 
-Una eventual evolución hacia otra tecnología de persistencia no se documenta
-como implementada mientras no exista en el código.
+y la entidad actualmente materializada se persiste en la tabla:
+
+`publicaciones`
+
+Las credenciales de acceso no forman parte del repositorio. La configuración
+local se proporciona mediante variables de entorno y el archivo `.env` se
+mantiene excluido mediante `.gitignore`.
+
+SQLite fue utilizado durante el primer corte y se conserva únicamente como
+parte de la evidencia histórica y de las decisiones arquitectónicas
+correspondientes a ese momento del proyecto.
 
 Cuando el prototipo sea desplegado en un entorno accesible externamente, la
 comunicación entre clientes y CampusMarket deberá realizarse mediante
@@ -310,9 +343,9 @@ El diagrama se encuentra documentado en:
 
 La estrategia arquitectónica de CampusMarket se basa en la evaluación de:
 
-- arquitectura en capas;
-- arquitectura hexagonal;
-- monolito modular.
+* arquitectura en capas;
+* arquitectura hexagonal;
+* monolito modular.
 
 Estas alternativas fueron contrastadas frente a los escenarios de calidad
 priorizados por el equipo.
@@ -326,23 +359,27 @@ El monolito modular se aplica principalmente al backend de CampusMarket, que se
 organiza mediante módulos correspondientes a capacidades principales del
 negocio:
 
-- `usuarios`;
-- `publicaciones`;
-- `catalogo`;
-- `administracion`.
+* `usuarios`;
+* `publicaciones`;
+* `catalogo`;
+* `administracion`.
 
 Estos módulos deben mantener responsabilidades y fronteras explícitas, evitando
 dependencias innecesarias entre sus componentes internos.
 
 Durante S6 estas capacidades se formalizaron además como contextos delimitados:
 
-- **Gestión de Usuarios**;
-- **Gestión de Publicaciones**;
-- **Catálogo**;
-- **Administración**.
+* **Gestión de Usuarios**;
+* **Gestión de Publicaciones**;
+* **Catálogo**;
+* **Administración**.
 
 La capacidad actualmente materializada con mayor profundidad es
 **Gestión de Publicaciones**.
+
+Durante S7 se refuerza además una estrategia **API-first**, donde la
+comunicación entre cliente y proveedor se define mediante un contrato OpenAPI
+versionado y verificable automáticamente.
 
 El detalle de la comparación entre estilos, las tácticas arquitectónicas
 seleccionadas, sus costos y las consecuencias de la decisión se encuentra en:
@@ -368,11 +405,14 @@ La documentación detallada de los bloques de construcción se mantiene en:
 La estructura ejecutable principal corresponde a:
 
 ```text
-Frontend Web → Backend API → SQLite
+Frontend Web
+    ↓ HTTP/JSON
+Backend API
+    ↓ PyMySQL / SQL
+MySQL
 ```
 
-Durante S6 se profundiza la estructura interna del Backend API mediante C4
-Nivel 3, manteniendo la dirección:
+La estructura interna materializada del Backend API corresponde a:
 
 ```text
 API de Publicaciones
@@ -381,8 +421,14 @@ Servicio de Publicaciones
         ↓
 Repositorio de Publicaciones
         ↓
-SQLite
+MySQL
 ```
+
+La dirección de dependencias mantiene separados los componentes responsables de
+interfaz HTTP, lógica de aplicación y persistencia.
+
+El repositorio de Publicaciones constituye el único componente productivo que
+accede directamente a la tabla `publicaciones`.
 
 El detalle de componentes, propiedad de datos y reglas de dependencia se
 encuentra en la sección 5 específica.
@@ -399,7 +445,7 @@ La ejecución principal actualmente materializada conserva el recorrido:
 
 ```text
 Flutter Web
-    ↓
+    ↓ HTTP/JSON síncrono
 FastAPI
     ↓
 router.py
@@ -407,26 +453,112 @@ router.py
 service.py
     ↓
 repository.py
-    ↓
-SQLite
+    ↓ PyMySQL / SQL
+MySQL
+```
+
+Para la creación de una publicación, el flujo principal es:
+
+```text
+Frontend
+   ↓ POST /publicaciones
+Router
+   ↓
+Service
+   ↓
+Repository
+   ↓ INSERT
+MySQL
+   ↓
+Repository
+   ↓
+Service
+   ↓
+Router
+   ↓ HTTP 201
+Frontend
+```
+
+Para la consulta de publicaciones:
+
+```text
+Frontend
+   ↓ GET /publicaciones
+Router
+   ↓
+Service
+   ↓
+Repository
+   ↓ SELECT
+MySQL
+   ↓
+Repository
+   ↓
+Service
+   ↓
+Router
+   ↓ HTTP 200
+Frontend
 ```
 
 La vista de ejecución también documenta los comportamientos verificables
-relacionados con el corte vertical y su evolución arquitectónica.
+relacionados con indisponibilidad temporal de la persistencia.
 
-Durante S7 la vista incorpora los flujos síncronos de creación y consulta con
-su protocolo y formato (`HTTP/1.1 REST` y `application/json`), además del modo
-de fallo `503` ante persistencia temporalmente no disponible. La
-correspondencia con el proveedor se protege mediante el contrato OpenAPI
-`1.0.0` y una prueba ejecutada en el pipeline.
+Ante una condición en la que MySQL no pueda ser alcanzado, la capa de
+persistencia traduce el error técnico a una condición controlada y la API
+responde con:
+
+`503 Service Unavailable`
+
+La correspondencia entre proveedor e interfaz se protege mediante el contrato
+OpenAPI `1.0.0` y pruebas automatizadas.
+
+---
+
+## 7. Vista de despliegue
+
+El estado actual se ejecuta principalmente en un entorno local de desarrollo:
+
+```text
+Navegador
+   ↓
+Flutter Web
+   ↓ HTTP/JSON
+FastAPI
+   ↓ TCP / SQL
+MySQL
+```
+
+La configuración local utiliza:
+
+* Flutter Web como cliente;
+* FastAPI como backend;
+* MySQL como persistencia;
+* variables de entorno para la configuración de conexión.
+
+Para un despliegue externo, la arquitectura prevista conserva los mismos
+límites lógicos:
+
+```text
+Cliente Web
+   ↓ HTTPS
+Frontend
+   ↓ HTTPS / JSON
+Backend FastAPI
+   ↓ conexión segura de base de datos
+MySQL
+```
+
+La selección definitiva del proveedor cloud se mantiene como una decisión de
+despliegue pendiente mientras no exista evidencia de un entorno productivo
+implementado.
 
 ---
 
 ## 8. Conceptos transversales
 
-Durante S6 se formalizaron los conceptos de dominio y las reglas de
-modularidad necesarias para mantener coherente la evolución del monolito
-modular.
+Durante S6 se formalizaron los conceptos de dominio y las reglas de modularidad
+necesarias para mantener coherente la evolución del monolito modular.
 
 La documentación completa se encuentra en:
 
@@ -434,22 +566,22 @@ La documentación completa se encuentra en:
 
 Esta sección contiene:
 
-- lenguaje ubicuo;
-- contextos delimitados;
-- mapa de contextos;
-- relaciones entre contextos;
-- propiedad única de datos;
-- reglas de comunicación entre módulos;
-- correspondencia con el estado actual del código;
-- relación con C4 Nivel 3;
-- verificación automática de modularidad.
+* lenguaje ubicuo;
+* contextos delimitados;
+* mapa de contextos;
+* relaciones entre contextos;
+* propiedad única de datos;
+* reglas de comunicación entre módulos;
+* correspondencia con el estado actual del código;
+* relación con C4 Nivel 3;
+* verificación automática de modularidad.
 
 Los contextos delimitados definidos para CampusMarket son:
 
-- **Gestión de Usuarios**;
-- **Gestión de Publicaciones**;
-- **Catálogo**;
-- **Administración**.
+* **Gestión de Usuarios**;
+* **Gestión de Publicaciones**;
+* **Catálogo**;
+* **Administración**.
 
 La regla central de propiedad adoptada es:
 
@@ -467,6 +599,9 @@ La escritura productiva se encuentra encapsulada en:
 
 `backend/app/publicaciones/repository.py`
 
+La tecnología de persistencia vigente es **MySQL**, accedida mediante
+**PyMySQL**.
+
 ---
 
 ### 8.1 Mapa de contextos
@@ -477,11 +612,11 @@ El mapa de contextos y sus relaciones tipadas se encuentran documentados en:
 
 Las relaciones definidas incluyen:
 
-- Gestión de Usuarios → Gestión de Publicaciones:
+* Gestión de Usuarios → Gestión de Publicaciones:
   **Customer/Supplier**;
-- Gestión de Publicaciones → Catálogo:
+* Gestión de Publicaciones → Catálogo:
   **Customer/Supplier**;
-- Gestión de Publicaciones → Administración:
+* Gestión de Publicaciones → Administración:
   contrato explícito y **Anticorruption Layer** en Administración.
 
 Actualmente no se adopta un **Shared Kernel** entre los contextos.
@@ -516,8 +651,8 @@ Fuente PlantUML:
 
 [03-componentes-backend.puml](../c4/03-componentes-backend.puml)
 
-El Nivel 3 amplía el contenedor Backend API sin modificar la topología del C4
-Nivel 2.
+El Nivel 3 amplía el contenedor Backend API sin modificar los límites
+principales del monolito modular.
 
 La descomposición actualmente verificable es:
 
@@ -528,7 +663,7 @@ Servicio de Publicaciones
         ↓
 Repositorio de Publicaciones
         ↓
-SQLite
+MySQL
 ```
 
 Los límites de Usuarios, Catálogo y Administración se mantienen documentados,
@@ -544,73 +679,107 @@ Las reglas principales de modularidad se verifican adicionalmente mediante:
 
 La prueba comprueba que:
 
-- `publicaciones` tenga un único escritor productivo;
-- otros contextos no accedan directamente a SQLite;
-- otros contextos no dependan directamente del repositorio interno de
+* `publicaciones` tenga un único escritor productivo;
+* otros contextos no accedan directamente a la tecnología de persistencia;
+* otros contextos no dependan directamente del repositorio interno de
   Publicaciones;
-- la dirección interna permanezca:
+* la dirección interna permanezca:
 
-  `router → service → repository → SQLite`.
+  `router → service → repository → MySQL`.
 
-La prueba se ejecuta junto con el resto de `backend/tests` mediante GitHub
-Actions.
+La integración de persistencia se verifica mediante:
+
+[`test_publicaciones_vertical.py`](../../backend/tests/test_publicaciones_vertical.py)
+
+Estas pruebas comprueban:
+
+* creación de una publicación mediante la API;
+* recuperación posterior de la publicación;
+* persistencia real en MySQL;
+* degradación controlada mediante HTTP `503` cuando la persistencia no está
+  disponible.
+
+Las pruebas del backend se ejecutan mediante `pytest`.
 
 ---
 
-### 8.5 Trazabilidad
+### 8.5 Contrato de API
 
-La correspondencia entre aspectos, contextos, propiedad de datos, código,
-auditoría y pruebas se mantiene en:
+Durante S7 se formaliza la comunicación API-first entre frontend y backend.
+
+El contrato versionado se mantiene en:
+
+`contracts/openapi-v1.json`
+
+FastAPI expone su implementación mediante los endpoints actualmente
+materializados.
+
+La prueba:
+
+[`test_contrato_openapi.py`](../../backend/tests/test_contrato_openapi.py)
+
+verifica automáticamente la correspondencia entre la implementación y el
+contrato OpenAPI.
+
+La integración actualmente implementada utiliza comunicación síncrona
+HTTP/JSON.
+
+---
+
+### 8.6 Trazabilidad
+
+La correspondencia entre aspectos, contextos, propiedad de datos, contratos,
+código, auditoría y pruebas se mantiene en:
 
 [docs/aspectos.md](../aspectos.md)
 
-Para S6 la cadena de trazabilidad se amplía a:
+La cadena de trazabilidad vigente puede representarse como:
 
 ```text
-Aspecto
+Aspecto arquitectónico
    ↓
 Contexto delimitado
    ↓
 Propietario del dato
    ↓
-C4 Nivel 3
+C4 Nivel 2 / C4 Nivel 3
+   ↓
+Contrato OpenAPI
    ↓
 Código
    ↓
-Auditoría
-   ↓
 Prueba automática
+   ↓
+Evidencia
 ```
 
 ---
 
-### 8.6 Coherencia con ADR-0001
+### 8.7 Coherencia con ADR-0001
 
-S6 mantiene los límites establecidos previamente por:
+Los límites establecidos previamente por:
 
 [ADR-0001 - Monolito modular](../adr/0001-usar-monolito-modular.md)
 
-Los límites continúan siendo:
+se mantienen:
 
-- `usuarios`;
-- `publicaciones`;
-- `catalogo`;
-- `administracion`.
+* `usuarios`;
+* `publicaciones`;
+* `catalogo`;
+* `administracion`.
 
-Durante S6 estos límites no fueron:
+Estos límites no han sido:
 
-- fusionados;
-- divididos;
-- reemplazados;
-- convertidos en microservicios.
+* fusionados;
+* divididos;
+* reemplazados;
+* convertidos en microservicios.
 
 La incorporación del C4 Nivel 3 hace explícita la estructura interna actual del
-Backend API, pero no representa un reajuste de las fronteras arquitectónicas.
+Backend API.
 
-Por esta razón no se registra un nuevo ADR de reajuste para S6.
-
-Un nuevo ADR será necesario únicamente si una evolución posterior modifica de
-forma efectiva estos límites.
+La migración de SQLite a MySQL modifica la tecnología de persistencia, pero no
+modifica los límites funcionales del monolito modular.
 
 ---
 
@@ -620,8 +789,16 @@ Las decisiones arquitectónicas se encuentran documentadas mediante ADR.
 
 Actualmente:
 
-- [ADR-0001 - Monolito modular](../adr/0001-usar-monolito-modular.md)
-- [ADR-0002 - Manejo de bloqueo temporal de SQLite](../adr/0002-manejo-bloqueo-sqlite.md)
+* [ADR-0001 - Monolito modular](../adr/0001-usar-monolito-modular.md)
+* [ADR-0002 - Manejo de bloqueo temporal de SQLite](../adr/0002-manejo-bloqueo-sqlite.md)
+* [ADR-0003 - Integración síncrona HTTP/JSON](../adr/0003-usar-integracion-sincrona-http-json.md)
+
+ADR-0002 corresponde a una decisión tomada durante el primer corte cuando
+SQLite era la tecnología de persistencia vigente.
+
+La migración posterior a MySQL debe registrarse mediante un ADR independiente,
+manteniendo ADR-0002 como evidencia histórica y evitando reescribir una decisión
+pasada.
 
 El detalle de las decisiones y su relación con arc42 se mantiene en:
 
@@ -656,6 +833,5 @@ El lenguaje ubicuo específico formalizado durante S6 se encuentra además en:
 
 Ambos documentos deben mantenerse coherentes durante la evolución de
 CampusMarket.
-
 
 

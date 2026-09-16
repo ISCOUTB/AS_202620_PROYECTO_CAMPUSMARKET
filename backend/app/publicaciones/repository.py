@@ -1,85 +1,83 @@
 import os
-import sqlite3
-from contextlib import closing
-from pathlib import Path
 
-
-SQLITE_TIMEOUT_SECONDS = 0.5
+import pymysql
+from pymysql.cursors import DictCursor
 
 
 class PersistenceUnavailableError(RuntimeError):
     """La persistencia no está disponible temporalmente."""
 
 
-def _db_path() -> Path:
-    configured = os.getenv("CAMPUSMARKET_DB_PATH")
-
-    if configured:
-        return Path(configured)
-
-    return Path(__file__).resolve().parents[2] / "data" / "campusmarket.db"
-
-
-def _connect() -> sqlite3.Connection:
-    path = _db_path()
-    path.parent.mkdir(parents=True, exist_ok=True)
-
-    connection = sqlite3.connect(
-        path,
-        timeout=SQLITE_TIMEOUT_SECONDS,
-    )
-    connection.row_factory = sqlite3.Row
-
-    return connection
-
-
-def _is_database_locked(error: sqlite3.OperationalError) -> bool:
-    error_code = getattr(error, "sqlite_errorcode", None)
-
-    if error_code in {
-        sqlite3.SQLITE_BUSY,
-        sqlite3.SQLITE_LOCKED,
-    }:
-        return True
-
-    message = str(error).lower()
-
-    return (
-        "database is locked" in message
-        or "database table is locked" in message
-    )
+def _connect():
+    try:
+        return pymysql.connect(
+            host=os.getenv("CAMPUSMARKET_DB_HOST", "localhost"),
+            port=int(os.getenv("CAMPUSMARKET_DB_PORT", "3306")),
+            user=os.getenv("CAMPUSMARKET_DB_USER", "campusmarket_app"),
+            password=os.getenv("CAMPUSMARKET_DB_PASSWORD", ""),
+            database=os.getenv("CAMPUSMARKET_DB_NAME", "campusmarket"),
+            cursorclass=DictCursor,
+            autocommit=False,
+            connect_timeout=2,
+        )
+    except pymysql.MySQLError as error:
+        raise PersistenceUnavailableError(
+            "La persistencia está temporalmente no disponible."
+        ) from error
 
 
 def initialize_database() -> None:
-    with closing(_connect()) as connection, connection:
-        connection.execute(
-            """
-            CREATE TABLE IF NOT EXISTS publicaciones (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                titulo TEXT NOT NULL,
-                descripcion TEXT NOT NULL,
-                precio REAL NOT NULL CHECK (precio > 0),
-                modalidad TEXT NOT NULL
-                    CHECK (modalidad IN ('venta', 'alquiler')),
-                estado TEXT NOT NULL
-                    CHECK (
-                        estado IN (
-                            'nuevo',
-                            'usado',
-                            'reacondicionado'
-                        )
-                    )
+    connection = None
+
+    try:
+        connection = _connect()
+
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS publicaciones (
+                    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+                    titulo VARCHAR(100) NOT NULL,
+                    descripcion VARCHAR(500) NOT NULL,
+                    precio DECIMAL(12, 2) NOT NULL,
+                    modalidad ENUM('venta', 'alquiler') NOT NULL,
+                    estado ENUM(
+                        'nuevo',
+                        'usado',
+                        'reacondicionado'
+                    ) NOT NULL,
+                    PRIMARY KEY (id),
+                    CONSTRAINT chk_publicaciones_precio
+                        CHECK (precio > 0)
+                )
+                """
             )
-            """
-        )
+
+        connection.commit()
+
+    except pymysql.MySQLError as error:
+        if connection:
+            connection.rollback()
+
+        raise PersistenceUnavailableError(
+            "La persistencia está temporalmente no disponible."
+        ) from error
+
+    finally:
+        if connection:
+            connection.close()
 
 
 def create_publication(data: dict) -> dict:
-    try:
-        initialize_database()
+    initialize_database()
 
-        with closing(_connect()) as connection, connection:
-            cursor = connection.execute(
+    connection = None
+
+    try:
+        connection = _connect()
+
+        with connection.cursor() as cursor:
+            cursor.execute(
                 """
                 INSERT INTO publicaciones (
                     titulo,
@@ -88,7 +86,7 @@ def create_publication(data: dict) -> dict:
                     modalidad,
                     estado
                 )
-                VALUES (?, ?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s, %s)
                 """,
                 (
                     data["titulo"],
@@ -101,48 +99,72 @@ def create_publication(data: dict) -> dict:
 
             publication_id = cursor.lastrowid
 
-            row = connection.execute(
+            cursor.execute(
                 """
                 SELECT
                     id,
                     titulo,
                     descripcion,
-                    precio,
+                    CAST(precio AS DOUBLE) AS precio,
                     modalidad,
                     estado
                 FROM publicaciones
-                WHERE id = ?
+                WHERE id = %s
                 """,
                 (publication_id,),
-            ).fetchone()
+            )
 
-    except sqlite3.OperationalError as error:
-        if _is_database_locked(error):
-            raise PersistenceUnavailableError(
-                "La persistencia está temporalmente no disponible."
-            ) from error
+            row = cursor.fetchone()
 
-        raise
+        connection.commit()
 
-    return dict(row)
+        return row
+
+    except pymysql.MySQLError as error:
+        if connection:
+            connection.rollback()
+
+        raise PersistenceUnavailableError(
+            "La persistencia está temporalmente no disponible."
+        ) from error
+
+    finally:
+        if connection:
+            connection.close()
 
 
 def list_publications() -> list[dict]:
     initialize_database()
 
-    with closing(_connect()) as connection, connection:
-        rows = connection.execute(
-            """
-            SELECT
-                id,
-                titulo,
-                descripcion,
-                precio,
-                modalidad,
-                estado
-            FROM publicaciones
-            ORDER BY id DESC
-            """
-        ).fetchall()
+    connection = None
 
-    return [dict(row) for row in rows]
+    try:
+        connection = _connect()
+
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT
+                    id,
+                    titulo,
+                    descripcion,
+                    CAST(precio AS DOUBLE) AS precio,
+                    modalidad,
+                    estado
+                FROM publicaciones
+                ORDER BY id DESC
+                """
+            )
+
+            rows = cursor.fetchall()
+
+        return rows
+
+    except pymysql.MySQLError as error:
+        raise PersistenceUnavailableError(
+            "La persistencia está temporalmente no disponible."
+        ) from error
+
+    finally:
+        if connection:
+            connection.close()

@@ -1,16 +1,20 @@
 # Escenarios de calidad - CampusMarket
 
-Los siguientes escenarios permiten convertir los atributos de calidad del
-proyecto en condiciones observables y verificables.
+Los siguientes escenarios convierten los atributos de calidad de CampusMarket
+en condiciones observables y verificables.
 
-Los valores utilizados como medidas fueron definidos inicialmente por el
-equipo y podrán ser ajustados posteriormente mediante pruebas y evidencia
-del prototipo.
+Los escenarios fueron definidos y verificados en diferentes momentos de la
+evolución del proyecto.
+
+Por esta razón, la documentación distingue entre:
+
+- escenarios todavía previstos;
+- escenarios materializados actualmente;
+- escenarios históricos verificados bajo una arquitectura anterior.
+
+---
 
 ## Tensiones entre atributos de calidad
-
-CampusMarket presenta tensiones arquitectónicas que deben considerarse al
-tomar decisiones sobre la evolución del sistema.
 
 ### Mantenibilidad vs rapidez de desarrollo
 
@@ -18,43 +22,50 @@ Una mayor separación entre módulos, responsabilidades y contratos internos
 favorece la mantenibilidad porque permite realizar cambios con menor impacto
 sobre funcionalidades no relacionadas.
 
-Sin embargo, introducir más abstracciones, validaciones y fronteras internas
-requiere mayor esfuerzo inicial de implementación. Por esta razón, existe una
-tensión entre mantener una arquitectura modular y avanzar rápidamente en el
-desarrollo del prototipo.
+Sin embargo, introducir más abstracciones, validaciones y fronteras requiere un
+mayor esfuerzo inicial.
 
-En CampusMarket se prioriza conservar fronteras claras entre capacidades del
-negocio, aceptando un costo inicial moderado de desarrollo para reducir el
-impacto de cambios futuros.
+CampusMarket prioriza mantener fronteras claras entre capacidades del negocio
+aunque esto implique un costo inicial moderado.
+
+---
 
 ### Rendimiento vs mantenibilidad
 
-Técnicas como índices adicionales, caché o lógica especializada pueden reducir
-los tiempos de respuesta de las consultas y favorecer el rendimiento.
+Índices, cachés o lógica especializada pueden mejorar el rendimiento.
 
-Sin embargo, estas optimizaciones también incrementan la complejidad del
-código y el esfuerzo necesario para mantenerlo y modificarlo.
+Sin embargo, también incrementan la complejidad del sistema.
 
-En el estado actual de CampusMarket se prioriza una implementación simple y
-modular mientras se cumpla el umbral definido en EC-01. Las optimizaciones
-adicionales deberán justificarse mediante mediciones antes de incorporarse.
+En el estado actual se prioriza una implementación sencilla y modular mientras
+se satisfagan los umbrales definidos.
+
+Las optimizaciones futuras deberán justificarse mediante mediciones.
+
+---
 
 ### Disponibilidad vs simplicidad operativa
 
-Agregar infraestructura especializada, mecanismos distribuidos o servicios
-adicionales puede aumentar la capacidad de tolerar determinados fallos y
-favorecer la disponibilidad.
+Agregar infraestructura especializada puede aumentar la tolerancia ante
+determinados fallos.
 
-Sin embargo, estas alternativas también incrementan el costo operativo, la
-complejidad de despliegue y el esfuerzo de mantenimiento.
+También incrementa:
 
-Para el reto arquitectónico de S5, CampusMarket prioriza conservar SQLite y
-mantener el backend como una única aplicación monolítica modular, de acuerdo
-con R-07, y mejorar primero el comportamiento ante fallos mediante mecanismos
-internos y medibles antes de considerar infraestructura adicional.
+- complejidad;
+- operación;
+- despliegue;
+- mantenimiento.
+
+Durante S5 se priorizó mantener SQLite debido a la restricción R-07 del primer
+corte.
+
+Ese contexto corresponde a una etapa histórica del proyecto.
+
+Posteriormente, por observación del docente, la persistencia evolucionó hacia
+MySQL mediante ADR-0004.
+
 ---
 
-## EC-01 - Consulta de productos
+# EC-01 - Consulta de productos
 
 **Atributo de calidad:** Rendimiento.
 
@@ -63,21 +74,23 @@ internos y medibles antes de considerar infraestructura adicional.
 **Estímulo:** El estudiante realiza una búsqueda o aplica un filtro sobre el
 catálogo.
 
-**Artefacto:** Funcionalidad de consulta de productos de CampusMarket.
+**Artefacto:** Funcionalidad de consulta de productos.
 
 **Entorno:** Operación normal con un catálogo de hasta 1.000 publicaciones.
 
 **Respuesta:** El sistema procesa la consulta y muestra los productos que
 coinciden con los criterios seleccionados.
 
-**Medida verificable:** En una prueba de 10 búsquedas consecutivas, por lo
-menos 9 deben mostrar los resultados en un tiempo máximo de 2 segundos.
+**Medida verificable:** En una prueba de 10 búsquedas consecutivas, por lo menos
+9 deben mostrar resultados en un máximo de 2 segundos.
 
 **Prioridad:** Alta.
 
+**Estado:** Definido, todavía no materializado completamente.
+
 ---
 
-## EC-02 - Protección de publicaciones
+# EC-02 - Protección de publicaciones
 
 **Atributo de calidad:** Seguridad.
 
@@ -86,107 +99,117 @@ menos 9 deben mostrar los resultados en un tiempo máximo de 2 segundos.
 **Estímulo:** El usuario intenta editar o eliminar una publicación que
 pertenece a otro estudiante.
 
-**Artefacto:** Funcionalidad de gestión de publicaciones.
+**Artefacto:** Gestión de publicaciones.
 
-**Entorno:** Operación normal con dos usuarios registrados diferentes.
+**Entorno:** Operación normal con dos usuarios diferentes.
 
-**Respuesta:** CampusMarket rechaza la operación y mantiene la publicación
-sin modificaciones.
+**Respuesta:** CampusMarket rechaza la operación y mantiene la publicación sin
+modificaciones.
 
-**Medida verificable:** En 10 intentos realizados por un usuario que no sea
-propietario de la publicación, los 10 intentos deben ser rechazados.
+**Medida verificable:** 10 de 10 intentos realizados por un usuario no
+propietario deben ser rechazados.
 
 **Prioridad:** Alta.
 
+**Estado:** Definido, todavía no materializado completamente.
+
 ---
 
-## EC-03 - Modificación del sistema
+# EC-03 - Modificación del sistema
 
 **Atributo de calidad:** Mantenibilidad.
 
 **Fuente:** Equipo de desarrollo.
 
-**Estímulo:** Se solicita agregar un nuevo estado para los productos, por
-ejemplo, `reacondicionado`.
+**Estímulo:** Se solicita agregar un nuevo estado de producto, por ejemplo:
 
-**Artefacto:** Funcionalidad encargada de gestionar los productos.
+`reacondicionado`
 
-**Entorno:** Desarrollo normal del sistema.
+**Artefacto:** Gestión de Publicaciones.
+
+**Entorno:** Desarrollo normal.
 
 **Respuesta:** El equipo incorpora la nueva opción sin modificar
-funcionalidades no relacionadas con los productos.
+funcionalidades no relacionadas.
 
-**Medida verificable:** El cambio deberá realizarse modificando como máximo
-dos módulos principales y sin requerir cambios en las funciones de
-autenticación o búsqueda.
+**Medida verificable:** El cambio debe realizarse modificando como máximo dos
+módulos principales y sin requerir cambios en autenticación o búsqueda.
 
 **Prioridad:** Alta.
 
-**Decisión arquitectónica relacionada:**  
-[ADR-0001 - Adoptar un monolito modular para CampusMarket](../adr/0001-usar-monolito-modular.md)
+**Decisión relacionada:**
+
+[ADR-0001 - Monolito modular](../adr/0001-usar-monolito-modular.md)
+
+**Estado:** Verificado durante la evolución del corte vertical.
 
 ---
 
-## EC-04 - Recuperación del prototipo
+# EC-04 - Recuperación del prototipo
 
-**Atributo de calidad:** Disponibilidad y recuperación.
+**Atributo de calidad:** Disponibilidad / recuperación.
 
 **Fuente:** Administrador o equipo de desarrollo.
 
-**Estímulo:** La aplicación deja de responder durante una prueba o
-demostración.
+**Estímulo:** La aplicación deja de responder durante una prueba o demostración.
 
-**Artefacto:** Aplicación CampusMarket.
+**Artefacto:** CampusMarket.
 
 **Entorno:** Ejecución del prototipo.
 
-**Respuesta:** El equipo reinicia o recupera el servicio y vuelve a permitir
-el acceso a CampusMarket sin perder la información almacenada correctamente
-antes de la falla.
+**Respuesta:** El equipo recupera el servicio y vuelve a permitir el acceso sin
+perder información almacenada correctamente antes de la falla.
 
-**Medida verificable:** El prototipo deberá volver a estar disponible en un
-tiempo máximo de 10 minutos después de detectar la falla.
+**Medida verificable:** El prototipo debe volver a estar disponible en un
+máximo de 10 minutos después de detectar la falla.
 
 **Prioridad:** Media.
 
 ---
 
-## EC-05 - Degradación ante bloqueo temporal de persistencia
+# EC-05 - Degradación ante bloqueo temporal de persistencia
+
+> **Estado histórico:** escenario definido y verificado durante S5, cuando
+> SQLite era la tecnología de persistencia vigente.
 
 **Atributo de calidad:** Disponibilidad / resiliencia.
 
 **Fuente:** Estudiante que intenta crear una publicación.
 
-**Estímulo:** SQLite se encuentra temporalmente bloqueada cuando el estudiante
-intenta crear una nueva publicación.
+**Estímulo histórico:** SQLite se encuentra temporalmente bloqueada cuando el
+estudiante intenta crear una nueva publicación.
 
-**Artefacto:** Corte vertical de creación de publicaciones de CampusMarket.
+**Artefacto:** Corte vertical de creación de publicaciones.
 
-**Entorno:** Aplicación en ejecución normal con persistencia SQLite y un
-bloqueo temporal de escritura provocado de forma reproducible.
+**Entorno histórico:** Aplicación utilizando SQLite durante el primer corte,
+con un bloqueo de escritura provocado de forma reproducible.
 
-**Respuesta:** CampusMarket rechaza temporalmente la operación de manera
-controlada, sin producir una escritura parcial, informa que la persistencia
-se encuentra temporalmente no disponible y recupera la creación normal una
-vez liberada la base de datos.
+**Respuesta esperada durante S5:** CampusMarket rechaza temporalmente la
+operación de forma controlada, no produce una escritura parcial y recupera la
+creación normal después de liberar la base de datos.
 
-**Medida verificable:** Durante el bloqueo, la solicitud debe finalizar en un
-tiempo máximo de **2 segundos** con HTTP `503`, sin crear registros parciales.
-Después de liberar SQLite, una nueva solicitud de creación debe responder con
-HTTP `201` y persistir correctamente la publicación.
+**Medida verificable de S5:**
 
-**Prioridad:** Alta.
+- HTTP `503`;
+- tiempo máximo de 2 segundos;
+- ninguna escritura parcial;
+- después de liberar SQLite, una nueva creación responde HTTP `201`.
 
-**Restricción relacionada:**  
+**Prioridad:** Alta durante S5.
+
+**Restricción relacionada:**
+
 [R-07 - Persistencia sin nueva infraestructura durante el primer corte](02-restricciones.md#r-07-persistencia-sin-nueva-infraestructura-durante-el-primer-corte)
 
-**Decisión arquitectónica relacionada:**  
+**Decisión histórica relacionada:**
+
 [ADR-0002 - Manejo de bloqueo temporal de SQLite](../adr/0002-manejo-bloqueo-sqlite.md)
 
-### Línea base previa al cambio
+---
 
-La medición realizada el 05/09/2026 antes de modificar la implementación
-obtuvo los siguientes resultados:
+## Línea base histórica de EC-05
+
+La medición del 05/09/2026 obtuvo:
 
 | Métrica | Línea base |
 |---|---:|
@@ -196,113 +219,169 @@ obtuvo los siguientes resultados:
 | HTTP después de liberar SQLite | `201` |
 | Tiempo de recuperación | `0.007 s` |
 
-La línea base mostró que la implementación preservaba la integridad de los
-datos y recuperaba la operación normal después de liberar SQLite.
+La implementación preservaba la integridad de los datos y recuperaba la
+operación normal.
 
-Sin embargo, no cumplía el comportamiento controlado definido para EC-05,
-porque durante el bloqueo respondía con HTTP `500` y tardaba `7.323 s`,
-superando el umbral máximo de 2 segundos.
+Sin embargo:
 
-**Evidencia de línea base:**  
+- respondía HTTP `500`;
+- tardaba `7.323 s`;
+- superaba el umbral de 2 segundos.
+
+Evidencia:
+
 [Medición antes del cambio](../evidencias/linea-base-bloqueo-sqlite-2026-09-05.md)
-
-### Respuesta arquitectónica aplicada
-
-Para responder al escenario se adoptó ADR-0002.
-
-La decisión mantiene SQLite y conserva el backend como una única aplicación
-monolítica modular, de acuerdo con R-07, y aplica los siguientes mecanismos:
-
-- espera SQLite acotada mediante timeout de `0.5 s`;
-- detección específica de condiciones `SQLITE_BUSY` y `SQLITE_LOCKED`;
-- traducción controlada de la indisponibilidad dentro del módulo
-  `publicaciones`;
-- respuesta HTTP `503 Service Unavailable`;
-- ausencia de reintentos automáticos;
-- preservación de la transacción para evitar escrituras parciales;
-- cierre explícito de conexiones SQLite;
-- propagación del mensaje de indisponibilidad hasta la interfaz Flutter;
-- recuperación normal después de liberar la base de datos.
-
-La implementación conserva las fronteras arquitectónicas existentes:
-
-**Frontend Flutter → Backend FastAPI → Persistencia SQLite**
-
-No se agregaron bases de datos externas, colas, cachés distribuidas ni nuevos
-servicios desplegables.
-
-### Resultado después del cambio
-
-La medición formal realizada el 06/09/2026 produjo:
-
-| Métrica | Línea base | Después del cambio | Umbral |
-|---|---:|---:|---:|
-| HTTP durante bloqueo | `500` | `503` | `503` |
-| Tiempo durante bloqueo | `7.323 s` | `1.283 s` | `≤ 2 s` |
-| Escritura parcial | `No` | `No` | `No` |
-| HTTP después de liberar SQLite | `201` | `201` | `201` |
-| Tiempo de recuperación | `0.007 s` | `0.006 s` | Informativo |
-
-El resultado posterior cumple EC-05:
-
-- la solicitud durante el bloqueo finaliza con HTTP `503`;
-- el tiempo de respuesta es inferior al umbral de 2 segundos;
-- no se produce una escritura parcial;
-- después de liberar SQLite, una nueva creación responde con HTTP `201`;
-- la operación normal se recupera sin intervención adicional.
-
-Una ejecución posterior de verificación volvió a confirmar el comportamiento
-con los siguientes resultados:
-
-- HTTP durante bloqueo: `503`;
-- tiempo durante bloqueo: `1.138 s`;
-- escritura parcial: `No`;
-- HTTP después de liberar SQLite: `201`;
-- tiempo de recuperación: `0.007 s`.
-
-### Verificación automatizada
-
-La prueba correspondiente se encuentra en:
-
-[`backend/tests/test_publicaciones_vertical.py`](../../backend/tests/test_publicaciones_vertical.py)
-
-La ejecución final del backend produjo:
-
-```text
-3 passed, 1 warning in 1.51s
-```
 
 ---
 
-## EC-06 - Compatibilidad del contrato de API
+## Respuesta arquitectónica histórica de EC-05
+
+Durante S5 se adoptó ADR-0002.
+
+La solución aplicó:
+
+- timeout SQLite de `0.5 s`;
+- detección de `SQLITE_BUSY`;
+- detección de `SQLITE_LOCKED`;
+- traducción controlada de indisponibilidad;
+- HTTP `503 Service Unavailable`;
+- ausencia de reintentos automáticos;
+- preservación de transacciones;
+- cierre explícito de conexiones;
+- recuperación posterior.
+
+La arquitectura de ese momento era:
+
+```text
+Flutter
+   ↓
+FastAPI
+   ↓
+Gestión de Publicaciones
+   ↓
+SQLite
+````
+
+Esta arquitectura **no representa la persistencia vigente**.
+
+---
+
+## Resultado histórico de EC-05
+
+La medición formal del 06/09/2026 produjo:
+
+| Métrica                        | Línea base | Después de ADR-0002 |      Umbral |
+| ------------------------------ | ---------: | ------------------: | ----------: |
+| HTTP durante bloqueo           |      `500` |               `503` |       `503` |
+| Tiempo durante bloqueo         |  `7.323 s` |           `1.283 s` |     `≤ 2 s` |
+| Escritura parcial              |       `No` |                `No` |        `No` |
+| HTTP después de liberar SQLite |      `201` |               `201` |       `201` |
+| Tiempo de recuperación         |  `0.007 s` |           `0.006 s` | Informativo |
+
+Por tanto, EC-05 fue satisfecho durante S5.
+
+Una ejecución posterior obtuvo además:
+
+* HTTP `503`;
+* `1.138 s`;
+* ninguna escritura parcial;
+* recuperación HTTP `201`.
+
+Evidencia:
+
+[Medición posterior](../evidencias/medicion-bloqueo-sqlite-2026-09-06.md)
+
+---
+
+## Evolución posterior de EC-05
+
+Después del primer corte, el docente indicó que la persistencia debía
+evolucionar hacia MySQL.
+
+La decisión se registró mediante:
+
+[ADR-0004 - Migrar persistencia a MySQL](../adr/0004-migrar-persistencia-a-mysql.md)
+
+Por esta razón:
+
+* EC-05 conserva valor como evidencia histórica;
+* las mediciones de SQLite no se reinterpretan como mediciones de MySQL;
+* `SQLITE_BUSY` y `SQLITE_LOCKED` no describen el comportamiento vigente;
+* la prueba actual `test_publicaciones_vertical.py` ya utiliza MySQL.
+
+La arquitectura vigente es:
+
+```text
+Flutter
+   ↓ HTTP/JSON
+FastAPI
+   ↓
+Gestión de Publicaciones
+   ↓ PyMySQL
+MySQL
+```
+
+Actualmente se conserva el comportamiento general de degradación controlada:
+
+* si la persistencia no está disponible;
+* el backend traduce el fallo;
+* el consumidor recibe HTTP `503`.
+
+El mecanismo técnico concreto ya no depende de bloqueos SQLite.
+
+---
+
+# EC-06 - Compatibilidad del contrato de API
 
 **Atributo de calidad:** Compatibilidad / mantenibilidad.
 
-**Fuente:** Equipo de desarrollo o proveedor de la API.
+**Fuente:** Equipo de desarrollo o proveedor de API.
 
-**Estímulo:** Se elimina, renombra o cambia el tipo de una ruta, operación,
-campo o respuesta que consume el frontend.
+**Estímulo:** Se elimina, renombra o modifica de forma incompatible una ruta,
+operación, campo o respuesta utilizada por el frontend.
 
-**Artefacto:** Contrato OpenAPI y proveedor FastAPI de CampusMarket.
+**Artefacto:** Contrato OpenAPI y proveedor FastAPI.
 
-**Entorno:** Pipeline de integración continua antes de fusionar el cambio a la
-rama principal.
+**Entorno:** Integración continua antes de fusionar cambios a la rama
+principal.
 
-**Respuesta:** La prueba compara la especificación OpenAPI versionada con la
-superficie generada por el proveedor, detecta la incompatibilidad y hace fallar
-el pipeline antes de que el cambio llegue al consumidor.
+**Respuesta:** La prueba compara la especificación versionada con la superficie
+OpenAPI generada por FastAPI y detecta la incompatibilidad.
 
-**Medida verificable:** El 100 % de los cambios incompatibles controlados
-introducidos en la demostración S7 debe producir un resultado de prueba fallido
-y una salida distinta de cero; después de restaurar la compatibilidad, el
-conjunto completo debe volver a verde.
+**Medida verificable:** Los cambios incompatibles utilizados durante la
+demostración S7 deben hacer fallar la prueba; después de restaurar el contrato,
+el conjunto completo debe volver a verde.
 
 **Prioridad:** Alta.
 
-**Decisión arquitectónica relacionada:**
+**Decisión relacionada:**
 
 [ADR-0003 - Integración síncrona HTTP/JSON](../adr/0003-usar-integracion-sincrona-http-json.md)
+
+**Contrato:**
+
+[`contracts/openapi-v1.json`](../../contracts/openapi-v1.json)
+
+**Prueba:**
+
+[`backend/tests/test_contrato_openapi.py`](../../backend/tests/test_contrato_openapi.py)
 
 **Evidencia:**
 
 [Demostración de cambio incompatible S7](../evidencias/fallo-contrato-s7-2026-09-15.md)
+
+---
+
+# Resumen de estado
+
+| Escenario | Estado                                                    |
+| --------- | --------------------------------------------------------- |
+| EC-01     | Definido; todavía no completamente materializado          |
+| EC-02     | Definido; todavía no completamente materializado          |
+| EC-03     | Materializado y utilizado para verificar mantenibilidad   |
+| EC-04     | Materializado mediante recuperación del prototipo         |
+| EC-05     | Verificado históricamente en S5 con SQLite                |
+| EC-06     | Materializado en S7 mediante OpenAPI y prueba de contrato |
+
+La documentación conserva los resultados históricos sin confundirlos con la
+arquitectura vigente.
