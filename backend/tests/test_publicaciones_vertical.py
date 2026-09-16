@@ -1,22 +1,33 @@
-import sqlite3
-import time
-from pathlib import Path
-
+import pymysql
 from fastapi.testclient import TestClient
 
 from backend.app.main import app
-from backend.app.publicaciones.repository import initialize_database
+from backend.app.publicaciones.repository import (
+    _connect,
+    initialize_database,
+)
 
 
 client = TestClient(app)
 
 
-def test_corte_vertical_crea_y_recupera_publicacion(
-    tmp_path: Path,
-    monkeypatch,
-):
-    database = tmp_path / "campusmarket-test.db"
-    monkeypatch.setenv("CAMPUSMARKET_DB_PATH", str(database))
+def _limpiar_publicaciones():
+    initialize_database()
+
+    connection = _connect()
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("DELETE FROM publicaciones")
+
+        connection.commit()
+
+    finally:
+        connection.close()
+
+
+def test_corte_vertical_crea_y_recupera_publicacion():
+    _limpiar_publicaciones()
 
     payload = {
         "titulo": "Calculadora científica",
@@ -26,7 +37,10 @@ def test_corte_vertical_crea_y_recupera_publicacion(
         "estado": "reacondicionado",
     }
 
-    create_response = client.post("/publicaciones", json=payload)
+    create_response = client.post(
+        "/publicaciones",
+        json=payload,
+    )
 
     assert create_response.status_code == 201
 
@@ -35,7 +49,6 @@ def test_corte_vertical_crea_y_recupera_publicacion(
     assert created["id"] > 0
     assert created["titulo"] == payload["titulo"]
     assert created["estado"] == "reacondicionado"
-    assert database.exists()
 
     list_response = client.get("/publicaciones")
 
@@ -48,57 +61,79 @@ def test_corte_vertical_crea_y_recupera_publicacion(
     assert publicaciones[0]["estado"] == "reacondicionado"
 
 
-def test_bloqueo_sqlite_degrada_controladamente_y_se_recupera(
-    tmp_path: Path,
-    monkeypatch,
-):
-    database = tmp_path / "campusmarket-lock-test.db"
-    monkeypatch.setenv("CAMPUSMARKET_DB_PATH", str(database))
+def test_mysql_persiste_y_recupera_publicacion():
+    _limpiar_publicaciones()
 
     payload = {
         "titulo": "Libro arquitectura",
-        "descripcion": "Prueba de bloqueo temporal de SQLite",
+        "descripcion": "Persistencia verificada sobre MySQL",
         "precio": 50000,
         "modalidad": "venta",
         "estado": "usado",
     }
 
-    initialize_database()
+    response = client.post(
+        "/publicaciones",
+        json=payload,
+    )
 
-    locker = sqlite3.connect(database)
-    locker.execute("BEGIN EXCLUSIVE")
+    assert response.status_code == 201
 
-    before = locker.execute(
-        "SELECT COUNT(*) FROM publicaciones"
-    ).fetchone()[0]
+    created = response.json()
+
+    connection = _connect()
 
     try:
-        start = time.perf_counter()
-        blocked_response = client.post("/publicaciones", json=payload)
-        blocked_elapsed = time.perf_counter() - start
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT
+                    id,
+                    titulo,
+                    descripcion,
+                    CAST(precio AS DOUBLE) AS precio,
+                    modalidad,
+                    estado
+                FROM publicaciones
+                WHERE id = %s
+                """,
+                (created["id"],),
+            )
 
-        after_failed = locker.execute(
-            "SELECT COUNT(*) FROM publicaciones"
-        ).fetchone()[0]
-
-        assert blocked_response.status_code == 503
-        assert blocked_elapsed <= 2.0
-        assert after_failed == before
-
-        detail = blocked_response.json()["detail"]
-        assert "temporalmente no disponible" in detail.lower()
+            row = cursor.fetchone()
 
     finally:
-        locker.rollback()
-        locker.close()
+        connection.close()
 
-    recovery_response = client.post("/publicaciones", json=payload)
+    assert row is not None
+    assert row["id"] == created["id"]
+    assert row["titulo"] == payload["titulo"]
+    assert row["estado"] == payload["estado"]
 
-    assert recovery_response.status_code == 201
 
-    with sqlite3.connect(database) as connection:
-        final_count = connection.execute(
-            "SELECT COUNT(*) FROM publicaciones"
-        ).fetchone()[0]
+def test_mysql_indisponible_degrada_controladamente(
+    monkeypatch,
+):
+    monkeypatch.setenv(
+        "CAMPUSMARKET_DB_PORT",
+        "3399",
+    )
 
-    assert final_count == before + 1
+    payload = {
+        "titulo": "Prueba indisponibilidad",
+        "descripcion": "MySQL temporalmente no disponible",
+        "precio": 50000,
+        "modalidad": "venta",
+        "estado": "usado",
+    }
+
+    response = client.post(
+        "/publicaciones",
+        json=payload,
+    )
+
+    assert response.status_code == 503
+
+    detail = response.json()["detail"]
+
+    assert "temporalmente no disponible" in detail.lower()
