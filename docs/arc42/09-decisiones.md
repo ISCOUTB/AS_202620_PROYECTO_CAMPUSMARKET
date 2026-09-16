@@ -25,7 +25,7 @@ etapa del proyecto.
 | ADR | Estado | Decisión | Alcance |
 |---|---|---|---|
 | [ADR-0001](../adr/0001-usar-monolito-modular.md) | Aceptado | Adoptar un monolito modular como estrategia arquitectónica inicial. | Arquitectura general |
-| [ADR-0002](../adr/0002-manejo-bloqueo-sqlite.md) | Histórico para la persistencia actual | Aplicar espera acotada y degradación controlada ante bloqueo temporal de SQLite durante el primer corte. | Persistencia del primer corte / EC-05 |
+| [ADR-0002](../adr/0002-manejo-bloqueo-sqlite.md) | Histórico - primer corte | Aplicar espera acotada y degradación controlada ante bloqueo temporal de SQLite durante el primer corte. | Persistencia del primer corte / EC-05 |
 | [ADR-0003](../adr/0003-usar-integracion-sincrona-http-json.md) | Aceptado | Mantener integración síncrona HTTP/JSON y protegerla mediante un contrato OpenAPI versionado. | Integración Frontend → Backend |
 | [ADR-0004](../adr/0004-migrar-persistencia-a-mysql.md) | Aceptado | Migrar la persistencia vigente de SQLite a MySQL a partir de la observación recibida del docente. | Persistencia vigente |
 

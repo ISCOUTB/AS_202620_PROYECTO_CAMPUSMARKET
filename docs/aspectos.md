@@ -70,7 +70,7 @@ FastAPI
 Gestión de Publicaciones
    ↓
 SQLite
-````
+```
 
 Esta referencia se conserva como historia arquitectónica.
 
