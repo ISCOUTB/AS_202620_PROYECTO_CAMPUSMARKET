@@ -14,16 +14,16 @@ actor "Administrador" as administrador
 
 package "CampusMarket" {
 
-    rectangle "Frontend Web\n\nFlutter / Dart\n\nInterfaz para publicar,\nconsultar y gestionar productos" as frontend
+    rectangle "Frontend Web\n\nFlutter / Dart\n\nInterfaz web para publicar,\nconsultar y gestionar productos" as frontend
 
     rectangle "Backend API\n\nFastAPI / Python\n\nExpone el contrato HTTP/JSON,\nvalida solicitudes y coordina\nla lógica de aplicación" as backend
 
     database "Persistencia\n\nMySQL\n\nBase: campusmarket\nAlmacena publicaciones" as mysql
 }
 
-estudiante --> frontend : Publica y consulta productos\n[HTTPS / HTML-CSS-JS]
+estudiante --> frontend : Publica y consulta productos\n[HTTPS / Flutter Web]
 
-administrador --> frontend : Supervisa contenido\n[HTTPS / HTML-CSS-JS]
+administrador --> frontend : Supervisa contenido\n[HTTPS / Flutter Web]
 
 frontend --> backend : GET /publicaciones\nPOST /publicaciones\n[HTTP/JSON síncrono]
 
