@@ -1,4 +1,3 @@
-
 # C4 Nivel 2 - Contenedores de CampusMarket
 
 El diagrama de contenedores vigente de CampusMarket se mantiene como
@@ -15,20 +14,24 @@ CampusMarket, indicando:
 
 - su responsabilidad general;
 - la tecnología utilizada;
-- las relaciones entre contenedores;
-- los protocolos principales de comunicación.
+- las relaciones entre actores y contenedores;
+- el propósito de cada comunicación;
+- el protocolo y formato o tecnología utilizados en cada relación.
 
 Este nivel responde principalmente a:
 
 - qué partes principales forman el sistema;
 - qué responsabilidad tiene cada contenedor;
 - qué tecnología utiliza cada uno;
-- cómo se comunican entre sí.
+- cómo interactúan los actores con el sistema;
+- cómo se comunican los contenedores entre sí.
 
 Los actores externos se mantienen coherentes con el C4 Nivel 1:
 
 - **Estudiante:** utiliza CampusMarket para publicar y consultar productos.
-- **Administrador:** accede al sistema para funciones de supervisión.
+- **Administrador:** representa el actor previsto para capacidades de supervisión.
+  Estas capacidades administrativas todavía no se consideran completamente
+  materializadas en el corte vertical actual.
 
 ---
 
@@ -36,18 +39,26 @@ Los actores externos se mantienen coherentes con el C4 Nivel 1:
 
 | Contenedor | Tecnología | Responsabilidad |
 |---|---|---|
-| Frontend Web | Flutter / Dart | Proporcionar la interfaz mediante la cual los usuarios interactúan con CampusMarket. |
+| Frontend Web | Flutter / Dart | Proporcionar la interfaz web mediante la cual los usuarios interactúan con CampusMarket. |
 | Backend API | FastAPI / Python | Recibir solicitudes HTTP, validar datos, ejecutar casos de uso y coordinar el acceso a la persistencia. |
 | Persistencia | MySQL | Almacenar y recuperar los datos actualmente materializados del dominio. |
 
 La topología vigente puede resumirse como:
 
 ```text
-Frontend Web
-    ↓ HTTP/JSON
-Backend API
-    ↓ PyMySQL / SQL
-MySQL
+Estudiante / Administrador
+          ↓
+  HTTPS / interfaz web
+          ↓
+     Flutter Web
+          ↓
+ HTTP/JSON síncrono
+          ↓
+      FastAPI
+          ↓
+   PyMySQL / SQL
+          ↓
+        MySQL
 ````
 
 La sustitución de SQLite por MySQL modifica la tecnología de persistencia, pero
@@ -61,11 +72,11 @@ mantiene la separación arquitectónica entre:
 
 ## Correspondencia con el código
 
-| Contenedor C4      | Evidencia en el repositorio                                                          |
-| ------------------ | ------------------------------------------------------------------------------------ |
-| Frontend Web       | `frontend/campusmarket/lib/`                                                         |
-| Backend API        | `backend/app/`                                                                       |
-| Persistencia MySQL | `backend/app/publicaciones/repository.py`, que utiliza PyMySQL para acceder a MySQL. |
+| Contenedor C4      | Evidencia en el repositorio                                                         |
+| ------------------ | ----------------------------------------------------------------------------------- |
+| Frontend Web       | `frontend/campusmarket/lib/`                                                        |
+| Backend API        | `backend/app/`                                                                      |
+| Persistencia MySQL | `backend/app/publicaciones/repository.py`, que utiliza PyMySQL para acceder a MySQL |
 
 El acceso productivo a la persistencia está encapsulado en:
 
@@ -86,29 +97,70 @@ La tabla actualmente materializada es:
 
 ---
 
-## Relaciones entre contenedores
+## Relaciones entre actores y contenedores
 
-Las relaciones principales son:
+Cada relación del C4 Nivel 2 explicita su propósito y el protocolo, formato o
+tecnología utilizada.
 
 ### Estudiante → Frontend Web
 
-El estudiante utiliza la interfaz Flutter para crear y consultar publicaciones.
+El estudiante accede al Frontend Web para publicar y consultar productos.
+
+La relación se representa como:
+
+```text
+Estudiante
+    ↓
+Publica y consulta productos
+[HTTPS / interfaz web Flutter Web]
+    ↓
+Frontend Web
+```
+
+La interacción se realiza mediante una interfaz web implementada con
+Flutter/Dart y servida al usuario mediante HTTPS en un entorno desplegado.
+
+En desarrollo local puede utilizarse HTTP.
 
 ### Administrador → Frontend Web
 
-El administrador utilizará el frontend para capacidades de supervisión.
+El administrador representa el actor asociado a capacidades de supervisión.
 
-Las capacidades administrativas todavía no se presentan como completamente
-materializadas.
+La relación se representa como:
+
+```text
+Administrador
+    ↓
+Supervisa contenido
+[HTTPS / interfaz web Flutter Web]
+    ↓
+Frontend Web
+```
+
+La capacidad administrativa se conserva como parte del límite arquitectónico y
+del diseño del sistema, pero todavía no debe interpretarse como una
+funcionalidad completamente materializada dentro del corte vertical actual.
 
 ### Frontend Web → Backend API
 
-El frontend crea y consulta publicaciones mediante:
+El Frontend Web crea y consulta publicaciones mediante:
 
 * HTTP;
 * JSON;
 * estilo REST;
 * comunicación síncrona.
+
+La relación se representa como:
+
+```text
+Frontend Web
+    ↓
+GET /publicaciones
+POST /publicaciones
+[HTTP/JSON síncrono]
+    ↓
+Backend API
+```
 
 Los endpoints actualmente materializados incluyen:
 
@@ -128,7 +180,18 @@ El Backend API guarda y recupera publicaciones mediante:
 * SQL;
 * conexiones controladas desde el repositorio.
 
-El frontend no accede directamente a MySQL.
+La relación se representa como:
+
+```text
+Backend API
+    ↓
+Guarda y consulta publicaciones
+[PyMySQL / SQL]
+    ↓
+MySQL
+```
+
+El Frontend Web no accede directamente a MySQL.
 
 ---
 
@@ -137,12 +200,14 @@ El frontend no accede directamente a MySQL.
 El corte vertical actualmente verificable recorre:
 
 ```text
-Flutter Web
+Estudiante
     ↓
+Frontend Flutter Web
+    ↓ HTTP/JSON
 FastAPI
     ↓
-módulo publicaciones
-    ↓
+Gestión de Publicaciones
+    ↓ PyMySQL / SQL
 MySQL
 ```
 
@@ -181,7 +246,15 @@ HTTP / JSON / REST / comunicación síncrona
 
 El contrato se documenta mediante:
 
-`contracts/openapi-v1.json`
+[`contracts/openapi-v1.json`](../../contracts/openapi-v1.json)
+
+La versión actual de la API es:
+
+`1.0.0`
+
+El contrato utiliza:
+
+`OpenAPI 3.1.0`
 
 La estrategia síncrona, sus consecuencias y su acoplamiento temporal se
 registran en:
@@ -195,15 +268,20 @@ La implementación del proveedor se verifica mediante:
 La relación puede resumirse como:
 
 ```text
-Flutter
-   ↓
-Contrato OpenAPI
-   ↓
+Flutter Web
+    ↓ HTTP/JSON
+Contrato OpenAPI 1.0.0
+    ↓
 FastAPI
 ```
 
-La prueba de contrato evita depender únicamente de la inspección manual del
-documento OpenAPI.
+La prueba de contrato compara el contrato versionado con la superficie OpenAPI
+generada por FastAPI.
+
+Por tanto, la verificación no depende únicamente de inspección manual.
+
+Un cambio incompatible de rutas, operaciones o esquemas provoca el fallo de la
+prueba de contrato.
 
 ---
 
@@ -225,11 +303,11 @@ Esto permite mantener:
 
 ```text
 router.py
-   ↓
+    ↓
 service.py
-   ↓
+    ↓
 repository.py
-   ↓
+    ↓ PyMySQL / SQL
 MySQL
 ```
 
@@ -283,6 +361,10 @@ Otros contextos, como:
 * Administración;
 
 no deben escribir directamente sobre esta tabla.
+
+Si en el futuro necesitan consultar o modificar información de Publicaciones,
+deberán hacerlo mediante interfaces definidas por el contexto propietario y no
+mediante acceso directo a la persistencia.
 
 Estas reglas se detallan en:
 
@@ -384,7 +466,9 @@ Por tanto:
 * cambia la tecnología de almacenamiento;
 * cambia el mecanismo de acceso de `sqlite3` a PyMySQL.
 
-La decisión de migración debe quedar registrada mediante un ADR independiente.
+La decisión de migración está registrada mediante un ADR independiente:
+
+[ADR-0004 - Migración de SQLite a MySQL](../adr/0004-migrar-sqlite-a-mysql.md)
 
 ---
 
@@ -403,17 +487,28 @@ La decisión base continúa registrada en:
 
 [ADR-0001 - Monolito modular](../adr/0001-usar-monolito-modular.md)
 
+La estrategia de integración se documenta en:
+
+[ADR-0003 - Integración síncrona HTTP/JSON](../adr/0003-usar-integracion-sincrona-http-json.md)
+
+La persistencia vigente se documenta en:
+
+[ADR-0004 - Migración de SQLite a MySQL](../adr/0004-migrar-sqlite-a-mysql.md)
+
 ---
 
 ## Alcance del Nivel 2
 
 Este diagrama representa únicamente:
 
+* actores externos;
 * contenedores principales;
 * responsabilidades generales;
 * tecnologías principales;
+* relaciones entre actores y contenedores;
 * relaciones entre contenedores;
-* protocolos de comunicación principales.
+* propósito de las comunicaciones;
+* protocolos, formatos o tecnologías principales utilizadas en cada relación.
 
 No representa:
 
@@ -439,14 +534,20 @@ El C4 Nivel 2 realiza un acercamiento al interior de esa caja y muestra cómo el
 sistema se materializa actualmente mediante:
 
 ```text
-Frontend Web
-    ↓
-Backend API
-    ↓
-MySQL
+Estudiante / Administrador
+          ↓
+     Frontend Web
+          ↓
+      Backend API
+          ↓
+         MySQL
 ```
 
 Los actores y límites permanecen coherentes entre ambos niveles.
+
+La presencia del actor Administrador expresa el límite y la responsabilidad
+prevista del sistema, sin afirmar que todas sus capacidades estén actualmente
+implementadas.
 
 ---
 
@@ -454,7 +555,7 @@ Los actores y límites permanecen coherentes entre ambos niveles.
 
 El C4 Nivel 3 amplía exclusivamente el contenedor Backend API.
 
-La estructura materializada es:
+La estructura actualmente materializada es:
 
 ```text
 API de Publicaciones
@@ -466,6 +567,13 @@ Repositorio de Publicaciones
 MySQL
 ```
 
+En este nivel también se mantienen explícitos los límites todavía no
+materializados de:
+
+* Gestión de Usuarios;
+* Catálogo;
+* Administración.
+
 Documentación:
 
 [C4 Nivel 3 - Componentes del Backend](./03-componentes-backend.md)
@@ -473,6 +581,38 @@ Documentación:
 Fuente:
 
 [`03-componentes-backend.puml`](./03-componentes-backend.puml)
+
+---
+
+## Trazabilidad S7
+
+La relación arquitectónica principal de S7 puede seguirse mediante:
+
+```text
+ASP-07
+  ↓
+EC-06
+  ↓
+C4 Nivel 2
+  ↓
+ADR-0003
+  ↓
+OpenAPI 1.0.0
+  ↓
+FastAPI / Flutter
+  ↓
+test_contrato_openapi.py
+  ↓
+GitHub Actions
+```
+
+Esta cadena conecta la decisión arquitectónica con:
+
+* la documentación;
+* el contrato;
+* la implementación;
+* la prueba automatizada;
+* la evidencia del pipeline.
 
 ---
 
@@ -484,10 +624,8 @@ El archivo:
 
 es la fuente versionada y vigente del C4 Nivel 2.
 
-Cualquier modificación gráfica debe realizarse sobre ese archivo para evitar
-versiones contradictorias de la arquitectura.
+Cualquier modificación gráfica debe realizarse primero sobre ese archivo para
+evitar versiones contradictorias de la arquitectura.
 
 La documentación textual de este archivo complementa el diagrama, pero no
 reemplaza su fuente PlantUML.
-
-````
