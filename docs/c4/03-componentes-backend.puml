@@ -1,7 +1,7 @@
 @startuml
 
 title CampusMarket - C4 Nivel 3 · Componentes del Backend API
-caption Semana 6 · Dominio y modularidad · Equipo CampusMarket
+caption Semana 7 · API-first, modularidad y persistencia MySQL · Equipo CampusMarket
 
 left to right direction
 
@@ -9,19 +9,19 @@ skinparam shadowing false
 skinparam defaultTextAlignment center
 skinparam packageStyle rectangle
 
-rectangle "Frontend Web\n\nFlutter / Dart" as frontend
+rectangle "Frontend\n\nFlutter / Dart" as frontend
 
 package "Backend API\nFastAPI / Python" {
 
-    rectangle "Entrada de aplicación\n\nmain.py\n\nConfigura FastAPI y registra\nlos routers disponibles" as main
+    rectangle "Entrada de aplicación\n\nmain.py\n\nConfigura FastAPI,\nCORS y registra\nlos routers disponibles" as main
 
     package "Contexto: Gestión de Publicaciones" {
 
-        rectangle "API de Publicaciones\n\nrouter.py\n\nExpone endpoints HTTP,\nvalida payloads y traduce\nerrores a respuestas HTTP" as router
+        rectangle "API de Publicaciones\n\nrouter.py\n\nExpone endpoints HTTP,\nvalida contratos de entrada\ny traduce errores a HTTP" as router
 
-        rectangle "Servicio de Publicaciones\n\nservice.py\n\nNormaliza datos y coordina\nlas reglas de aplicación" as service
+        rectangle "Servicio de Publicaciones\n\nservice.py\n\nNormaliza datos,\ncoordina casos de uso\ny desacopla API de persistencia" as service
 
-        rectangle "Repositorio de Publicaciones\n\nrepository.py\n\nÚnico componente productivo\nque escribe y consulta\nla entidad publicaciones" as repository
+        rectangle "Repositorio de Publicaciones\n\nrepository.py\n\nÚnico componente productivo\nque accede directamente\na la persistencia" as repository
     }
 
     rectangle "Gestión de Usuarios\n\nLímite definido\nNo materializado actualmente" as usuarios
@@ -31,9 +31,9 @@ package "Backend API\nFastAPI / Python" {
     rectangle "Administración\n\nLímite definido\nNo materializado actualmente" as administracion
 }
 
-database "Persistencia local\n\nSQLite\n\nTabla: publicaciones" as sqlite
+database "Persistencia\n\nMySQL\n\nBase: campusmarket\nTabla: publicaciones" as mysql
 
-frontend --> router : Crear y consultar publicaciones\n[HTTP / JSON]
+frontend --> router : GET /publicaciones\nPOST /publicaciones\n[HTTP / JSON síncrono]
 
 main --> router : Registra router
 
@@ -41,14 +41,26 @@ router --> service : crear_publicacion()\nlistar_publicaciones()
 
 service --> repository : create_publication()\nlist_publications()
 
-repository --> sqlite : INSERT / SELECT\n[sqlite3 / SQL]
+repository --> mysql : CREATE TABLE / INSERT / SELECT\n[PyMySQL / SQL]
 
 usuarios -[hidden]-> router
 catalogo -[hidden]-> service
 administracion -[hidden]-> repository
 
+note right of router
+**CONTRATO DE API**
+
+Los endpoints HTTP/JSON
+constituyen el contrato entre
+Frontend y Backend.
+
+El contrato está documentado
+mediante OpenAPI.
+end note
+
 note right of usuarios
-**Estado S6**
+**Estado actual**
+
 El contexto está delimitado,
 pero su funcionalidad todavía
 no está materializada.
@@ -56,18 +68,22 @@ end note
 
 note right of catalogo
 **Regla de propiedad**
-Catálogo podrá leer o solicitar
-información de publicaciones,
+
+Catálogo podrá consultar
+información de Publicaciones
+mediante contratos definidos,
 pero no escribir directamente
 la tabla publicaciones.
 end note
 
 note right of administracion
 **Regla de comunicación**
+
 Administración deberá solicitar
-operaciones mediante contratos
-de Publicaciones y no acceder
-directamente a su persistencia.
+operaciones mediante interfaces
+del contexto Publicaciones,
+sin acceder directamente
+a su persistencia.
 end note
 
 note bottom of repository
@@ -83,8 +99,22 @@ Gestión de Publicaciones es el
 - publicaciones.modalidad
 - publicaciones.estado
 
-La escritura productiva está
+La persistencia productiva está
 encapsulada en repository.py.
+
+El acceso a MySQL se realiza
+mediante PyMySQL.
+end note
+
+note bottom of mysql
+**PERSISTENCIA ACTUAL**
+
+MySQL reemplaza a SQLite
+como tecnología de persistencia
+vigente del sistema.
+
+SQLite queda únicamente como
+evidencia histórica del Corte 1.
 end note
 
 legend bottom
@@ -93,7 +123,9 @@ legend bottom
 | Gestión de Publicaciones | Contexto actualmente materializado |
 | API / Servicio / Repositorio | Componentes internos verificables en código |
 | Usuarios / Catálogo / Administración | Límites definidos aún no materializados |
-| SQLite | Contenedor de persistencia del C4 Nivel 2 |
+| MySQL | Persistencia vigente de CampusMarket |
+| HTTP / JSON | Integración síncrona Frontend → Backend |
+| OpenAPI | Contrato documentado de la API |
 | Flecha | Dependencia o comunicación observable |
 endlegend
 

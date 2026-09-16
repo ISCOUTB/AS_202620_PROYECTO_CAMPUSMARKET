@@ -1,3 +1,4 @@
+﻿
 ````markdown
 # 5. Bloques de construcción
 
@@ -8,7 +9,7 @@ arquitectura actual:
 |---|---|---|---|
 | Frontend Web | Capturar información del usuario, presentar las funcionalidades disponibles y comunicarse con el backend. | Flutter / Dart | `frontend/campusmarket/lib/` |
 | Backend API | Recibir solicitudes HTTP, coordinar reglas de aplicación y controlar el acceso a las capacidades del dominio. | FastAPI / Python | `backend/app/` |
-| Persistencia local | Almacenar y recuperar los datos actualmente materializados del dominio. | SQLite / `sqlite3` | acceso productivo encapsulado en `backend/app/publicaciones/repository.py` |
+| Persistencia | Almacenar y recuperar los datos actualmente materializados del dominio. | MySQL / PyMySQL | acceso productivo encapsulado en `backend/app/publicaciones/repository.py` |
 
 Esta división corresponde a los contenedores representados en el
 **C4 Nivel 2**.
@@ -17,6 +18,10 @@ Durante S6 se profundiza además en la estructura interna del contenedor
 **Backend API** mediante un **C4 Nivel 3**, haciendo explícitos los límites
 modulares, los componentes actualmente materializados y la propiedad de los
 datos.
+
+Durante S7 se complementa esta estructura con una orientación **API-first**,
+donde el contrato entre frontend y backend se documenta mediante OpenAPI y se
+verifica automáticamente.
 
 ---
 
@@ -72,7 +77,7 @@ el flujo:
 ```text
 Frontend Web
      |
-     | HTTP / JSON
+     | HTTP / JSON síncrono
      v
 API de Publicaciones
      |
@@ -82,9 +87,9 @@ Servicio de Publicaciones
      v
 Repositorio de Publicaciones
      |
-     | SQL / sqlite3
+     | PyMySQL / SQL
      v
-SQLite
+MySQL
 ````
 
 ---
@@ -102,9 +107,16 @@ SQLite
 * configurar FastAPI;
 * registrar middleware;
 * registrar los routers actualmente disponibles;
-* actuar como punto de composición del Backend API.
+* actuar como punto de composición del Backend API;
+* exponer la configuración general de la API.
 
 En el estado actual registra el router correspondiente a Publicaciones.
+
+También expone el endpoint:
+
+`GET /health`
+
+como mecanismo básico de verificación del Backend API.
 
 ---
 
@@ -120,14 +132,18 @@ En el estado actual registra el router correspondiente a Publicaciones.
 * recibir y validar solicitudes;
 * utilizar los modelos de entrada y salida;
 * delegar las operaciones al servicio;
-* traducir condiciones de aplicación a respuestas HTTP.
+* traducir condiciones de aplicación a respuestas HTTP;
+* mantener separada la interfaz HTTP de la persistencia.
 
 Actualmente participa en:
 
 * `POST /publicaciones`;
 * `GET /publicaciones`.
 
-La API no ejecuta SQL ni accede directamente a SQLite.
+La API no ejecuta SQL ni accede directamente a MySQL.
+
+La comunicación externa se mantiene mediante HTTP/JSON y su contrato se
+documenta con OpenAPI.
 
 ---
 
@@ -146,7 +162,8 @@ La API no ejecuta SQL ni accede directamente a SQLite.
 * propagar de forma controlada las condiciones de indisponibilidad de
   persistencia.
 
-El servicio no ejecuta SQL directamente.
+El servicio no ejecuta SQL directamente ni conoce detalles de conexión con
+MySQL.
 
 ---
 
@@ -158,12 +175,17 @@ El servicio no ejecuta SQL directamente.
 
 **Responsabilidad**
 
-* encapsular las conexiones a SQLite;
-* crear la estructura de persistencia necesaria;
+* encapsular las conexiones a MySQL;
+* inicializar la estructura de persistencia necesaria;
 * insertar publicaciones;
 * consultar publicaciones;
-* manejar condiciones específicas de bloqueo de SQLite;
+* manejar errores técnicos de acceso a persistencia;
+* preservar las transacciones mediante `commit` y `rollback`;
 * aislar del resto del contexto los detalles concretos de persistencia.
+
+El acceso a MySQL se realiza mediante:
+
+`PyMySQL`
 
 Este componente constituye actualmente el **único escritor productivo** de la
 entidad persistida:
@@ -189,7 +211,7 @@ service.py
 repository.py
    |
    v
-SQLite
+MySQL
 ```
 
 La regla adoptada es:
@@ -216,9 +238,14 @@ responsabilidades internas del Backend API.
 Las interfaces actualmente verificables son:
 
 * **Flutter → FastAPI:** REST sobre HTTP/JSON.
-* **FastAPI → SQLite:** SQL mediante la biblioteca estándar `sqlite3`.
+* **FastAPI → MySQL:** SQL mediante PyMySQL.
 * **Endpoint de creación:** `POST /publicaciones`.
 * **Endpoint de consulta:** `GET /publicaciones`.
+* **Endpoint de salud:** `GET /health`.
+* **Contrato de API:** `contracts/openapi-v1.json`.
+
+La comunicación Flutter → FastAPI actualmente materializada es **síncrona**:
+cada solicitud HTTP espera una respuesta en la misma interacción.
 
 En el interior del contexto Publicaciones, la comunicación mantiene la
 secuencia:
@@ -232,7 +259,28 @@ mediante acceso directo a la persistencia de Publicaciones.
 
 ---
 
-## 5.6 Propiedad de datos
+## 5.6 Contrato API-first
+
+Durante S7 se formaliza el contrato entre consumidor y proveedor mediante
+OpenAPI.
+
+El contrato versionado se encuentra en:
+
+`contracts/openapi-v1.json`
+
+La implementación del Backend API debe permanecer coherente con dicho contrato.
+
+La correspondencia se verifica mediante:
+
+`backend/tests/test_contrato_openapi.py`
+
+La intención arquitectónica es evitar que el contrato sea únicamente una
+descripción documental: debe ser contrastado automáticamente contra la
+implementación real.
+
+---
+
+## 5.7 Propiedad de datos
 
 S6 adopta como regla arquitectónica:
 
@@ -271,7 +319,7 @@ no deben ejecutar operaciones directas de escritura sobre esta entidad.
 
 ---
 
-## 5.7 Reglas entre módulos
+## 5.8 Reglas entre módulos
 
 Para conservar las fronteras del monolito modular se establecen las siguientes
 reglas:
@@ -326,7 +374,7 @@ usuario.
 
 ---
 
-## 5.8 Verificación automática de la modularidad
+## 5.9 Verificación automática de la modularidad
 
 Las reglas principales de separación se complementan mediante la prueba:
 
@@ -337,26 +385,34 @@ Esta prueba verifica que:
 * `backend/app/publicaciones/repository.py` sea el único escritor productivo de
   `publicaciones`;
 
-* `usuarios`, `catalogo` y `administracion` no accedan directamente a SQLite;
+* `usuarios`, `catalogo` y `administracion` no accedan directamente a la
+  tecnología de persistencia;
 
 * otros contextos no importen directamente el repositorio interno de
   Publicaciones;
 
 * el flujo implementado mantenga la dirección:
 
-  `router → service → repository → SQLite`;
+  `router → service → repository → MySQL`;
 
 * la persistencia del contexto permanezca encapsulada en su repositorio.
 
-Estas comprobaciones se ejecutan junto con las demás pruebas del backend
-mediante GitHub Actions.
+La integración vertical se verifica además mediante:
 
-La verificación automática complementa la auditoría documental de S6 y permite
-detectar futuras violaciones de las reglas arquitectónicas.
+[`backend/tests/test_publicaciones_vertical.py`](../../backend/tests/test_publicaciones_vertical.py)
+
+Esta prueba comprueba:
+
+* creación de publicaciones a través de la API;
+* recuperación posterior mediante la API;
+* persistencia real de los datos en MySQL;
+* respuesta controlada `503` ante indisponibilidad de la persistencia.
+
+Estas comprobaciones se ejecutan junto con las demás pruebas del backend.
 
 ---
 
-## 5.9 Correspondencia con los niveles C4
+## 5.10 Correspondencia con los niveles C4
 
 La estructura arquitectónica queda representada en tres niveles.
 
@@ -373,7 +429,11 @@ Documentación:
 Representa:
 
 ```text
-Frontend Web → Backend API → SQLite
+Frontend Web
+    ↓ HTTP/JSON
+Backend API
+    ↓ PyMySQL / SQL
+MySQL
 ```
 
 Documentación:
@@ -392,7 +452,7 @@ Servicio de Publicaciones
         ↓
 Repositorio de Publicaciones
         ↓
-SQLite
+MySQL
 ```
 
 Documentación:
@@ -405,10 +465,36 @@ Fuente:
 
 ---
 
-## 5.10 Coherencia con ADR-0001
+## 5.11 Evolución de la persistencia
 
-La incorporación del C4 Nivel 3 no modifica la decisión arquitectónica
-establecida por ADR-0001.
+Durante el primer corte, CampusMarket utilizó SQLite como mecanismo de
+persistencia.
+
+Esa decisión y sus mediciones se mantienen documentadas como evidencia
+histórica, principalmente en:
+
+* ADR-0002;
+* evidencia de bloqueo de SQLite;
+* scripts y mediciones del primer corte.
+
+La persistencia vigente del sistema es **MySQL**.
+
+La migración modifica la tecnología de persistencia, pero mantiene:
+
+* el módulo propietario de `publicaciones`;
+* la dirección `router → service → repository`;
+* el principio de único escritor;
+* las fronteras del monolito modular.
+
+Por esta razón, la migración debe documentarse mediante un ADR independiente,
+sin reescribir las decisiones históricas del primer corte.
+
+---
+
+## 5.12 Coherencia con ADR-0001
+
+La incorporación del C4 Nivel 3 y la migración de persistencia no modifican la
+decisión arquitectónica establecida por ADR-0001.
 
 Los límites continúan siendo:
 
@@ -417,7 +503,7 @@ Los límites continúan siendo:
 * `catalogo`;
 * `administracion`.
 
-Durante S6 estos límites:
+Estos límites:
 
 * no fueron fusionados;
 * no fueron divididos;
@@ -426,14 +512,12 @@ Durante S6 estos límites:
 
 S6 profundiza en su definición, propiedad de datos y reglas de comunicación.
 
-Por esta razón no se registra un nuevo ADR de reajuste arquitectónico.
-
-Un nuevo ADR será necesario únicamente si una evolución posterior modifica de
-forma efectiva las fronteras establecidas por ADR-0001.
+S7 añade el contrato API-first y actualiza la tecnología de persistencia sin
+modificar esas fronteras funcionales.
 
 ---
 
-## 5.11 Evidencia relacionada
+## 5.13 Evidencia relacionada
 
 La estructura documentada en esta sección se complementa con:
 
@@ -443,10 +527,14 @@ La estructura documentada en esta sección se complementa con:
 * [C4 Nivel 3 - Componentes del Backend](../c4/03-componentes-backend.md)
 * [Auditoría de modularidad S6](../evidencias/auditoria-modularidad-s6-2026-09-12.md)
 * [Trazabilidad de aspectos](../aspectos.md)
+* [`contracts/openapi-v1.json`](../../contracts/openapi-v1.json)
+* [`test_modularidad_s6.py`](../../backend/tests/test_modularidad_s6.py)
+* [`test_publicaciones_vertical.py`](../../backend/tests/test_publicaciones_vertical.py)
+* [`test_contrato_openapi.py`](../../backend/tests/test_contrato_openapi.py)
 
 De esta forma, los bloques de construcción no se documentan únicamente como
 una estructura conceptual: su correspondencia se mantiene trazada hacia el
-código, la propiedad de los datos, la auditoría y las pruebas automáticas.
+código, la propiedad de los datos, los contratos, la auditoría y las pruebas
+automáticas.
 
-```
-```
+````

@@ -5,19 +5,28 @@ El diagrama de contexto vigente de CampusMarket se mantiene como
 
 [`01-contexto.puml`](./01-contexto.puml)
 
+---
+
 ## Propósito
 
 El C4 Nivel 1 representa a **CampusMarket como un único sistema** e identifica
-únicamente a las personas y elementos externos que interactúan con él.
+las personas y elementos externos que interactúan con él.
 
-En este nivel no se muestran contenedores, módulos, componentes, clases ni
-detalles internos de implementación.
+En este nivel no se muestran:
+
+- contenedores;
+- módulos;
+- componentes;
+- clases;
+- tecnologías internas de persistencia.
 
 Su objetivo es responder principalmente:
 
 - quién utiliza CampusMarket;
 - para qué interactúa con el sistema;
 - cuál es el límite del sistema bajo diseño.
+
+---
 
 ## Actores externos
 
@@ -31,8 +40,10 @@ Miembro de la comunidad universitaria que utiliza CampusMarket para:
 
 ### Administrador
 
-Usuario responsable de supervisar las publicaciones y apoyar la gestión del
+Usuario responsable de supervisar publicaciones y apoyar la gestión del
 contenido disponible en CampusMarket.
+
+---
 
 ## Sistema bajo diseño
 
@@ -40,8 +51,11 @@ contenido disponible en CampusMarket.
 publicación, consulta y búsqueda de productos dentro de la comunidad
 universitaria.
 
-En el C4 Nivel 1 se representa como una única caja, sin exponer su estructura
-interna.
+En el C4 Nivel 1 se representa como una única caja.
+
+Los detalles internos se documentan en niveles posteriores del modelo C4.
+
+---
 
 ## Relaciones principales
 
@@ -50,58 +64,99 @@ interna.
 - **Administrador → CampusMarket:** supervisa publicaciones y contenido
   mediante un navegador web.
 
-Durante el desarrollo local del prototipo se utiliza comunicación mediante
-**HTTP**.
+Durante el desarrollo local del prototipo la comunicación utiliza HTTP.
 
-El uso de **HTTPS** corresponde a un despliegue externo futuro y no se
-documenta como si ya estuviera implementado en el entorno local actual.
+El uso de HTTPS corresponde a un posible despliegue externo y no se presenta
+como una capacidad ya implementada en el entorno local.
+
+---
 
 ## Alcance
 
-En la línea base S4 y durante el primer corte se mantienen fuera del alcance
-actual:
+Actualmente se mantienen fuera del alcance materializado:
 
 - pagos electrónicos;
 - procesamiento bancario;
 - envíos y logística;
-- servicios externos de transporte.
+- integración con empresas externas de transporte.
 
-Actualmente no se representan sistemas externos adicionales porque esas
-integraciones no forman parte del prototipo implementado.
+No se representan sistemas externos adicionales porque todavía no forman parte
+del corte vertical implementado.
 
-Esta decisión mantiene el diagrama consistente con el estado real del sistema
-y evita representar integraciones todavía inexistentes.
+---
 
-## Relación con el C4 Nivel 2
+## Relación con C4 Nivel 2
 
-El **C4 Nivel 1** representa CampusMarket como un único sistema.
+El C4 Nivel 1 representa CampusMarket como un único sistema.
 
-El **C4 Nivel 2** realiza un acercamiento al interior de esa caja y muestra los
-contenedores actualmente implementados:
+El:
 
-- **Frontend Web** - Flutter / Dart;
-- **Backend API** - FastAPI / Python;
-- **Persistencia local** - SQLite.
+[C4 Nivel 2 - Contenedores](./02-contenedores.md)
 
-Los actores externos definidos en el Nivel 1 se mantienen coherentes con el
-Nivel 2.
+realiza un acercamiento al interior de CampusMarket.
 
-La restricción **R-07 - Persistencia sin nueva infraestructura durante el
-primer corte** no modifica los actores externos ni el límite de CampusMarket,
-por lo que la topología del C4 Nivel 1 se conserva durante S5.
+La arquitectura vigente del Nivel 2 se materializa mediante:
 
-La respuesta arquitectónica de S5 afecta el comportamiento interno ante la
-indisponibilidad temporal de SQLite, detalle que se documenta en el
-[C4 Nivel 2](./02-contenedores.md) y en
-[ADR-0002](../adr/0002-manejo-bloqueo-sqlite.md).
+```text
+Frontend Web
+    ↓ HTTP/JSON
+Backend API
+    ↓ PyMySQL / SQL
+MySQL
+````
+
+Los contenedores vigentes son:
+
+* **Frontend Web** — Flutter / Dart;
+* **Backend API** — FastAPI / Python;
+* **Persistencia** — MySQL.
+
+La persistencia mediante SQLite utilizada durante el primer corte forma parte de
+la historia arquitectónica del proyecto y no representa el estado vigente.
+
+Su tratamiento histórico permanece documentado mediante:
+
+[ADR-0002 - Manejo de bloqueo temporal de SQLite](../adr/0002-manejo-bloqueo-sqlite.md)
+
+La migración hacia MySQL se registra mediante:
+
+[ADR-0004 - Migrar la persistencia de SQLite a MySQL](../adr/0004-migrar-persistencia-a-mysql.md)
+
+---
+
+## Evolución arquitectónica
+
+El cambio:
+
+```text
+SQLite → MySQL
+```
+
+no altera el alcance del C4 Nivel 1.
+
+Los actores continúan siendo:
+
+* Estudiante;
+* Administrador.
+
+CampusMarket continúa representándose como un único sistema frente a esos
+actores.
+
+La modificación afecta únicamente la estructura interna mostrada a partir del
+C4 Nivel 2.
+
+---
 
 ## Fuente canónica
 
-El archivo [`01-contexto.puml`](./01-contexto.puml) es la fuente versionada y
-vigente del C4 Nivel 1.
+El archivo:
 
-Cualquier modificación del diagrama debe realizarse sobre ese archivo para
-evitar mantener versiones contradictorias de la arquitectura.
+[`01-contexto.puml`](./01-contexto.puml)
 
-La documentación textual de este archivo complementa el diagrama, pero no
-reemplaza su fuente PlantUML.
+es la fuente versionada y vigente del C4 Nivel 1.
+
+Cualquier modificación gráfica debe realizarse sobre ese archivo para evitar
+versiones contradictorias.
+
+La documentación Markdown complementa el diagrama, pero no reemplaza la fuente
+PlantUML.
