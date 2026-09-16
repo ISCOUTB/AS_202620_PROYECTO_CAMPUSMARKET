@@ -11,56 +11,88 @@ productos dentro de la comunidad universitaria.
 
 ---
 
-## Arquitectura
+# Estado arquitectónico vigente
 
 CampusMarket adopta un **monolito modular**, decisión registrada en:
 
 [ADR-0001 - Usar monolito modular](docs/adr/0001-usar-monolito-modular.md)
 
-Las capacidades principales del sistema se organizan alrededor de:
+Las capacidades principales se organizan alrededor de los contextos:
 
 - `usuarios`
 - `publicaciones`
 - `catalogo`
 - `administracion`
 
-El corte vertical actualmente implementado y verificable se concentra
-principalmente en la capacidad de `publicaciones`.
+Actualmente la capacidad funcional materializada con mayor profundidad es:
 
-La arquitectura ejecutable mantiene el recorrido:
+**Gestión de Publicaciones**
 
-**Flutter Web → FastAPI → módulo `publicaciones` → SQLite**
+El recorrido ejecutable vigente es:
 
-Durante S6 estos módulos se formalizaron además como límites de dominio,
-haciendo explícitas sus responsabilidades, relaciones y propiedad de datos.
+```text
+Flutter Web
+    ↓ HTTP/JSON
+    ↓ contrato OpenAPI
+FastAPI
+    ↓
+router.py
+    ↓
+service.py
+    ↓
+repository.py
+    ↓ PyMySQL / SQL
+MySQL
+```
+
+La persistencia vigente es **MySQL**.
+
+SQLite permanece únicamente como parte de la historia arquitectónica del
+primer corte, principalmente S4 y S5.
+
+La migración fue realizada posteriormente como respuesta a una observación
+docente y se encuentra registrada en:
+
+[ADR-0004 - Migrar persistencia de SQLite a MySQL](docs/adr/0004-migrar-persistencia-a-mysql.md)
 
 ---
 
-## Tecnologías actuales
+# Tecnologías actuales
 
 | Elemento | Tecnología |
 |---|---|
 | Frontend | Flutter / Dart |
 | Backend | FastAPI / Python |
-| Persistencia actual | SQLite |
+| Estilo arquitectónico | Monolito modular |
+| Persistencia vigente | MySQL |
+| Driver de persistencia | PyMySQL |
+| API | HTTP/JSON REST |
+| Contrato de API | OpenAPI 3.1 |
+| Versión del contrato | `1.0.0` |
 | Pruebas backend | pytest |
 | Integración continua | GitHub Actions |
 | Análisis estático | SonarQube Cloud |
 | Diagramas arquitectónicos | PlantUML |
 
-SQLite es la persistencia realmente implementada actualmente.
+La integración entre Flutter y FastAPI es actualmente **síncrona** mediante
+HTTP/JSON.
 
-Una eventual evolución hacia otra tecnología de persistencia no se documenta
-como implementada mientras no exista en el código.
+La decisión se documenta en:
+
+[ADR-0003 - Integración síncrona HTTP/JSON](docs/adr/0003-usar-integracion-sincrona-http-json.md)
 
 ---
 
-## Requisitos previos
+# Requisitos previos
 
-- Python 3.12
-- Flutter disponible en `PATH`
-- Google Chrome
-- dependencias Python instaladas
+Para ejecutar el estado vigente del proyecto se requiere:
+
+- Python 3.12;
+- Flutter disponible en `PATH`;
+- Google Chrome;
+- MySQL disponible;
+- dependencias Python instaladas;
+- configuración de conexión a MySQL mediante variables de entorno.
 
 Desde la raíz del repositorio:
 
@@ -68,77 +100,155 @@ Desde la raíz del repositorio:
 pip install -r backend/requirements.txt
 ```
 
+Las dependencias del backend se encuentran en:
+
+[`backend/requirements.txt`](backend/requirements.txt)
+
 ---
 
-## Arranque con un solo comando
+# Configuración de MySQL
 
-### Windows
+La aplicación utiliza las siguientes variables de entorno:
+
+```text
+CAMPUSMARKET_DB_HOST
+CAMPUSMARKET_DB_PORT
+CAMPUSMARKET_DB_USER
+CAMPUSMARKET_DB_PASSWORD
+CAMPUSMARKET_DB_NAME
+```
+
+Ejemplo para PowerShell:
+
+```powershell
+$env:CAMPUSMARKET_DB_HOST="localhost"
+$env:CAMPUSMARKET_DB_PORT="3306"
+$env:CAMPUSMARKET_DB_USER="campusmarket_app"
+$env:CAMPUSMARKET_DB_PASSWORD="<PASSWORD_LOCAL>"
+$env:CAMPUSMARKET_DB_NAME="campusmarket"
+```
+
+Las credenciales reales no deben almacenarse en el repositorio.
+
+El archivo `.env`, cuando se utiliza localmente, se mantiene fuera del control
+de versiones mediante `.gitignore`.
+
+El acceso productivo a MySQL se encuentra encapsulado en:
+
+[`backend/app/publicaciones/repository.py`](backend/app/publicaciones/repository.py)
+
+---
+
+# Arranque del prototipo
+
+## Windows
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\run_s4.ps1
 ```
 
-### Linux/macOS
+## Linux/macOS
 
 ```bash
 bash scripts/run_s4.sh
 ```
 
-El comando inicia:
+Los scripts permiten iniciar:
 
 - Backend FastAPI: `http://localhost:8000`
 - Frontend Flutter Web: `http://localhost:3000`
 
-La ejecución fue comprobada directamente y documentada mediante procedimiento
-reproducible y capturas.
+> **Importante:** estos scripts no levantan una instancia MySQL.
+> Antes de iniciar CampusMarket, MySQL debe estar disponible y las variables de
+> conexión deben encontrarse configuradas.
 
-Evidencia:
+La evidencia histórica del arranque con un solo comando se encuentra en:
 
 [Arranque con un solo comando](docs/evidencias/arranque-un-comando-2026-09-04.md)
 
-Durante la verificación se confirmó:
-
-- inicio correcto del backend;
-- inicio correcto del frontend;
-- acceso al frontend mediante `localhost:3000`;
-- respuesta correcta del endpoint `/health`.
+Esta evidencia corresponde al estado del primer corte.
 
 ---
 
-# Línea base arquitectónica S1-S4
+# API de CampusMarket
 
-Las evidencias construidas durante S1, S2, S3 y S4 conforman la línea base
-arquitectónica utilizada para el primer corte.
+Durante S7 se formalizó la interfaz entre:
 
-## Corte vertical S4
+**Frontend Flutter → Backend FastAPI**
 
-El recorrido implementado es:
+La integración utiliza:
 
-**Flutter Web → FastAPI → lógica de publicaciones → SQLite**
+- HTTP;
+- JSON;
+- estilo REST;
+- comunicación síncrona;
+- contrato OpenAPI versionado.
 
-La funcionalidad verificable permite crear y consultar publicaciones.
+El contrato fuente se encuentra en:
 
-### Correspondencia con el código
+[`contracts/openapi-v1.json`](contracts/openapi-v1.json)
 
-**Frontend**
+La guía asociada se encuentra en:
 
-- Interfaz:
-  [`publicacion_form_page.dart`](frontend/campusmarket/lib/publicaciones/publicacion_form_page.dart)
-- Cliente HTTP:
-  [`publicaciones_api.dart`](frontend/campusmarket/lib/publicaciones/publicaciones_api.dart)
+[`contracts/README.md`](contracts/README.md)
 
-**Backend**
+## Operaciones actualmente materializadas
 
-- Entrada HTTP:
-  [`router.py`](backend/app/publicaciones/router.py)
-- Lógica de aplicación:
-  [`service.py`](backend/app/publicaciones/service.py)
-- Persistencia:
-  [`repository.py`](backend/app/publicaciones/repository.py)
+| Método | Ruta | Propósito |
+|---|---|---|
+| `GET` | `/health` | Consultar disponibilidad del backend |
+| `GET` | `/publicaciones` | Consultar publicaciones |
+| `POST` | `/publicaciones` | Crear una publicación |
+
+La API mantiene identificadores de operación estables para facilitar generación
+de clientes y verificación de compatibilidad.
 
 ---
 
-## Pruebas automatizadas
+# Contrato OpenAPI y API-first
+
+CampusMarket utiliza un contrato OpenAPI versionado como referencia explícita
+de la interfaz entre consumidor y proveedor.
+
+La relación es:
+
+```text
+Flutter
+   ↓
+HTTP/JSON
+   ↓
+Contrato OpenAPI
+   ↓
+FastAPI
+```
+
+La prueba:
+
+[`backend/tests/test_contrato_openapi.py`](backend/tests/test_contrato_openapi.py)
+
+compara el contrato versionado con el esquema generado por FastAPI.
+
+La intención es detectar automáticamente cambios incompatibles como:
+
+- eliminar una ruta;
+- renombrar una operación;
+- retirar un campo requerido;
+- cambiar tipos;
+- hacer obligatorio un campo previamente opcional;
+- eliminar respuestas acordadas.
+
+Durante S7 se realizó una demostración controlada de ruptura del contrato.
+
+Evidencia:
+
+[Demostración de cambio incompatible S7](docs/evidencias/fallo-contrato-s7-2026-09-15.md)
+
+Después de restaurar la compatibilidad, el conjunto completo de pruebas volvió
+a verde.
+
+---
+
+# Pruebas automatizadas
 
 Desde la raíz:
 
@@ -146,31 +256,39 @@ Desde la raíz:
 python -m pytest backend/tests -q
 ```
 
-Las pruebas principales del proyecto incluyen:
+Las pruebas principales incluyen:
 
 - [`backend/tests/test_health.py`](backend/tests/test_health.py)
 - [`backend/tests/test_publicaciones_vertical.py`](backend/tests/test_publicaciones_vertical.py)
 - [`backend/tests/test_modularidad_s6.py`](backend/tests/test_modularidad_s6.py)
 - [`backend/tests/test_contrato_openapi.py`](backend/tests/test_contrato_openapi.py)
 
-El conjunto de pruebas verifica actualmente:
+El conjunto actual verifica:
 
 - disponibilidad del backend mediante `/health`;
-- recorrido HTTP del corte vertical;
-- creación y consulta de publicaciones;
-- persistencia SQLite;
-- degradación controlada ante bloqueo temporal;
-- propiedad única de la entidad `publicaciones`;
-- ausencia de acceso directo a SQLite desde otros contextos;
-- dirección de dependencias `router → service → repository → SQLite`.
-- correspondencia exacta entre el contrato OpenAPI versionado y el proveedor
-  FastAPI.
+- creación de publicaciones;
+- consulta de publicaciones;
+- persistencia real en MySQL;
+- respuesta HTTP `201` en creación válida;
+- respuesta controlada HTTP `503` cuando la persistencia no está disponible;
+- propiedad única del dato `publicaciones`;
+- ausencia de escritura directa desde otros contextos;
+- dirección interna:
+  `router → service → repository → MySQL`;
+- correspondencia entre contrato OpenAPI y proveedor FastAPI.
 
-Las pruebas se ejecutan automáticamente mediante GitHub Actions.
+La última verificación del conjunto completo produjo:
+
+```text
+12 passed
+```
+
+El warning de `StarletteTestClient/httpx` observado durante la ejecución es una
+advertencia de deprecación de dependencia y no provoca fallo de las pruebas.
 
 ---
 
-## Verificación del frontend
+# Verificación del frontend
 
 Desde:
 
@@ -178,13 +296,13 @@ Desde:
 cd frontend/campusmarket
 ```
 
-se ejecutó:
+puede ejecutarse:
 
 ```bash
 flutter analyze
 ```
 
-Resultado verificado:
+Durante las verificaciones realizadas se obtuvo:
 
 ```text
 No issues found!
@@ -192,106 +310,60 @@ No issues found!
 
 ---
 
-# Integración continua y análisis estático
+# Integración continua
 
-## GitHub Actions
-
-Las pruebas automatizadas del backend se ejecutan mediante:
+Las pruebas automatizadas se ejecutan mediante:
 
 [`.github/workflows/backend-tests.yml`](.github/workflows/backend-tests.yml)
 
-El workflow realiza:
+El pipeline actual:
 
-1. obtención del repositorio;
-2. configuración de Python 3.12;
-3. instalación de dependencias;
-4. ejecución de `pytest`.
+1. obtiene el repositorio;
+2. configura Python 3.12;
+3. instala las dependencias;
+4. levanta un servicio MySQL para CI;
+5. configura los parámetros de conexión;
+6. comprueba disponibilidad de MySQL;
+7. ejecuta las pruebas funcionales y arquitectónicas;
+8. ejecuta explícitamente la prueba de contrato OpenAPI.
 
-Las pruebas de modularidad incorporadas en S6 forman parte del mismo conjunto
-de pruebas y, por tanto, también se ejecutan dentro del pipeline.
+De esta manera, la ejecución de CI reproduce también la dependencia vigente
+sobre MySQL sin requerir credenciales locales del equipo.
 
-## SonarQube Cloud
+---
 
-El análisis estático se realiza mediante el proyecto oficial de CampusMarket
-en **SonarQube Cloud**, asociado al repositorio de ISCOUTB.
+# SonarQube Cloud
 
-La configuración complementaria se encuentra en:
+El análisis estático se realiza mediante el proyecto oficial de CampusMarket en
+**SonarQube Cloud**.
+
+Configuración:
 
 [`.sonarcloud.properties`](.sonarcloud.properties)
 
-La configuración separa explícitamente:
-
-**Código fuente**
+Código fuente analizado:
 
 - `backend/app`
 - `frontend/campusmarket/lib`
 
-**Pruebas**
+Pruebas:
 
 - `backend/tests`
 
-El proyecto oficial utilizado es:
+Proyecto oficial:
 
-`ISCOUTB_AS_202620_PROYECTO_CAMPUSMARKET`
+```text
+ISCOUTB_AS_202620_PROYECTO_CAMPUSMARKET
+```
 
-Las integraciones verificadas reportaron:
+Durante la integración más reciente se obtuvo:
 
 - Quality Gate: **Passed**
-- Issues nuevos: **0**
-- Security Hotspots nuevos: **0**
-- Duplicación en código nuevo: **0.0 %**
+- Code scanning: **Passed**
+- Backend tests: **Passed**
 
-La configuración temporal de SonarCloud utilizada inicialmente durante el
-saneamiento fue retirada una vez disponible el proyecto oficial del curso.
-
-GitHub Actions permanece dedicado a las pruebas automatizadas y SonarQube
-Cloud realiza el análisis estático oficial.
-
----
-
-# Correcciones acumuladas antes del primer corte
-
-Durante las clases, el docente solicitó organizar la respuesta a la
-retroalimentación acumulada mediante un archivo Markdown en el repositorio,
-separando las correcciones realizadas durante las semanas anteriores.
-
-Ese seguimiento se encuentra en:
-
-[`correcciones.md`](correcciones.md)
-
-El documento registra para S1-S4:
-
-- retroalimentación recibida;
-- correcciones realizadas;
-- evidencia correspondiente;
-- estado de saneamiento.
-
-Estado acumulado:
-
-| Semana | Estado |
-|---|---|
-| S1 | **Saneado** |
-| S2 | **Saneado** |
-| S3 | **Saneado** |
-| S4 | **Saneado** |
-
-Entre los principales pendientes atendidos antes del primer corte se
-encuentran:
-
-- tensiones entre atributos de calidad;
-- estructura documental arc42;
-- tabla de trazabilidad de ocho columnas;
-- actualización del registro de IA;
-- distribución de contribuciones;
-- correspondencia de las fronteras del monolito modular;
-- trazabilidad ADR → implementación;
-- arranque con un solo comando;
-- integración oficial de SonarQube Cloud;
-- medición de una línea base reproducible.
-
-`correcciones.md` mantiene además de forma explícita el estado actual de los
-aspectos que todavía no forman parte del corte vertical, evitando asociarlos
-artificialmente con código o pruebas que no los materializan.
+SonarQube Cloud y GitHub Actions complementan la revisión manual de la
+arquitectura.
 
 ---
 
@@ -305,12 +377,13 @@ mediante PlantUML.
 - [Documentación](docs/c4/01-contexto.md)
 - [Fuente PlantUML](docs/c4/01-contexto.puml)
 
-El Nivel 1 representa CampusMarket como un único sistema frente a:
+Representa CampusMarket como un único sistema frente a:
 
 - Estudiante;
 - Administrador.
 
-No expone tecnologías ni estructura interna.
+El cambio de SQLite a MySQL no modifica el Nivel 1 porque se trata de una
+decisión interna del sistema.
 
 ---
 
@@ -319,35 +392,35 @@ No expone tecnologías ni estructura interna.
 - [Documentación](docs/c4/02-contenedores.md)
 - [Fuente PlantUML](docs/c4/02-contenedores.puml)
 
-El Nivel 2 representa:
+El estado vigente representa:
 
-**Frontend Web → Backend API → Persistencia local SQLite**
+```text
+Frontend Web
+    ↓ HTTP/JSON
+Backend API
+    ↓ PyMySQL / SQL
+MySQL
+```
 
-con sus responsabilidades, tecnologías y relaciones.
+Los contenedores vigentes son:
 
-Incluye:
+- **Frontend Web** — Flutter / Dart;
+- **Backend API** — FastAPI / Python;
+- **Persistencia** — MySQL.
 
-- contenedores ejecutables;
-- responsabilidades;
-- tecnologías;
-- relaciones entre contenedores;
-- flechas etiquetadas;
-- leyenda arquitectónica.
-
-No se incorporan routers, services, repositories o clases como cajas del
-Nivel 2 porque ese detalle corresponde al Nivel 3.
+SQLite se conserva únicamente como referencia histórica de los cortes
+anteriores.
 
 ---
 
-## C4 Nivel 3 - Componentes del Backend API
+## C4 Nivel 3 - Componentes del Backend
 
 - [Documentación](docs/c4/03-componentes-backend.md)
 - [Fuente PlantUML](docs/c4/03-componentes-backend.puml)
 
-El Nivel 3 realiza un acercamiento al interior del contenedor
-**Backend API**.
+El Nivel 3 realiza un acercamiento al contenedor **Backend API**.
 
-La materialización actualmente verificable sigue el flujo:
+La materialización vigente es:
 
 ```text
 Frontend Web
@@ -358,10 +431,10 @@ Servicio de Publicaciones
      ↓
 Repositorio de Publicaciones
      ↓
-SQLite
+MySQL
 ```
 
-La correspondencia principal con el código es:
+Correspondencia:
 
 | Componente | Implementación |
 |---|---|
@@ -369,6 +442,7 @@ La correspondencia principal con el código es:
 | API de Publicaciones | `backend/app/publicaciones/router.py` |
 | Servicio de Publicaciones | `backend/app/publicaciones/service.py` |
 | Repositorio de Publicaciones | `backend/app/publicaciones/repository.py` |
+| Persistencia | MySQL |
 
 Los contextos:
 
@@ -379,78 +453,84 @@ Los contextos:
 se mantienen como límites arquitectónicos definidos, pero todavía no se
 declaran como capacidades funcionales completamente materializadas.
 
-El Nivel 3 no introduce nuevos servicios desplegables ni modifica la topología
-del Nivel 2.
+---
 
-Hace explícita la organización interna del Backend API y su correspondencia
-con los límites de dominio formalizados durante S6.
+# S4 - Corte vertical inicial
+
+> **Estado histórico:** esta sección describe la arquitectura existente durante
+> S4 y no la persistencia vigente.
+
+Durante S4 se construyó el primer corte vertical:
+
+```text
+Flutter Web
+    ↓
+FastAPI
+    ↓
+Gestión de Publicaciones
+    ↓
+SQLite
+```
+
+La funcionalidad permitía crear y consultar publicaciones.
+
+La correspondencia principal era:
+
+**Frontend**
+
+- [`publicacion_form_page.dart`](frontend/campusmarket/lib/publicaciones/publicacion_form_page.dart)
+- [`publicaciones_api.dart`](frontend/campusmarket/lib/publicaciones/publicaciones_api.dart)
+
+**Backend**
+
+- [`router.py`](backend/app/publicaciones/router.py)
+- [`service.py`](backend/app/publicaciones/service.py)
+- [`repository.py`](backend/app/publicaciones/repository.py)
+
+Esta evidencia se conserva porque representa la evolución real del proyecto.
 
 ---
 
-# Primer corte - Reto arquitectónico S5
+# S5 - Reto arquitectónico del primer corte
 
-## Definición de la restricción
+> **Estado histórico:** S5 fue ejecutado mientras SQLite era la persistencia
+> vigente.
 
-Durante la explicación del reto de Semana 5, el equipo consultó si la nueva
-restricción arquitectónica sería asignada directamente por el docente o
-definida por cada grupo.
+## Restricción R-07
 
-La aclaración recibida fue que **cada equipo debía definir la restricción a
-partir del estado real de su arquitectura**.
-
-Por esta razón, el equipo no reutilizó como nueva restricción una decisión ya
-existente como el monolito modular.
-
-Primero se revisó la arquitectura actual y posteriormente se definió:
+Durante el primer corte se definió:
 
 **R-07 - Persistencia sin nueva infraestructura durante el primer corte**
 
-La restricción se encuentra documentada en:
+Documentación:
 
 [`docs/arc42/02-restricciones.md`](docs/arc42/02-restricciones.md)
 
-R-07 establece que durante el primer corte:
+La restricción establecía durante ese corte:
 
-- se mantiene SQLite como persistencia;
-- se conserva el backend como una única aplicación monolítica modular;
-- no se incorporan bases de datos externas;
-- no se agregan colas;
-- no se agregan cachés distribuidas;
-- no se crean nuevos servicios desplegables.
-
-La restricción obliga a mejorar la respuesta del sistema utilizando la
-arquitectura ya existente.
+- mantener SQLite;
+- conservar el monolito modular;
+- no incorporar una base externa;
+- no agregar colas;
+- no agregar cachés distribuidas;
+- no crear nuevos servicios desplegables.
 
 ---
 
-## Diagnóstico
+## EC-05 - Degradación ante bloqueo temporal
 
-Para evaluar el impacto de R-07 se analizó el comportamiento del corte
-vertical ante una condición adversa de persistencia:
+El escenario analizó un bloqueo temporal de SQLite durante la creación de una
+publicación.
 
-**bloqueo temporal de SQLite durante la creación de una publicación.**
+### Línea base histórica
 
-Antes de aplicar cambios se realizó una medición reproducible.
-
-### Línea base
-
-| Métrica | Resultado inicial |
+| Métrica | Resultado |
 |---|---:|
 | HTTP durante bloqueo | `500` |
 | Tiempo durante bloqueo | `7.323 s` |
 | Escritura parcial | `No` |
-| HTTP después de liberar SQLite | `201` |
+| Recuperación posterior | `201` |
 | Tiempo de recuperación | `0.007 s` |
-
-La línea base mostró que:
-
-- el sistema no generaba escrituras parciales;
-- recuperaba su funcionamiento después de liberar SQLite;
-- pero respondía con HTTP `500`;
-- y demoraba `7.323 s`.
-
-El principal problema era, por tanto, una **degradación no controlada y
-demasiado lenta** ante la indisponibilidad temporal de persistencia.
 
 Evidencia:
 
@@ -458,209 +538,44 @@ Evidencia:
 
 ---
 
-## Escenario de calidad EC-05
+## ADR-0002
 
-A partir del diagnóstico se formuló:
-
-**EC-05 - Degradación ante bloqueo temporal de persistencia**
-
-Documentación:
-
-[`docs/arc42/10-escenarios-de-calidad.md`](docs/arc42/10-escenarios-de-calidad.md)
-
-El escenario exige que, cuando SQLite se encuentre temporalmente bloqueada
-durante la creación de una publicación:
-
-- el sistema responda mediante HTTP `503`;
-- la respuesta ocurra en un máximo de `2 segundos`;
-- no exista escritura parcial;
-- se informe la indisponibilidad temporal;
-- después de liberar SQLite se recupere la creación normal.
-
----
-
-## Decisión arquitectónica ADR-0002
-
-La decisión se documentó en:
+La respuesta arquitectónica se documentó mediante:
 
 [ADR-0002 - Manejo de bloqueo temporal de SQLite](docs/adr/0002-manejo-bloqueo-sqlite.md)
 
-Antes de decidir se consideraron alternativas como:
-
-- mantener el comportamiento existente;
-- aumentar la espera;
-- realizar reintentos automáticos;
-- migrar la persistencia;
-- introducir nueva infraestructura;
-- aplicar una espera acotada y degradación controlada.
-
-La decisión final mantiene la infraestructura existente y aplica:
+Durante S5 se aplicó:
 
 - timeout SQLite de `0.5 s`;
-- detección específica de `SQLITE_BUSY`;
-- detección específica de `SQLITE_LOCKED`;
-- traducción controlada de la indisponibilidad;
+- detección de `SQLITE_BUSY`;
+- detección de `SQLITE_LOCKED`;
 - HTTP `503 Service Unavailable`;
 - ausencia de reintentos automáticos;
 - preservación de la transacción;
-- cierre explícito de conexiones;
-- propagación del estado hasta Flutter.
+- recuperación posterior.
 
-No se adoptaron PostgreSQL, colas, cachés ni nuevos servicios porque eso
-contradiría directamente R-07.
-
-Los reintentos automáticos tampoco fueron seleccionados porque podían
-incrementar la latencia y comprometer el umbral de EC-05.
-
----
-
-## Aplicación sobre el corte vertical
-
-La modificación preserva el recorrido:
-
-**Flutter Web → FastAPI → módulo `publicaciones` → SQLite**
-
-### Backend
-
-La degradación controlada atraviesa:
-
-```text
-SQLite
-   ↓
-repository.py
-   ↓
-service.py
-   ↓
-router.py
-   ↓
-HTTP 503
-```
-
-Archivos principales:
-
-- [`repository.py`](backend/app/publicaciones/repository.py)
-- [`service.py`](backend/app/publicaciones/service.py)
-- [`router.py`](backend/app/publicaciones/router.py)
-
-### Frontend
-
-El HTTP `503` es interpretado específicamente por Flutter:
-
-```text
-HTTP 503
-   ↓
-publicaciones_api.dart
-   ↓
-publicacion_form_page.dart
-   ↓
-mensaje de indisponibilidad temporal
-```
-
-Archivos:
-
-- [`publicaciones_api.dart`](frontend/campusmarket/lib/publicaciones/publicaciones_api.dart)
-- [`publicacion_form_page.dart`](frontend/campusmarket/lib/publicaciones/publicacion_form_page.dart)
-
-De esta forma, la condición adversa no termina únicamente en un error
-genérico: el usuario recibe información sobre la indisponibilidad temporal.
-
----
-
-## Impacto sobre C4
-
-R-07 y ADR-0002 **no agregan nuevos contenedores**.
-
-La topología continúa siendo:
-
-**Frontend Web → Backend API → SQLite**
-
-El cambio afecta principalmente el comportamiento de la relación:
-
-**Backend API → Persistencia local**
-
-y posteriormente la forma en que:
-
-**Frontend Web ← Backend API**
-
-comunica la degradación controlada.
-
-Esta decisión está explicada en:
-
-[C4 Nivel 2 - Contenedores](docs/c4/02-contenedores.md)
-
----
-
-# Medición posterior a ADR-0002
-
-Después de aplicar la decisión se repitió el mismo escenario.
-
-Resultado formal:
+### Resultado histórico
 
 | Métrica | Línea base | Después | Umbral |
 |---|---:|---:|---:|
 | HTTP durante bloqueo | `500` | `503` | `503` |
 | Tiempo durante bloqueo | `7.323 s` | `1.283 s` | `≤ 2 s` |
 | Escritura parcial | `No` | `No` | `No` |
-| HTTP después de liberar SQLite | `201` | `201` | `201` |
-| Tiempo de recuperación | `0.007 s` | `0.006 s` | Informativo |
-
-La respuesta durante el bloqueo pasó de:
-
-**HTTP `500` en `7.323 s`**
-
-a:
-
-**HTTP `503` en `1.283 s`**
-
-sin producir escrituras parciales.
-
-La operación normal se recuperó mediante HTTP `201` después de liberar
-SQLite.
-
-Por lo tanto, la medición formal **cumple el umbral de EC-05**.
+| Recuperación posterior | `201` | `201` | `201` |
 
 Evidencia:
 
 [Medición posterior a ADR-0002](docs/evidencias/medicion-bloqueo-sqlite-2026-09-06.md)
 
-Una ejecución posterior volvió a verificar el comportamiento con:
+Estas mediciones no deben interpretarse como resultados obtenidos sobre MySQL.
 
-- HTTP `503`;
-- `1.138 s` durante el bloqueo;
-- ninguna escritura parcial;
-- recuperación HTTP `201`.
-
-La medición formal utilizada como evidencia continúa siendo la ejecución de
-`1.283 s`.
+El escenario se conserva como evidencia histórica de S5.
 
 ---
 
-## Medición reproducible
+# S6 - Dominio y modularidad
 
-El escenario puede volver a ejecutarse desde la raíz mediante:
-
-```bash
-python scripts/medir_bloqueo_sqlite.py
-```
-
-Script:
-
-[`scripts/medir_bloqueo_sqlite.py`](scripts/medir_bloqueo_sqlite.py)
-
-La primera ejecución realizada durante el desarrollo permitió detectar además
-un problema de cierre de conexiones temporales en Windows.
-
-Esa ejecución no fue utilizada como evidencia final.
-
-Después de corregir el ciclo de vida de las conexiones SQLite, la medición
-fue repetida correctamente sin traceback y se utilizó como resultado formal.
-
----
-
-# Evidencia S6 - Dominio y modularidad
-
-Durante S6 se hizo explícita la organización del dominio de CampusMarket
-utilizando:
+Durante S6 se formalizaron:
 
 - lenguaje ubicuo;
 - contextos delimitados;
@@ -670,52 +585,20 @@ utilizando:
 - C4 Nivel 3;
 - pruebas automáticas de reglas arquitectónicas.
 
-Los contextos delimitados identificados son:
+Los contextos definidos son:
 
 - **Gestión de Usuarios**
 - **Gestión de Publicaciones**
 - **Catálogo**
 - **Administración**
 
-La documentación principal se encuentra en:
+Documentación:
 
-- [Conceptos transversales - arc42 sección 8](docs/arc42/08-conceptos-transversales.md)
-- [C4 Nivel 3 - Componentes del Backend](docs/c4/03-componentes-backend.md)
-- [Fuente PlantUML del C4 Nivel 3](docs/c4/03-componentes-backend.puml)
-- [Auditoría de modularidad S6](docs/evidencias/auditoria-modularidad-s6-2026-09-12.md)
-- [Trazabilidad de aspectos](docs/aspectos.md)
-
----
-
-## Lenguaje ubicuo y contextos delimitados
-
-La sección 8 de arc42 establece un vocabulario común para términos como:
-
-- estudiante;
-- usuario;
-- producto;
-- publicación;
-- modalidad;
-- estado del producto;
-- catálogo;
-- administrador;
-- propietario;
-- dueño del dato;
-- contexto delimitado.
-
-También diferencia explícitamente entre **Producto** y **Publicación** para
-evitar utilizar ambos términos como sinónimos.
-
-El mapa de contextos documenta relaciones del tipo:
-
-- **Customer/Supplier** entre Gestión de Usuarios y Gestión de Publicaciones;
-- **Customer/Supplier** entre Gestión de Publicaciones y Catálogo;
-- contrato explícito y **Anticorruption Layer** entre Publicaciones y
-  Administración.
-
-No se adopta actualmente un **Shared Kernel**, porque no existe un modelo que
-deba ser modificado conjuntamente por dos contextos y su incorporación
-aumentaría innecesariamente el acoplamiento.
+- [Conceptos transversales](docs/arc42/08-conceptos-transversales.md)
+- [C4 Nivel 3](docs/c4/03-componentes-backend.md)
+- [Fuente PlantUML C4 Nivel 3](docs/c4/03-componentes-backend.puml)
+- [Auditoría de modularidad](docs/evidencias/auditoria-modularidad-s6-2026-09-12.md)
+- [Trazabilidad](docs/aspectos.md)
 
 ---
 
@@ -725,20 +608,21 @@ La regla arquitectónica adoptada es:
 
 > Cada dato de dominio tiene un único módulo responsable de escribirlo.
 
-En el estado actual del prototipo, la entidad persistida de dominio
-materializada es:
+La entidad actualmente materializada es:
 
-`publicaciones`
+```text
+publicaciones
+```
 
 Su propietario es:
 
 **Gestión de Publicaciones**
 
-El único escritor productivo se encuentra en:
+El escritor productivo permanece en:
 
 [`backend/app/publicaciones/repository.py`](backend/app/publicaciones/repository.py)
 
-Los campos actualmente persistidos son:
+Los campos persistidos son:
 
 | Campo | Propietario |
 |---|---|
@@ -749,153 +633,216 @@ Los campos actualmente persistidos son:
 | `modalidad` | Gestión de Publicaciones |
 | `estado` | Gestión de Publicaciones |
 
-La auditoría no detectó escrituras compartidas de `publicaciones` desde:
-
-- `usuarios`;
-- `catalogo`;
-- `administracion`.
-
----
-
-## Auditoría de modularidad
-
-La revisión del código se encuentra documentada en:
-
-[Auditoría de modularidad S6](docs/evidencias/auditoria-modularidad-s6-2026-09-12.md)
-
-La auditoría revisó:
-
-- entidades persistidas;
-- operaciones `INSERT`;
-- operaciones `UPDATE`;
-- operaciones `DELETE`;
-- accesos directos mediante `sqlite3`;
-- repositorios;
-- servicios;
-- límites de contexto.
-
-El recorrido confirmó que el único escritor productivo de `publicaciones`
-permanece dentro de Gestión de Publicaciones.
-
-También se documentaron los riesgos:
-
-- `MOD-01` - acceso futuro de Catálogo a persistencia;
-- `MOD-02` - escritura futura desde Administración;
-- `MOD-03` - materialización pendiente del propietario de publicación;
-- `MOD-04` - accesos SQLite permitidos únicamente para pruebas e
-  instrumentación.
-
-Cada riesgo cuenta con un plan preventivo o correctivo.
+La sustitución SQLite → MySQL no modifica esta propiedad arquitectónica.
 
 ---
 
 ## Verificación automática de modularidad
 
-Además de la auditoría manual se incorporó:
+La prueba:
 
 [`backend/tests/test_modularidad_s6.py`](backend/tests/test_modularidad_s6.py)
 
-La prueba verifica automáticamente que:
+verifica actualmente:
 
-- `backend/app/publicaciones/repository.py` sea el único escritor productivo de
-  `publicaciones`;
-- `usuarios`, `catalogo` y `administracion` no accedan directamente a SQLite;
-- los otros contextos no importen directamente el repositorio interno de
-  Publicaciones;
-- el flujo implementado mantenga la dirección:
-  `router → service → repository → SQLite`;
-- la creación y consulta de `publicaciones` permanezcan encapsuladas en el
-  repositorio propietario.
+- `repository.py` como único escritor productivo de `publicaciones`;
+- ausencia de acceso directo desde otros contextos;
+- ausencia de importación del repositorio interno por otros módulos;
+- dirección:
 
-Estas comprobaciones forman parte de `backend/tests` y se ejecutan mediante
-GitHub Actions.
+```text
+router → service → repository → MySQL
+```
 
-La integración utilizada para S6 finalizó con:
+S6 definió la regla arquitectónica.
 
-- pruebas del backend: **Passed**;
-- SonarQube Cloud Quality Gate: **Passed**;
-- nuevos problemas detectados en el análisis correspondiente: **0**.
+S7 y ADR-0004 conservaron la regla después de migrar la persistencia a MySQL.
 
 ---
 
-## C4 Nivel 3 y coherencia con ADR-0001
+# S7 - API-first e integración
 
-El C4 Nivel 3 amplía únicamente el contenedor **Backend API**.
+Durante S7 se hizo explícita la interfaz entre:
 
-Representa:
+**Frontend Flutter → Backend FastAPI**
+
+Se definieron:
+
+- contrato OpenAPI versionado;
+- proveedor FastAPI;
+- consumidor Flutter;
+- comunicación síncrona HTTP/JSON;
+- prueba automática de contrato;
+- demostración de ruptura incompatible;
+- correspondencia con C4 y arc42.
+
+La trazabilidad principal es:
 
 ```text
-Frontend Web
-     ↓
-API de Publicaciones
-     ↓
-Servicio de Publicaciones
-     ↓
-Repositorio de Publicaciones
-     ↓
-SQLite
+ASP-07
+   ↓
+EC-06
+   ↓
+ADR-0003
+   ↓
+OpenAPI
+   ↓
+FastAPI
+   ↓
+test_contrato_openapi.py
 ```
 
-Los límites principales continúan siendo:
+---
 
-- `usuarios`;
-- `publicaciones`;
-- `catalogo`;
-- `administracion`.
+## EC-06 - Compatibilidad del contrato
 
-S6 no fusiona, divide ni reemplaza estos límites.
+Documentación:
 
-Por esta razón, la incorporación del C4 Nivel 3 constituye una profundización
-de la arquitectura existente y **no un reajuste de los límites definidos por
-ADR-0001**.
+[`docs/arc42/10-escenarios-de-calidad.md`](docs/arc42/10-escenarios-de-calidad.md)
 
-No se registra un nuevo ADR para S6 porque no existe una nueva decisión que
-reemplace o modifique ADR-0001.
+El escenario busca detectar cambios incompatibles antes de fusionarlos a la
+rama principal.
 
-Si posteriormente cambia realmente alguno de estos límites, deberá
-actualizarse el C4 Nivel 3 y registrarse un nuevo ADR explicando el reajuste.
+La verificación automática utiliza:
+
+[`backend/tests/test_contrato_openapi.py`](backend/tests/test_contrato_openapi.py)
+
+---
+
+## ADR-0003
+
+[ADR-0003 - Integración síncrona HTTP/JSON](docs/adr/0003-usar-integracion-sincrona-http-json.md)
+
+La decisión mantiene:
+
+```text
+Flutter ↔ FastAPI
+```
+
+mediante comunicación síncrona HTTP/JSON.
+
+No se incorporan colas ni mensajería asíncrona porque las operaciones actuales
+requieren confirmación inmediata y no existe evidencia que justifique esa
+complejidad adicional.
+
+---
+
+# Evolución de persistencia - MySQL
+
+Después del primer corte se recibió una observación docente indicando que la
+persistencia debía evolucionar desde SQLite hacia MySQL.
+
+La decisión se registra mediante:
+
+[ADR-0004 - Migrar persistencia de SQLite a MySQL](docs/adr/0004-migrar-persistencia-a-mysql.md)
+
+La migración:
+
+**modifica**
+
+- motor de persistencia;
+- driver;
+- configuración de conexión;
+- pruebas de integración;
+- CI;
+- C4;
+- arc42.
+
+La migración **no modifica**:
+
+- monolito modular;
+- contextos delimitados;
+- propietario de `publicaciones`;
+- comunicación Flutter → FastAPI;
+- contrato OpenAPI;
+- dirección `router → service → repository`.
+
+La persistencia vigente es:
+
+```text
+MySQL
+```
+
+y el acceso se realiza mediante:
+
+```text
+PyMySQL
+```
+
+---
+
+# ADR vigentes e históricos
+
+## Vigentes
+
+- [ADR-0001 - Usar monolito modular](docs/adr/0001-usar-monolito-modular.md)
+- [ADR-0003 - Integración síncrona HTTP/JSON](docs/adr/0003-usar-integracion-sincrona-http-json.md)
+- [ADR-0004 - Migrar persistencia a MySQL](docs/adr/0004-migrar-persistencia-a-mysql.md)
+
+## Histórico
+
+- [ADR-0002 - Manejo de bloqueo temporal de SQLite](docs/adr/0002-manejo-bloqueo-sqlite.md)
+
+ADR-0002 continúa siendo válido como evidencia del contexto en el que fue
+tomado, pero no describe el motor de persistencia vigente.
 
 ---
 
 # Trazabilidad arquitectónica
 
-La trazabilidad general del proyecto se mantiene en:
+La trazabilidad general se mantiene en:
 
 [`docs/aspectos.md`](docs/aspectos.md)
 
-## Trazabilidad S5
+La cadena general es:
 
-La cadena principal es:
+```text
+Aspecto
+   ↓
+Requisito / escenario
+   ↓
+ADR
+   ↓
+C4
+   ↓
+Código
+   ↓
+Prueba
+   ↓
+Evidencia
+```
 
-**ASP-06 → R-07 / EC-05 → C4 Nivel 2 → ADR-0002 → código → pruebas → medición → evidencia**
+A partir de S7 también se incorpora:
 
-| Elemento | Evidencia |
-|---|---|
-| Aspecto | `ASP-06` |
-| Restricción | `R-07` |
-| Escenario | `EC-05` |
-| C4 | `docs/c4/02-contenedores.md` |
-| Decisión | `docs/adr/0002-manejo-bloqueo-sqlite.md` |
-| Código backend | `backend/app/publicaciones/` |
-| Código frontend | `frontend/campusmarket/lib/publicaciones/` |
-| Prueba | `backend/tests/test_publicaciones_vertical.py` |
-| Medición | `scripts/medir_bloqueo_sqlite.py` |
-| Línea base | `docs/evidencias/linea-base-bloqueo-sqlite-2026-09-05.md` |
-| Resultado | `docs/evidencias/medicion-bloqueo-sqlite-2026-09-06.md` |
+```text
+Aspecto
+   ↓
+Contrato OpenAPI
+   ↓
+Proveedor FastAPI
+   ↓
+Prueba de contrato
+```
 
-## Trazabilidad S6
+Para la migración de persistencia:
 
-Durante S6 la trazabilidad se amplía a:
-
-**Aspecto → contexto delimitado → propietario del dato → C4 Nivel 3 → código → auditoría → prueba automática**
-
-La correspondencia entre los contextos y los aspectos del proyecto está
-documentada en:
-
-[Aspectos y trazabilidad](docs/aspectos.md)
-
-La cadena permite comprobar que las decisiones documentadas corresponden con
-los módulos y datos realmente presentes en el repositorio.
+```text
+Observación docente
+        ↓
+ADR-0004
+        ↓
+C4
+        ↓
+arc42
+        ↓
+repository.py
+        ↓
+PyMySQL
+        ↓
+MySQL
+        ↓
+pruebas
+```
 
 ---
 
@@ -903,31 +850,22 @@ los módulos y datos realmente presentes en el repositorio.
 
 La documentación arquitectónica principal se encuentra en:
 
-- [Secciones iniciales](docs/arc42/ARC42.md)
+- [Secciones principales](docs/arc42/ARC42.md)
 - [Sección 2 - Restricciones](docs/arc42/02-restricciones.md)
 - [Sección 3 - Contexto](docs/arc42/03-contexto.md)
 - [Sección 4 - Estrategia de solución](docs/arc42/04-estrategia-de-solucion.md)
 - [Sección 5 - Bloques de construcción](docs/arc42/05-bloques-de-construccion.md)
 - [Sección 6 - Vista de ejecución](docs/arc42/06-vista-ejecucion.md)
-- [Sección 8 - Conceptos transversales y dominio](docs/arc42/08-conceptos-transversales.md)
+- [Sección 8 - Conceptos transversales](docs/arc42/08-conceptos-transversales.md)
 - [Sección 9 - Decisiones](docs/arc42/09-decisiones.md)
 - [Sección 10 - Escenarios de calidad](docs/arc42/10-escenarios-de-calidad.md)
 - [Sección 12 - Glosario](docs/arc42/12-glosario.md)
-
-## ADR
-
-- [ADR-0001 - Usar monolito modular](docs/adr/0001-usar-monolito-modular.md)
-- [ADR-0002 - Manejo de bloqueo temporal de SQLite](docs/adr/0002-manejo-bloqueo-sqlite.md)
-- [ADR-0003 - Integración síncrona HTTP/JSON](docs/adr/0003-usar-integracion-sincrona-http-json.md)
-
-No se crea un ADR adicional durante S6 porque los límites definidos por
-ADR-0001 permanecen vigentes.
 
 ---
 
 # Registro de uso de Inteligencia Artificial
 
-El registro de uso de herramientas de IA se encuentra en:
+El registro se encuentra en:
 
 [`docs/ia.md`](docs/ia.md)
 
@@ -940,140 +878,127 @@ El documento registra:
 - propuestas rechazadas;
 - justificación del rechazo.
 
-Para cada evidencia las actividades realizadas durante una misma jornada se
-consolidan bajo una fecha general para evitar fragmentar el registro.
+La IA se utiliza como apoyo para:
 
-Durante S6 la IA fue utilizada como apoyo para:
-
-- interpretar la evidencia;
-- estructurar el lenguaje ubicuo;
-- revisar contextos delimitados;
-- contrastar propiedad de datos con el código;
-- auditar modularidad;
-- revisar C4 Nivel 3;
-- formular pruebas de reglas arquitectónicas;
-- mejorar la trazabilidad documental.
-
-Las propuestas no se aceptan automáticamente.
+- análisis;
+- estructuración documental;
+- comparación de alternativas;
+- revisión arquitectónica;
+- elaboración de pruebas;
+- auditoría de consistencia;
+- trazabilidad.
 
 El equipo conserva la responsabilidad sobre:
 
 - decisiones arquitectónicas;
-- modificaciones incorporadas;
+- código incorporado;
 - pruebas ejecutadas;
 - mediciones;
 - validación del repositorio;
-- aceptación, corrección o rechazo de propuestas generadas con IA.
+- aceptación o rechazo de propuestas.
 
-Las respuestas de IA no se utilizan por sí mismas como evidencia del sistema.
+Las respuestas de IA no se utilizan por sí solas como evidencia del sistema.
 
 ---
 
 # Evidencias principales
 
-## Primer corte
+## Primer corte / S1-S5
 
-- [Correcciones acumuladas S1-S4](correcciones.md)
+- [Correcciones S1-S4](correcciones.md)
 - [Restricciones arquitectónicas](docs/arc42/02-restricciones.md)
-- [EC-05](docs/arc42/10-escenarios-de-calidad.md)
 - [ADR-0001](docs/adr/0001-usar-monolito-modular.md)
 - [ADR-0002](docs/adr/0002-manejo-bloqueo-sqlite.md)
 - [C4 Nivel 1](docs/c4/01-contexto.md)
 - [C4 Nivel 2](docs/c4/02-contenedores.md)
-- [Arranque con un comando](docs/evidencias/arranque-un-comando-2026-09-04.md)
+- [Arranque histórico con un comando](docs/evidencias/arranque-un-comando-2026-09-04.md)
 - [Línea base S5](docs/evidencias/linea-base-bloqueo-sqlite-2026-09-05.md)
-- [Medición final S5](docs/evidencias/medicion-bloqueo-sqlite-2026-09-06.md)
-- [Prueba del corte vertical](backend/tests/test_publicaciones_vertical.py)
-- [Script de medición](scripts/medir_bloqueo_sqlite.py)
+- [Medición S5](docs/evidencias/medicion-bloqueo-sqlite-2026-09-06.md)
 
-## Evidencia S6
+## S6
 
-- [arc42 sección 8 - Conceptos transversales](docs/arc42/08-conceptos-transversales.md)
-- [C4 Nivel 3 - Componentes del Backend](docs/c4/03-componentes-backend.md)
+- [Conceptos transversales](docs/arc42/08-conceptos-transversales.md)
+- [C4 Nivel 3](docs/c4/03-componentes-backend.md)
 - [Fuente PlantUML C4 Nivel 3](docs/c4/03-componentes-backend.puml)
 - [Auditoría de modularidad](docs/evidencias/auditoria-modularidad-s6-2026-09-12.md)
 - [Prueba automática de modularidad](backend/tests/test_modularidad_s6.py)
-- [Trazabilidad de aspectos](docs/aspectos.md)
-- [Registro de IA](docs/ia.md)
+- [Trazabilidad](docs/aspectos.md)
 
-## Evidencia S7
+## S7
 
-- [Contrato OpenAPI 3.1 versionado](contracts/openapi-v1.json)
-- [Guía de verificación y generación de cliente](contracts/README.md)
+- [Contrato OpenAPI](contracts/openapi-v1.json)
+- [Guía del contrato](contracts/README.md)
 - [Prueba de contrato](backend/tests/test_contrato_openapi.py)
-- [ADR-0003 - Integración síncrona HTTP/JSON](docs/adr/0003-usar-integracion-sincrona-http-json.md)
-- [arc42 sección 6 - Flujos de interacción](docs/arc42/06-vista-ejecucion.md)
-- [C4 Nivel 2 con protocolo y formato](docs/c4/02-contenedores.md)
-- [Demostración de cambio incompatible](docs/evidencias/fallo-contrato-s7-2026-09-15.md)
+- [ADR-0003](docs/adr/0003-usar-integracion-sincrona-http-json.md)
+- [ADR-0004](docs/adr/0004-migrar-persistencia-a-mysql.md)
+- [Vista de ejecución](docs/arc42/06-vista-ejecucion.md)
+- [C4 Nivel 2](docs/c4/02-contenedores.md)
+- [C4 Nivel 3](docs/c4/03-componentes-backend.md)
+- [Demostración de incompatibilidad](docs/evidencias/fallo-contrato-s7-2026-09-15.md)
+- [Prueba funcional vigente](backend/tests/test_publicaciones_vertical.py)
+- [Prueba de modularidad](backend/tests/test_modularidad_s6.py)
+- [Registro de IA](docs/ia.md)
 
 ---
 
 # Estado actual del proyecto
 
-La línea base S1-S4 se encuentra documentada y saneada en:
+La arquitectura vigente es:
 
-[`correcciones.md`](correcciones.md)
+```text
+Flutter Web
+    ↓ HTTP/JSON síncrono
+    ↓ OpenAPI
+FastAPI
+    ↓
+Gestión de Publicaciones
+    ↓
+Repository
+    ↓ PyMySQL
+MySQL
+```
 
-El reto arquitectónico S5 cuenta con:
+CampusMarket mantiene:
 
-- restricción definida;
-- diagnóstico;
-- línea base reproducible;
-- escenario de calidad medible;
-- comparación de alternativas;
-- ADR;
-- cambio aplicado sobre el corte vertical;
-- degradación controlada;
-- pruebas automatizadas;
-- medición posterior;
-- contraste contra el umbral;
-- recuperación verificada;
-- C4 Nivel 2 actualizado;
-- trazabilidad;
-- registro de IA.
-
-La Evidencia S6 cuenta con:
-
-- lenguaje ubicuo;
+- monolito modular;
 - cuatro contextos delimitados;
-- mapa de contextos;
-- relaciones `Customer/Supplier`;
-- capa anticorrupción prevista para Administración;
-- decisión explícita de no utilizar Shared Kernel actualmente;
-- tabla módulo → datos con propietario único;
-- correspondencia con las entidades reales del código;
-- auditoría de escrituras compartidas;
-- riesgos MOD-01 a MOD-04;
-- planes preventivos y correctivos;
-- arc42 sección 8 actualizada;
-- C4 Nivel 3 del Backend API;
-- prueba automática de modularidad;
-- ejecución mediante GitHub Actions;
-- Quality Gate de SonarQube Cloud superado;
-- trazabilidad S6;
-- registro actualizado del uso de IA.
+- propiedad única de los datos;
+- C4 Nivel 1, 2 y 3;
+- documentación arc42;
+- contrato OpenAPI versionado;
+- API HTTP/JSON síncrona;
+- persistencia MySQL;
+- pruebas funcionales;
+- pruebas arquitectónicas;
+- prueba automática de contrato;
+- GitHub Actions;
+- SonarQube Cloud;
+- trazabilidad arquitectónica;
+- registro de uso de IA.
 
-La arquitectura continúa siendo un **monolito modular**.
+Los elementos todavía no completamente materializados se mantienen
+explícitamente identificados como tales.
 
-La evolución realizada durante S6 fortalece sus fronteras internas y la
-propiedad de los datos sin introducir microservicios, nueva infraestructura o
-límites de dominio artificiales.
+SQLite no se presenta como tecnología vigente.
 
-La Evidencia S7 cuenta con:
+Permanece únicamente dentro de la documentación histórica correspondiente al
+momento en que realmente formó parte de la arquitectura.
 
-- contrato OpenAPI `3.1.0` y versión de API `1.0.0`;
-- rutas y esquemas correspondientes a las tres operaciones implementadas;
-- identificadores de operación estables para generación de clientes;
-- prueba de contrato que compara el documento con el proveedor FastAPI;
-- paso explícito de contrato en GitHub Actions;
-- demostración controlada de fallo al renombrar `titulo` como `nombre`;
-- restauración del proveedor y conjunto completo en verde;
-- ADR-0003 con comparación síncrona/asíncrona, acoplamiento temporal y modos
-  de fallo;
-- arc42 sección 6 con flujos exitosos y de indisponibilidad;
-- C4 Nivel 2 con protocolo y formato en cada relación;
-- trazabilidad ASP-07 y registro actualizado del uso de IA.
+La evolución SQLite → MySQL conserva las fronteras del monolito modular y hace
+coincidir nuevamente:
 
-S7 conserva la topología del monolito modular. La relación Flutter-FastAPI se
-formaliza como **HTTP/1.1 REST / `application/json`** y queda protegida frente a
-cambios incompatibles antes de la integración.
+```text
+documentación
+    ↓
+C4
+    ↓
+ADR
+    ↓
+código
+    ↓
+pruebas
+    ↓
+CI
+```
+
+con el estado real de CampusMarket.
