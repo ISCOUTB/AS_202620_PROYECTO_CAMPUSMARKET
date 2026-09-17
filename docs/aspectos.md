@@ -32,7 +32,7 @@ La evolución de persistencia se registra mediante:
 | ASP-04 | Recuperación del prototipo | [EC-04 - Recuperación del prototipo](./arc42/10-escenarios-de-calidad.md#ec-04---recuperación-del-prototipo) | [C4 Nivel 1](./c4/01-contexto.md) | [ADR-0001](./adr/0001-usar-monolito-modular.md) | [`scripts/run_s4.ps1`](../scripts/run_s4.ps1) | [`test_health.py`](../backend/tests/test_health.py) | [Evidencia de arranque](./evidencias/arranque-un-comando-2026-09-04.md) |
 | ASP-05 | Creación de publicaciones | [Alcance funcional](./arc42/ARC42.md#32-alcance-funcional) | [C4 Nivel 2](./c4/02-contenedores.md) / [C4 Nivel 3](./c4/03-componentes-backend.md) | [ADR-0001](./adr/0001-usar-monolito-modular.md) / [ADR-0004](./adr/0004-migrar-persistencia-a-mysql.md) | [`router.py`](../backend/app/publicaciones/router.py), [`service.py`](../backend/app/publicaciones/service.py), [`repository.py`](../backend/app/publicaciones/repository.py) | [`test_publicaciones_vertical.py`](../backend/tests/test_publicaciones_vertical.py) | Corte vertical vigente con MySQL |
 | ASP-06 | Degradación controlada de persistencia | [EC-05](./arc42/10-escenarios-de-calidad.md#ec-05---degradación-ante-bloqueo-temporal-de-persistencia) | [C4 Nivel 2](./c4/02-contenedores.md) / [Vista de ejecución](./arc42/06-vista-ejecucion.md) | [ADR-0002](./adr/0002-manejo-bloqueo-sqlite.md) histórico / [ADR-0004](./adr/0004-migrar-persistencia-a-mysql.md) vigente | [`repository.py`](../backend/app/publicaciones/repository.py), [`service.py`](../backend/app/publicaciones/service.py), [`router.py`](../backend/app/publicaciones/router.py) | [`test_publicaciones_vertical.py`](../backend/tests/test_publicaciones_vertical.py) | Evidencia histórica SQLite + verificación vigente MySQL |
-| ASP-07 | Contrato ejecutable de API | [EC-06 - Compatibilidad del contrato](./arc42/10-escenarios-de-calidad.md#ec-06---compatibilidad-del-contrato-de-api) | [C4 Nivel 2](./c4/02-contenedores.md) / [Vista de ejecución](./arc42/06-vista-ejecucion.md) | [ADR-0003](./adr/0003-usar-integracion-sincrona-http-json.md) | [`openapi-v1.json`](../contracts/openapi-v1.json), [`main.py`](../backend/app/main.py), [`router.py`](../backend/app/publicaciones/router.py) | [`test_contrato_openapi.py`](../backend/tests/test_contrato_openapi.py) | Contrato OpenAPI versionado y verificable |
+| ASP-07 | Contrato ejecutable de API | [EC-06 - Compatibilidad del contrato](./arc42/10-escenarios-de-calidad.md#ec-06---compatibilidad-del-contrato-de-api) | [C4 Nivel 2](./c4/02-contenedores.md) / [Vista de ejecución](./arc42/06-vista-ejecucion.md) | [ADR-0003](./adr/0003-usar-integracion-sincrona-http-json.md) | [`openapi-v1.json`](../contracts/openapi-v1.json), [`main.py`](../backend/app/main.py), [`router.py`](../backend/app/publicaciones/router.py) | [`test_contrato_openapi.py`](../backend/tests/test_contrato_openapi.py) / [`backend-tests.yml`](../.github/workflows/backend-tests.yml) | [Evidencia S7](./evidencias/evidencia-s7-2026-09-15.md) / [Fallo incompatible](./evidencias/fallo-contrato-s7-2026-09-15.md) / [Run #93 verde](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/35115585642) / [Run rojo](https://github.com/Nnigarp/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/34934077733) |
 | ASP-08 | Migración de persistencia a MySQL | Observación docente sobre persistencia vigente | [C4 Nivel 2](./c4/02-contenedores.md) / [C4 Nivel 3](./c4/03-componentes-backend.md) | [ADR-0004 - Migrar persistencia a MySQL](./adr/0004-migrar-persistencia-a-mysql.md) | [`repository.py`](../backend/app/publicaciones/repository.py), [`requirements.txt`](../backend/requirements.txt), [`.gitignore`](../.gitignore) | [`test_publicaciones_vertical.py`](../backend/tests/test_publicaciones_vertical.py), [`test_modularidad_s6.py`](../backend/tests/test_modularidad_s6.py) | Implementación vigente MySQL/PyMySQL |
 
 ---
@@ -317,34 +317,168 @@ router → service → repository → MySQL
 
 # Trazabilidad S7 — API-first
 
-Durante S7 se formaliza la interfaz entre:
+Durante S7 se formalizó la interfaz entre:
 
 **Frontend Flutter → Backend FastAPI**
 
 La comunicación vigente utiliza:
 
-* HTTP;
-* JSON;
-* estilo REST;
-* comportamiento síncrono.
+- HTTP;
+- JSON;
+- estilo REST;
+- comportamiento síncrono;
+- contrato OpenAPI ejecutable y versionado.
 
-El contrato está versionado en:
+El contrato fuente se encuentra en:
 
-`contracts/openapi-v1.json`
+[`contracts/openapi-v1.json`](../contracts/openapi-v1.json)
 
-Los endpoints materializados son:
+La especificación declara:
 
-* `POST /publicaciones`;
-* `GET /publicaciones`;
-* `GET /health`.
+```text
+OpenAPI 3.1.0
+API 1.0.0
+```
 
-La decisión se registra mediante:
+Los endpoints actualmente materializados son:
+
+```text
+POST /publicaciones
+GET  /publicaciones
+GET  /health
+```
+
+La decisión arquitectónica asociada se registra mediante:
 
 [ADR-0003 - Integración síncrona HTTP/JSON](./adr/0003-usar-integracion-sincrona-http-json.md)
 
+El escenario de calidad asociado es:
+
+[EC-06 - Compatibilidad del contrato de API](./arc42/10-escenarios-de-calidad.md#ec-06---compatibilidad-del-contrato-de-api)
+
+La representación arquitectónica relacionada se encuentra en:
+
+- [C4 Nivel 2](./c4/02-contenedores.md);
+- [Vista de ejecución arc42](./arc42/06-vista-ejecucion.md).
+
 ---
 
-## Verificación del contrato
+## ASP-07 — cadena de trazabilidad navegable
+
+La cadena completa del aspecto es:
+
+```text
+ASP-07
+   ↓
+EC-06
+   ↓
+C4 Nivel 2 / Vista de ejecución
+   ↓
+ADR-0003
+   ↓
+contracts/openapi-v1.json
+   ↓
+FastAPI
+   ↓
+main.py / router.py
+   ↓
+test_contrato_openapi.py
+   ↓
+GitHub Actions
+   ↓
+evidencia de fallo incompatible
+   ↓
+run final en verde
+```
+
+Correspondencia directa:
+
+| Eslabón | Evidencia |
+|---|---|
+| Aspecto | `ASP-07 - Contrato ejecutable de API` |
+| Escenario | [EC-06](./arc42/10-escenarios-de-calidad.md#ec-06---compatibilidad-del-contrato-de-api) |
+| C4 | [C4 Nivel 2](./c4/02-contenedores.md) |
+| Ejecución | [arc42 sección 6](./arc42/06-vista-ejecucion.md) |
+| Decisión | [ADR-0003](./adr/0003-usar-integracion-sincrona-http-json.md) |
+| Contrato | [`contracts/openapi-v1.json`](../contracts/openapi-v1.json) |
+| Entrada FastAPI | [`backend/app/main.py`](../backend/app/main.py) |
+| API de Publicaciones | [`backend/app/publicaciones/router.py`](../backend/app/publicaciones/router.py) |
+| Prueba contractual | [`backend/tests/test_contrato_openapi.py`](../backend/tests/test_contrato_openapi.py) |
+| Pipeline | [`.github/workflows/backend-tests.yml`](../.github/workflows/backend-tests.yml) |
+| Evidencia completa | [`evidencia-s7-2026-09-15.md`](./evidencias/evidencia-s7-2026-09-15.md) |
+| Evidencia de incompatibilidad | [`fallo-contrato-s7-2026-09-15.md`](./evidencias/fallo-contrato-s7-2026-09-15.md) |
+
+---
+
+## Correspondencia contrato ↔ implementación
+
+La ficha S7 requiere cotejo bidireccional entre contrato y código.
+
+### Contrato → código: creación de publicaciones
+
+```text
+Contrato:
+POST /publicaciones
+operationId: crearPublicacion
+```
+
+se implementa en:
+
+[`backend/app/publicaciones/router.py`](../backend/app/publicaciones/router.py)
+
+mediante:
+
+```text
+POST /publicaciones
+operation_id = crearPublicacion
+```
+
+### Contrato → código: consulta de publicaciones
+
+```text
+Contrato:
+GET /publicaciones
+operationId: listarPublicaciones
+```
+
+se implementa en:
+
+[`backend/app/publicaciones/router.py`](../backend/app/publicaciones/router.py)
+
+mediante:
+
+```text
+GET /publicaciones
+operation_id = listarPublicaciones
+```
+
+### Código → contrato: salud del backend
+
+La implementación:
+
+[`backend/app/main.py`](../backend/app/main.py)
+
+expone:
+
+```text
+GET /health
+operation_id = consultarSalud
+```
+
+y la misma operación se encuentra declarada en:
+
+[`contracts/openapi-v1.json`](../contracts/openapi-v1.json)
+
+como:
+
+```text
+GET /health
+operationId: consultarSalud
+```
+
+---
+
+## Verificación automática del contrato
 
 La prueba:
 
@@ -355,32 +489,108 @@ compara:
 ```text
 contracts/openapi-v1.json
         ↕
-FastAPI
+OpenAPI generado por FastAPI
 ```
 
-Esto permite detectar incompatibilidades entre:
+La prueba permite detectar incompatibilidades en:
 
-* contrato;
-* implementación;
-* proveedor.
+- rutas;
+- métodos HTTP;
+- `operationId`;
+- esquemas;
+- campos requeridos;
+- respuestas acordadas.
 
-La trazabilidad de ASP-07 es:
+El workflow:
 
-```text
-ASP-07
-   ↓
-EC-06
-   ↓
-ADR-0003
-   ↓
-OpenAPI
-   ↓
-FastAPI
-   ↓
-test_contrato_openapi.py
+[`.github/workflows/backend-tests.yml`](../.github/workflows/backend-tests.yml)
+
+ejecuta explícitamente:
+
+```yaml
+- name: Ejecutar prueba de contrato OpenAPI
+  run: python -m pytest backend/tests/test_contrato_openapi.py -q
 ```
 
 ---
+
+## Evidencia de ejecución en CI
+
+La ejecución oficial correspondiente al estado revisado por la pasada temprana
+del agente es:
+
+```text
+Run #93
+Commit: baeca7ea3cebe33818a68c1edc38e9aaf045424c
+Conclusión: success
+```
+
+Evidencia:
+
+[GitHub Actions Run #93](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/35115585642)
+
+---
+
+## Evidencia de incompatibilidad real
+
+Para comprobar que la prueba contractual puede fallar, se realizó temporalmente:
+
+```diff
+- operation_id="crearPublicacion",
++ operation_id="registrarPublicacion",
+```
+
+La prueba detectó la incompatibilidad y GitHub Actions terminó en rojo.
+
+Evidencia:
+
+[GitHub Actions - Run rojo](https://github.com/Nnigarp/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/34934077733)
+
+Resultado:
+
+```text
+FAILED test_proveedor_fastapi_cumple_el_contrato_versionado
+1 failed, 10 passed, 2 warnings
+Process completed with exit code 1.
+```
+
+La mutación fue restaurada posteriormente y no forma parte del código vigente.
+
+La documentación detallada se encuentra en:
+
+[`fallo-contrato-s7-2026-09-15.md`](./evidencias/fallo-contrato-s7-2026-09-15.md)
+
+---
+
+## Historial del contrato
+
+El contrato fue incorporado al repositorio mediante:
+
+```text
+485249a4ac8be1f12e5bfc4c0b54af744e51e5d6
+Implementar contrato OpenAPI y prueba de contrato S7
+```
+
+Su historial puede reproducirse mediante:
+
+```bash
+git log --format='%h %cI %s' -- contracts/openapi-v1.json
+```
+
+De esta forma, ASP-07 mantiene trazabilidad navegable entre:
+
+```text
+requisito
+→ arquitectura
+→ decisión
+→ contrato
+→ código
+→ prueba
+→ CI
+→ evidencia
+```
+
+sin depender únicamente de descripciones textuales.
 
 # Trazabilidad de migración MySQL — ADR-0004
 
