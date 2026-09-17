@@ -170,7 +170,194 @@ Esta evidencia corresponde al estado del primer corte.
 
 ---
 
+# Evidencia auditable S7 para revisión automática
+
+La evidencia completa de S7 se encuentra en:
+
+[`docs/evidencias/evidencia-s7-2026-09-15.md`](docs/evidencias/evidencia-s7-2026-09-15.md)
+
+Esta sección concentra las rutas y ejecuciones que utiliza la ficha S7 para
+verificar el estado del repositorio.
+
+| Comprobación | Evidencia |
+|---|---|
+| Contrato OpenAPI ejecutable | [`contracts/openapi-v1.json`](contracts/openapi-v1.json) |
+| OpenAPI / versión | OpenAPI `3.1.0`, API `1.0.0` |
+| Schemas del contrato | `HealthResponse`, `PublicacionCreate`, `Publicacion`, `ErrorResponse`, `HTTPValidationError`, `ValidationError` |
+| Implementación `POST /publicaciones` | [`backend/app/publicaciones/router.py`](backend/app/publicaciones/router.py) |
+| Implementación `GET /publicaciones` | [`backend/app/publicaciones/router.py`](backend/app/publicaciones/router.py) |
+| Implementación `GET /health` | [`backend/app/main.py`](backend/app/main.py) |
+| Prueba contractual | [`backend/tests/test_contrato_openapi.py`](backend/tests/test_contrato_openapi.py) |
+| Workflow CI | [`.github/workflows/backend-tests.yml`](.github/workflows/backend-tests.yml) |
+| Run oficial verde | https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/35115585642 |
+| Run rojo por incompatibilidad | https://github.com/Nnigarp/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/34934077733 |
+| Trazabilidad de aspectos | [`docs/aspectos.md`](docs/aspectos.md) |
+| Registro de IA | [`docs/ia.md`](docs/ia.md) |
+| ADR de integración | [`docs/adr/0003-usar-integracion-sincrona-http-json.md`](docs/adr/0003-usar-integracion-sincrona-http-json.md) |
+| arc42 sección 6 | [`docs/arc42/06-vista-ejecucion.md`](docs/arc42/06-vista-ejecucion.md) |
+| C4 Nivel 2 | [`docs/c4/02-contenedores.puml`](docs/c4/02-contenedores.puml) |
+
+## Cotejo mínimo contrato ↔ código
+
+La ficha S7 exige comprobar dos rutas desde el contrato hacia el código y una
+ruta desde el código hacia el contrato.
+
+```text
+Contrato POST /publicaciones
+→ backend/app/publicaciones/router.py
+→ operation_id = crearPublicacion
+
+Contrato GET /publicaciones
+→ backend/app/publicaciones/router.py
+→ operation_id = listarPublicaciones
+
+Código GET /health
+→ backend/app/main.py
+→ contrato OpenAPI GET /health
+→ operationId = consultarSalud
+```
+
+La prueba automatizada:
+
+[`backend/tests/test_contrato_openapi.py`](backend/tests/test_contrato_openapi.py)
+
+compara adicionalmente la superficie OpenAPI generada por FastAPI con el
+contrato versionado.
+
+## Historial del contrato
+
+El contrato está versionado en:
+
+```text
+contracts/openapi-v1.json
+```
+
+La versión declarada es:
+
+```text
+OpenAPI 3.1.0
+API 1.0.0
+```
+
+El contrato fue incorporado al historial mediante:
+
+```text
+485249a4ac8be1f12e5bfc4c0b54af744e51e5d6
+Implementar contrato OpenAPI y prueba de contrato S7
+```
+
+El historial puede reproducirse mediante:
+
+```bash
+git log --format='%h %cI %s' -- contracts/openapi-v1.json
+```
+
+## Prueba contractual en CI
+
+El workflow:
+
+[`.github/workflows/backend-tests.yml`](.github/workflows/backend-tests.yml)
+
+ejecuta explícitamente:
+
+```yaml
+- name: Ejecutar prueba de contrato OpenAPI
+  run: python -m pytest backend/tests/test_contrato_openapi.py -q
+```
+
+Run oficial exitoso correspondiente al estado revisado:
+
+```text
+Run #93
+Commit: baeca7ea3cebe33818a68c1edc38e9aaf045424c
+Conclusión: success
+```
+
+https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/35115585642
+
+## Evidencia de fallo ante incompatibilidad
+
+También se demostró que la prueba contractual puede fallar cuando el proveedor
+rompe el contrato.
+
+Cambio temporal:
+
+```diff
+- operation_id="crearPublicacion",
++ operation_id="registrarPublicacion",
+```
+
+Run rojo:
+
+https://github.com/Nnigarp/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/34934077733
+
+Resultado:
+
+```text
+conclusion: failure
+FAILED test_proveedor_fastapi_cumple_el_contrato_versionado
+1 failed, 10 passed, 2 warnings
+Process completed with exit code 1.
+```
+
+La incompatibilidad fue restaurada posteriormente y las ejecuciones siguientes
+regresaron a verde.
+
+Evidencia detallada:
+
+[`docs/evidencias/fallo-contrato-s7-2026-09-15.md`](docs/evidencias/fallo-contrato-s7-2026-09-15.md)
+
+## Evidencia transversal
+
+La matriz de trazabilidad se encuentra en:
+
+[`docs/aspectos.md`](docs/aspectos.md)
+
+y utiliza las ocho columnas requeridas:
+
+```text
+ID · Aspecto · Requisito · C4 · ADR · Código · Pruebas · Evidencia
+```
+
+El registro de uso de inteligencia artificial se encuentra en:
+
+[`docs/ia.md`](docs/ia.md)
+
+y documenta herramienta, uso, verificación del equipo y propuestas rechazadas
+con su justificación técnica.
+
+## Estado de SonarQube Cloud
+
+CampusMarket utiliza el proyecto oficial:
+
+```text
+ISCOUTB_AS_202620_PROYECTO_CAMPUSMARKET
+```
+
+Existe evidencia pública de Quality Gate aprobado:
+
+https://sonarcloud.io/dashboard?id=ISCOUTB_AS_202620_PROYECTO_CAMPUSMARKET&pullRequest=41
+
+La configuración versionada se encuentra en:
+
+[`.sonarcloud.properties`](.sonarcloud.properties)
+
+Sin embargo, la comprobación transversal de `CONTRATO.md` exige además que el
+scanner de SonarQube Cloud sea invocado explícitamente desde el workflow y que
+exista un run exitoso de CI asociado a ese análisis.
+
+Ese punto permanece como pendiente técnico de saneamiento y no se considera
+cerrado hasta contar con las tres evidencias:
+
+1. invocación del scanner en el workflow;
+2. run exitoso que ejecute el scanner;
+3. URL pública del análisis con Quality Gate aprobado.
+
+---
+
 # API de CampusMarket
+
+#API de CampusMarket
 
 Durante S7 se formalizó la interfaz entre:
 
