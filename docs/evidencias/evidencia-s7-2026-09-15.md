@@ -52,8 +52,9 @@ compatibilidad.
 
 **Recuento específico S7:** 10 de 10 criterios con evidencia identificada.
 
-> Este recuento corresponde a la matriz específica de S7. La comprobación
-> transversal de SonarQube Cloud se documenta por separado más adelante.
+> Este recuento corresponde exclusivamente a la matriz específica de S7.
+> La comprobación transversal de SonarQube Cloud se documenta por separado
+> más adelante y mantiene un pendiente técnico por permisos administrativos.
 
 ---
 
@@ -633,8 +634,15 @@ main.py / router.py
    ↓
 test_contrato_openapi.py
    ↓
-evidencia S7
+GitHub Actions
+   ↓
+fallo incompatible
+   ↓
+run verde
 ```
+
+La evidencia navegable se encuentra directamente en la fila ASP-07 de
+`docs/aspectos.md`.
 
 ---
 
@@ -659,8 +667,9 @@ Entre los rechazos documentados se encuentran:
 - conservar cambios incompatibles solamente para demostrar fallos;
 - debilitar la prueba contractual para que una incompatibilidad pase.
 
-El saneamiento posterior a la pasada temprana del revisor debe registrarse
-también en `docs/ia.md` como nueva evidencia del 17/09/2026.
+El saneamiento posterior a la pasada temprana del revisor también fue registrado
+el 17/09/2026 en `docs/ia.md`, incluyendo las verificaciones realizadas y las
+propuestas rechazadas con su justificación técnica.
 
 ---
 
@@ -694,22 +703,70 @@ Análisis público:
 
 https://sonarcloud.io/dashboard?id=ISCOUTB_AS_202620_PROYECTO_CAMPUSMARKET&pullRequest=41
 
+---
+
 ## Estado transversal pendiente de saneamiento
 
-La pasada temprana del revisor automático señaló correctamente que, aunque
-SonarQube Cloud dispone de análisis público y Quality Gate aprobado, el workflow
-actual `.github/workflows/backend-tests.yml` no invoca explícitamente un scanner
-de SonarQube Cloud.
+La pasada temprana del revisor automático señaló que, aunque SonarQube Cloud
+dispone de análisis público y Quality Gate aprobado, el workflow actual
+`.github/workflows/backend-tests.yml` no invoca explícitamente un scanner de
+SonarQube Cloud.
 
-Por tanto, según `CONTRATO.md`, todavía queda pendiente obtener las tres
-evidencias conjuntamente:
+Durante el saneamiento del 17/09/2026 se verificó directamente el proyecto
+oficial de CampusMarket en SonarQube Cloud:
 
-1. scanner invocado desde el workflow;
-2. run exitoso de CI que ejecute ese scanner para la rama o hash revisado;
-3. URL pública del análisis de SonarQube Cloud con Quality Gate aprobado.
+```text
+Project Key: ISCOUTB_AS_202620_PROYECTO_CAMPUSMARKET
+Organization Key: isco-utb
+Quality Gate: Passed
+```
 
-Este pendiente se trata como saneamiento técnico separado y no se oculta ni se
-declara resuelto antes de disponer de la ejecución requerida.
+También se comprobó que el análisis corresponde al proyecto oficial del curso
+y no a la configuración personal utilizada temporalmente durante S5.
+
+La cuenta actual del equipo no muestra acceso a:
+
+```text
+Administration
+→ Analysis Method
+```
+
+por lo que no dispone de los permisos administrativos necesarios para cambiar
+el método de análisis del proyecto oficial.
+
+La configuración vigente del repositorio conserva `.sonarcloud.properties`
+para el análisis oficial de SonarQube Cloud. No se incorporó directamente un
+scanner adicional al workflow sin poder revisar o modificar previamente
+`Analysis Method`, ya que hacerlo podría duplicar mecanismos de análisis o
+provocar una ejecución fallida.
+
+El estado verificado es:
+
+```text
+Proyecto oficial SonarQube Cloud: verificado
+Project Key oficial: verificado
+Organization Key: verificado
+Quality Gate público: Passed
+Configuración .sonarcloud.properties: versionada
+Scanner explícito en workflow: pendiente
+Run exitoso del scanner desde CI: pendiente
+Restricción actual: permisos administrativos del proyecto oficial
+```
+
+Por tanto, según la comprobación transversal exigida por `CONTRATO.md`, este
+punto no se declara cerrado.
+
+Para completar el saneamiento se requiere una cuenta con permisos
+administrativos sobre el proyecto oficial que permita:
+
+1. revisar o modificar `Administration → Analysis Method`;
+2. configurar de forma segura el análisis basado en CI;
+3. invocar el scanner de SonarQube Cloud desde GitHub Actions;
+4. obtener un run exitoso que ejecute dicho scanner;
+5. conservar la URL pública del análisis con Quality Gate aprobado.
+
+La restricción queda documentada como una limitación de permisos y no como
+evidencia de cumplimiento.
 
 ---
 
@@ -772,12 +829,16 @@ Al 17/09/2026, CampusMarket dispone de evidencia auditable para:
 - ADR de integración síncrona;
 - arc42 sección 6;
 - C4 Nivel 2;
-- trazabilidad en `docs/aspectos.md`;
+- trazabilidad navegable en `docs/aspectos.md`;
 - registro de IA con decisiones rechazadas y motivo;
-- Quality Gate público de SonarQube Cloud.
+- Quality Gate público de SonarQube Cloud;
+- identificación del proyecto y organización oficiales de SonarQube Cloud;
+- documentación explícita de la restricción administrativa que impide migrar
+  actualmente el análisis a CI.
 
 **Matriz específica S7: 10 de 10 criterios documentados con evidencia auditable.**
 
 **Pendiente transversal:** integrar el scanner de SonarQube Cloud al workflow y
-obtener un run exitoso asociado a ese análisis, según la comprobación exigida
-por `CONTRATO.md`.
+obtener un run exitoso asociado a ese análisis. La configuración permanece
+pendiente por falta de permisos administrativos sobre `Analysis Method` en el
+proyecto oficial y no se declara cumplida mientras no exista esa ejecución.
