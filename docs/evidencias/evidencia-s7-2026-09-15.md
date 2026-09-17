@@ -1,15 +1,20 @@
 # Evidencia S7 - Contrato de API y prueba de contrato
 
 **Periodo:** 14-20/09/2026  
-**Última actualización:** 16/09/2026  
+**Última actualización:** 17/09/2026  
 **Proyecto:** CampusMarket
 
-**Estado:** Evidencia S7 integrada y verificada en `master`.
+**Estado:** Evidencia S7 integrada y saneada a partir de la pasada temprana del revisor automático.
 
 La implementación principal del contrato se incorporó mediante los PR #37 y #38.
 Durante el cierre de S7 se realizaron además los ajustes de persistencia MySQL,
 trazabilidad arquitectónica y documentación mediante los PR #40 y #41, junto
 con el ajuste final del C4 Nivel 2.
+
+El 17/09/2026 se reforzó esta evidencia para hacer explícitas y auditables las
+comprobaciones solicitadas por la ficha S7: esquemas del contrato, cotejo
+bidireccional contrato-implementación, historial Git del contrato, ejecución de
+la prueba contractual en CI y evidencia de fallo ante un cambio incompatible.
 
 ---
 
@@ -22,80 +27,325 @@ El contrato OpenAPI `1.0.0` describe las operaciones actualmente implementadas,
 sus cuerpos, respuestas y esquemas de datos.
 
 La prueba automatizada compara el contrato versionado con la superficie OpenAPI
-generada por FastAPI y se ejecuta mediante un paso explícito del pipeline.
+generada por FastAPI y se ejecuta mediante un paso explícito de GitHub Actions.
 
 Además, se verificó experimentalmente que la prueba falla cuando el proveedor
-introduce un cambio incompatible y vuelve a verde después de restaurar el
-contrato esperado.
+introduce un cambio incompatible y vuelve a verde después de restaurar la
+compatibilidad.
 
 ---
 
 ## Matriz de cumplimiento S7
 
-| Criterio | Estado | Evidencia |
+| Criterio | Estado | Evidencia auditable |
 |---|---|---|
-| Contrato ejecutable versionado | Cumple | `contracts/openapi-v1.json`: OpenAPI `3.1.0`, API `1.0.0` |
-| Rutas y esquemas de datos | Cumple | `GET /health`, `GET /publicaciones`, `POST /publicaciones`; esquemas `HealthResponse`, `PublicacionCreate`, `Publicacion` y `ErrorResponse` |
-| Correspondencia contrato-API | Cumple | `backend/app/main.py`, `backend/app/publicaciones/router.py` y comparación exacta en `backend/tests/test_contrato_openapi.py` |
-| Versión declarada e historial | Cumple | `info.version: 1.0.0`; contrato incorporado mediante el PR #37 y versionado en Git |
-| Prueba de contrato presente | Cumple | `backend/tests/test_contrato_openapi.py` |
-| Pipeline ejecuta la prueba | Cumple | Paso `Ejecutar prueba de contrato OpenAPI` en `.github/workflows/backend-tests.yml`; Run #91 sobre `master` |
-| Falla ante cambio incompatible | Cumple | Ejecución roja ante `crearPublicacion` → `registrarPublicacion` y comprobación local complementaria `titulo` → `nombre` |
-| ADR ligado a un escenario | Cumple | `docs/adr/0003-usar-integracion-sincrona-http-json.md`, ligado principalmente a EC-06, con alternativa asíncrona descartada y consecuencias documentadas |
-| arc42 sección 6 | Cumple | Flujos de creación, consulta, persistencia e indisponibilidad en `docs/arc42/06-vista-ejecucion.md` |
-| C4 Nivel 2 etiquetado | Cumple | `docs/c4/02-contenedores.puml` y `docs/c4/02-contenedores.md`; relaciones con propósito y protocolo/formato o tecnología explícitos |
+| Contrato ejecutable versionado | Cumple | [`contracts/openapi-v1.json`](../../contracts/openapi-v1.json): OpenAPI `3.1.0`, API `1.0.0` |
+| Rutas y esquemas de datos | Cumple | El contrato contiene `paths` y `components.schemas`: `HealthResponse`, `PublicacionCreate`, `Publicacion`, `ErrorResponse`, `HTTPValidationError` y `ValidationError` |
+| Correspondencia contrato-API | Cumple | Cotejo explícito de `POST /publicaciones`, `GET /publicaciones` y `GET /health` contra `router.py` y `main.py`, complementado por `test_contrato_openapi.py` |
+| Versión declarada e historial | Cumple | `info.version: 1.0.0`; incorporación del contrato en commit `485249a4ac8be1f12e5bfc4c0b54af744e51e5d6` |
+| Prueba de contrato presente | Cumple | [`backend/tests/test_contrato_openapi.py`](../../backend/tests/test_contrato_openapi.py) |
+| Pipeline ejecuta la prueba | Cumple | Paso `Ejecutar prueba de contrato OpenAPI` en `.github/workflows/backend-tests.yml` y Run #93 en verde |
+| Falla ante cambio incompatible | Cumple | Run rojo ante `crearPublicacion` → `registrarPublicacion` y prueba local complementaria `titulo` → `nombre` |
+| ADR ligado a un escenario | Cumple | [`ADR-0003`](../adr/0003-usar-integracion-sincrona-http-json.md), ligado principalmente a EC-06, con alternativa asíncrona descartada y consecuencias documentadas |
+| arc42 sección 6 | Cumple | [`docs/arc42/06-vista-ejecucion.md`](../arc42/06-vista-ejecucion.md), con flujos de creación, consulta e indisponibilidad |
+| C4 Nivel 2 etiquetado | Cumple | [`docs/c4/02-contenedores.puml`](../c4/02-contenedores.puml) y [`docs/c4/02-contenedores.md`](../c4/02-contenedores.md), con comunicaciones etiquetadas |
 
-**Recuento:** 10 de 10 criterios cumplidos.
+**Recuento específico S7:** 10 de 10 criterios con evidencia identificada.
 
----
-
-## Operaciones contratadas
-
-| Método | Ruta | Operación | Respuestas |
-|---|---|---|---|
-| `GET` | `/health` | `consultarSalud` | `200 HealthResponse` |
-| `GET` | `/publicaciones` | `listarPublicaciones` | `200 Publicacion[]` |
-| `POST` | `/publicaciones` | `crearPublicacion` | `201 Publicacion`, `422 HTTPValidationError`, `503 ErrorResponse` |
+> Este recuento corresponde a la matriz específica de S7. La comprobación
+> transversal de SonarQube Cloud se documenta por separado más adelante.
 
 ---
 
-## Verificaciones ejecutadas
+# Evidencia auditable para el revisor automático
 
-### Estado compatible inicial
+Esta sección concentra de forma explícita las comprobaciones descritas por la
+ficha S7 y permite reproducirlas directamente contra el repositorio.
 
-Durante la implementación inicial del contrato se obtuvo:
+---
+
+## 1. Contrato ejecutable, rutas y esquemas
+
+Contrato fuente:
+
+[`contracts/openapi-v1.json`](../../contracts/openapi-v1.json)
+
+Información declarada:
 
 ```text
-11 passed, 2 warnings
-exit code: 0
-````
+OpenAPI: 3.1.0
+API: 1.0.0
+```
 
-Ejecución verde del fork con las pruebas separadas:
+Rutas actualmente contratadas:
 
-[https://github.com/Nnigarp/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/34935043273](https://github.com/Nnigarp/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/34935043273)
+```text
+GET  /health
+GET  /publicaciones
+POST /publicaciones
+```
 
-Ejecución oficial correspondiente al PR #38:
+El contrato no contiene únicamente un listado de endpoints. Incluye
+`components.schemas` con los modelos utilizados por las operaciones:
 
-[https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/34935516952](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/34935516952)
+```text
+components.schemas
+├── HealthResponse
+├── PublicacionCreate
+├── Publicacion
+├── ErrorResponse
+├── HTTPValidationError
+└── ValidationError
+```
+
+Correspondencia de operaciones y esquemas:
+
+| Operación | Entrada | Respuesta |
+|---|---|---|
+| `GET /health` | — | `200 HealthResponse` |
+| `GET /publicaciones` | — | `200 Publicacion[]` |
+| `POST /publicaciones` | `PublicacionCreate` | `201 Publicacion` |
+| `POST /publicaciones` | datos inválidos | `422 HTTPValidationError` |
+| `POST /publicaciones` | persistencia no disponible | `503 ErrorResponse` |
+
+Campos contractuales principales de `PublicacionCreate`:
+
+```text
+titulo       string   minLength=3   maxLength=100
+descripcion  string   minLength=3   maxLength=500
+precio       number   exclusiveMinimum=0
+modalidad    venta | alquiler
+estado       nuevo | usado | reacondicionado
+```
+
+`Publicacion` conserva esos campos y agrega:
+
+```text
+id integer
+```
 
 ---
 
-## Evidencia de fallo ante cambio incompatible
+## 2. Cotejo bidireccional contrato ↔ implementación
 
-### Mutación controlada en GitHub Actions
+La ficha S7 solicita comprobar dos rutas desde el contrato hacia el código y
+una ruta desde el código hacia el contrato.
 
-Se cambió temporalmente:
+### Contrato → código: `POST /publicaciones`
+
+Contrato:
+
+```text
+POST /publicaciones
+operationId: crearPublicacion
+requestBody: PublicacionCreate
+response 201: Publicacion
+response 503: ErrorResponse
+```
+
+Implementación:
+
+[`backend/app/publicaciones/router.py`](../../backend/app/publicaciones/router.py)
+
+```python
+@router.post(
+    "",
+    response_model=Publicacion,
+    status_code=status.HTTP_201_CREATED,
+    operation_id="crearPublicacion",
+    summary="Crear una publicación",
+)
+```
+
+El router tiene prefijo:
+
+```python
+router = APIRouter(prefix="/publicaciones", tags=["publicaciones"])
+```
+
+Por tanto, la operación implementada es:
+
+```text
+POST /publicaciones
+```
+
+**Resultado:** correspondencia verificada.
+
+---
+
+### Contrato → código: `GET /publicaciones`
+
+Contrato:
+
+```text
+GET /publicaciones
+operationId: listarPublicaciones
+response 200: Publicacion[]
+```
+
+Implementación:
+
+[`backend/app/publicaciones/router.py`](../../backend/app/publicaciones/router.py)
+
+```python
+@router.get(
+    "",
+    response_model=list[Publicacion],
+    operation_id="listarPublicaciones",
+    summary="Listar publicaciones",
+)
+```
+
+Con el prefijo `/publicaciones`, la operación implementada es:
+
+```text
+GET /publicaciones
+```
+
+**Resultado:** correspondencia verificada.
+
+---
+
+### Código → contrato: `GET /health`
+
+Implementación:
+
+[`backend/app/main.py`](../../backend/app/main.py)
+
+```python
+@app.get(
+    "/health",
+    response_model=HealthResponse,
+    operation_id="consultarSalud",
+    summary="Consultar la salud del backend",
+)
+```
+
+Contrato:
+
+```text
+GET /health
+operationId: consultarSalud
+response 200: HealthResponse
+```
+
+**Resultado:** correspondencia verificada.
+
+---
+
+### Verificación automatizada adicional
+
+La correspondencia completa también se verifica mediante:
+
+[`backend/tests/test_contrato_openapi.py`](../../backend/tests/test_contrato_openapi.py)
+
+La prueba compara el contrato versionado con el OpenAPI generado por FastAPI,
+de forma que una desincronización entre proveedor y contrato produce un fallo
+automático.
+
+---
+
+## 3. Versión e historial Git del contrato
+
+El contrato declara:
+
+```json
+"openapi": "3.1.0",
+"info": {
+  "title": "CampusMarket API",
+  "version": "1.0.0"
+}
+```
+
+El archivo versionado es:
+
+```text
+contracts/openapi-v1.json
+```
+
+Su incorporación al repositorio quedó registrada mediante:
+
+```text
+Commit:
+485249a4ac8be1f12e5bfc4c0b54af744e51e5d6
+
+Fecha:
+2026-09-15
+
+Mensaje:
+Implementar contrato OpenAPI y prueba de contrato S7
+```
+
+Comando reproducible de historial:
+
+```bash
+git log --format='%h %cI %s' -- contracts/openapi-v1.json
+```
+
+La versión de la API se encuentra tanto en el contrato como en la aplicación
+FastAPI, que declara:
+
+```python
+app = FastAPI(
+    title="CampusMarket API",
+    version="1.0.0",
+)
+```
+
+---
+
+## 4. Prueba de contrato ejecutada por el pipeline
+
+Workflow:
+
+[`.github/workflows/backend-tests.yml`](../../.github/workflows/backend-tests.yml)
+
+La prueba de contrato se invoca explícitamente mediante:
+
+```yaml
+- name: Ejecutar prueba de contrato OpenAPI
+  run: python -m pytest backend/tests/test_contrato_openapi.py -q
+```
+
+La ejecución oficial correspondiente al commit que fue revisado por la pasada
+temprana del agente es:
+
+```text
+Commit: baeca7ea3cebe33818a68c1edc38e9aaf045424c
+GitHub Actions: Run #93
+Conclusión: success
+```
+
+URL:
+
+https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/35115585642
+
+Esto demuestra que la prueba contractual no solamente existe en el árbol:
+forma parte de la integración continua.
+
+---
+
+## 5. Evidencia de fallo ante cambio incompatible
+
+Para comprobar que la prueba contractual puede detectar una ruptura real, se
+introdujo temporalmente la siguiente mutación:
 
 ```diff
 - operation_id="crearPublicacion",
 + operation_id="registrarPublicacion",
 ```
 
-Ejecución roja:
+GitHub Actions terminó en rojo:
 
-[https://github.com/Nnigarp/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/34934077733](https://github.com/Nnigarp/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/34934077733)
+https://github.com/Nnigarp/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/34934077733
 
-Resultado:
+Datos de la ejecución:
+
+```text
+conclusion: failure
+```
+
+Resultado principal:
 
 ```text
 FAILED test_proveedor_fastapi_cumple_el_contrato_versionado
@@ -107,14 +357,27 @@ Proveedor: operationId = registrarPublicacion
 Process completed with exit code 1.
 ```
 
-La ejecución demuestra que la prueba de contrato no pasa de forma incondicional:
-un cambio incompatible en el proveedor rompe el pipeline.
+La ejecución demuestra que la prueba no pasa incondicionalmente: una ruptura
+del proveedor respecto al contrato hace fallar el pipeline.
+
+Después se restauró:
+
+```text
+operationId = crearPublicacion
+```
+
+y las ejecuciones posteriores volvieron a verde.
+
+La evidencia detallada se conserva en:
+
+[`fallo-contrato-s7-2026-09-15.md`](./fallo-contrato-s7-2026-09-15.md)
 
 ---
 
-### Mutación local complementaria
+## 6. Mutación local complementaria
 
-También se cambió temporalmente el esquema:
+También se realizó una segunda comprobación modificando temporalmente el
+esquema del proveedor:
 
 ```diff
 - titulo: str = Field(min_length=3, max_length=100)
@@ -130,21 +393,47 @@ FAILED test_proveedor_fastapi_cumple_el_contrato_versionado
 exit code: 1
 ```
 
-Las dos mutaciones fueron restauradas y no permanecen en el código vigente.
-
-La demostración completa se encuentra en:
-
-[`fallo-contrato-s7-2026-09-15.md`](./fallo-contrato-s7-2026-09-15.md)
+La mutación fue restaurada y no forma parte del código vigente.
 
 ---
 
-## Verificación final en `master`
+# Operaciones contratadas
+
+| Método | Ruta | Operación | Respuestas |
+|---|---|---|---|
+| `GET` | `/health` | `consultarSalud` | `200 HealthResponse` |
+| `GET` | `/publicaciones` | `listarPublicaciones` | `200 Publicacion[]` |
+| `POST` | `/publicaciones` | `crearPublicacion` | `201 Publicacion`, `422 HTTPValidationError`, `503 ErrorResponse` |
+
+---
+
+# Verificaciones ejecutadas
+
+## Estado compatible inicial
+
+Durante la implementación inicial del contrato se obtuvo:
+
+```text
+11 passed, 2 warnings
+exit code: 0
+```
+
+Ejecución verde del fork con las pruebas separadas:
+
+https://github.com/Nnigarp/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/34935043273
+
+Ejecución oficial correspondiente al PR #38:
+
+https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/34935516952
+
+---
+
+## Verificación posterior en `master`
 
 Después de la integración del contrato, la migración de persistencia a MySQL y
-el cierre documental de S7, se realizó una verificación final sobre la rama
-principal.
+el cierre documental de S7 se ejecutó nuevamente el pipeline.
 
-Estado revisado:
+Una de las verificaciones documentadas fue:
 
 ```text
 commit: 208ada3d6e6d378f474a8e01afabb8e5385b3ef2
@@ -153,12 +442,9 @@ GitHub Actions: Run #91
 resultado: success
 ```
 
-Run:
+URL:
 
-[https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/35114137881](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/35114137881)
-
-El pipeline verificó primero la disponibilidad del servicio MySQL utilizado
-durante las pruebas.
+https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/35114137881
 
 Resultado de las pruebas funcionales y arquitectónicas:
 
@@ -172,23 +458,22 @@ Resultado de la prueba de contrato ejecutada de manera independiente:
 3 passed
 ```
 
-Resultado global del pipeline:
+Resultado global:
 
 ```text
 12 pruebas aprobadas
 GitHub Actions: success
 ```
 
-La separación de las pruebas permite identificar explícitamente que la prueba
-de contrato forma parte de la integración continua y no está oculta dentro del
-conjunto general de pruebas.
+Posteriormente, el commit `baeca7e`, utilizado por la pasada temprana del
+revisor automático, también obtuvo un pipeline exitoso mediante el Run #93.
 
 ---
 
-## C4 Nivel 2
+# C4 Nivel 2
 
 Durante el cierre del 16/09/2026 se revisó el C4 Nivel 2 para hacer explícita la
-tecnología o protocolo utilizado en cada relación.
+tecnología, protocolo o formato utilizado en cada comunicación.
 
 Las relaciones vigentes son:
 
@@ -224,41 +509,32 @@ Backend API
 MySQL
 ```
 
-El ajuste quedó registrado en:
-
-```text
-208ada3 - Ajustar C4 Nivel 2 con protocolos en todas las relaciones
-```
-
 Fuentes:
 
-* [`docs/c4/02-contenedores.puml`](../c4/02-contenedores.puml)
-* [`docs/c4/02-contenedores.md`](../c4/02-contenedores.md)
+- [`docs/c4/02-contenedores.puml`](../c4/02-contenedores.puml)
+- [`docs/c4/02-contenedores.md`](../c4/02-contenedores.md)
 
 ---
 
-## Cliente generado
+# Cliente generado
 
 OpenAPI Generator `7.25.0` generó de forma reproducible un cliente Dart con:
 
-* `crearPublicacion`;
-* `listarPublicaciones`;
-* `consultarSalud`.
+- `crearPublicacion`;
+- `listarPublicaciones`;
+- `consultarSalud`.
 
 El procedimiento se documenta en:
 
 [`contracts/README.md`](../../contracts/README.md)
 
-El cliente generado se utilizó únicamente como comprobación reproducible del
-contrato.
-
-No se incorporó como segundo cliente productivo porque
-`publicaciones_api.dart` ya representa el cliente actual del corte vertical y
-mantener ambos introduciría responsabilidades duplicadas.
+El cliente generado se utilizó como comprobación reproducible del contrato y no
+se incorporó como segundo cliente productivo, porque
+`publicaciones_api.dart` ya representa el cliente actual del corte vertical.
 
 ---
 
-## Decisión y trade-off
+# Decisión y trade-off
 
 Se mantiene la integración síncrona porque crear y consultar publicaciones
 requiere una respuesta inmediata para el consumidor Flutter.
@@ -267,19 +543,19 @@ Se acepta como consecuencia el acoplamiento temporal entre Frontend y Backend.
 
 Los modos de fallo se expresan mediante:
 
-* HTTP `422`;
-* HTTP `503`;
-* errores de comunicación HTTP.
+- HTTP `422`;
+- HTTP `503`;
+- errores de comunicación HTTP.
 
-La alternativa asíncrona fue evaluada y descartada para el alcance actual porque
-requeriría:
+La alternativa asíncrona fue evaluada y descartada para el alcance actual
+porque requeriría:
 
-* estados pendientes;
-* reintentos;
-* idempotencia;
-* tratamiento de duplicados;
-* consistencia eventual;
-* infraestructura adicional de mensajería.
+- estados pendientes;
+- reintentos;
+- idempotencia;
+- tratamiento de duplicados;
+- consistencia eventual;
+- infraestructura adicional de mensajería.
 
 No existe actualmente una necesidad arquitectónica que justifique introducir
 esa complejidad.
@@ -290,7 +566,7 @@ La decisión está registrada en:
 
 ---
 
-## Persistencia vigente
+# Persistencia vigente
 
 Durante el cierre de S7 la persistencia vigente de CampusMarket fue migrada de
 SQLite a MySQL.
@@ -318,7 +594,77 @@ La decisión de migración se encuentra registrada en:
 
 ---
 
-## Calidad y análisis estático
+# Evidencia transversal del repositorio
+
+## Tabla de aspectos
+
+La trazabilidad transversal se mantiene en:
+
+[`docs/aspectos.md`](../aspectos.md)
+
+El archivo utiliza las ocho columnas requeridas por el contrato del curso:
+
+```text
+ID
+Aspecto
+Requisito
+C4
+ADR
+Código
+Pruebas
+Evidencia
+```
+
+Para S7, la fila principal es `ASP-07 - Contrato ejecutable de API`, cuya
+cadena de trazabilidad conecta:
+
+```text
+ASP-07
+   ↓
+EC-06
+   ↓
+C4 Nivel 2 / Vista de ejecución
+   ↓
+ADR-0003
+   ↓
+contracts/openapi-v1.json
+   ↓
+main.py / router.py
+   ↓
+test_contrato_openapi.py
+   ↓
+evidencia S7
+```
+
+---
+
+## Registro de uso de IA
+
+El registro se mantiene en:
+
+[`docs/ia.md`](../ia.md)
+
+La sección S7 registra, para cada uso:
+
+- herramienta utilizada;
+- uso realizado;
+- verificación del equipo;
+- qué se rechazó y por qué.
+
+Entre los rechazos documentados se encuentran:
+
+- inventar endpoints o eventos inexistentes;
+- considerar Swagger automático como prueba contractual suficiente;
+- incorporar un segundo cliente Dart productivo sin necesidad;
+- conservar cambios incompatibles solamente para demostrar fallos;
+- debilitar la prueba contractual para que una incompatibilidad pase.
+
+El saneamiento posterior a la pasada temprana del revisor debe registrarse
+también en `docs/ia.md` como nueva evidencia del 17/09/2026.
+
+---
+
+# Calidad y análisis estático
 
 CampusMarket utiliza el proyecto oficial de SonarQube Cloud:
 
@@ -326,32 +672,50 @@ CampusMarket utiliza el proyecto oficial de SonarQube Cloud:
 ISCOUTB_AS_202620_PROYECTO_CAMPUSMARKET
 ```
 
-La configuración complementaria permanece versionada en:
+Configuración versionada:
 
 ```text
 .sonarcloud.properties
 ```
 
-Durante el cierre de S7, el análisis correspondiente al PR #41 reportó:
+El análisis correspondiente al PR #41 reportó:
 
-* Quality Gate: **Passed**;
-* problemas nuevos: **0**;
-* problemas aceptados nuevos: **0**;
-* Security Hotspots nuevos: **0**;
-* duplicación en código nuevo: **0.0 %**.
+- Quality Gate: **Passed**;
+- problemas nuevos: **0**;
+- problemas aceptados nuevos: **0**;
+- Security Hotspots nuevos: **0**;
+- duplicación en código nuevo: **0.0 %**.
 
 PR:
 
-[https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/pull/41](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/pull/41)
+https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/pull/41
 
-El análisis pertenece al proyecto oficial de SonarQube Cloud configurado para
-el repositorio de ISCOUTB.
+Análisis público:
+
+https://sonarcloud.io/dashboard?id=ISCOUTB_AS_202620_PROYECTO_CAMPUSMARKET&pullRequest=41
+
+## Estado transversal pendiente de saneamiento
+
+La pasada temprana del revisor automático señaló correctamente que, aunque
+SonarQube Cloud dispone de análisis público y Quality Gate aprobado, el workflow
+actual `.github/workflows/backend-tests.yml` no invoca explícitamente un scanner
+de SonarQube Cloud.
+
+Por tanto, según `CONTRATO.md`, todavía queda pendiente obtener las tres
+evidencias conjuntamente:
+
+1. scanner invocado desde el workflow;
+2. run exitoso de CI que ejecute ese scanner para la rama o hash revisado;
+3. URL pública del análisis de SonarQube Cloud con Quality Gate aprobado.
+
+Este pendiente se trata como saneamiento técnico separado y no se oculta ni se
+declara resuelto antes de disponer de la ejecución requerida.
 
 ---
 
-## Cadena de trazabilidad
+# Cadena de trazabilidad S7
 
-La trazabilidad principal de S7 es:
+La trazabilidad principal es:
 
 ```text
 ASP-07
@@ -374,37 +738,46 @@ fallo ante cambio incompatible
    ↓
 restauración
    ↓
-Run #91 en verde
+pipeline verde
 ```
 
 Esta cadena conecta:
 
-* aspecto arquitectónico;
-* escenario de calidad;
-* representación C4;
-* decisión arquitectónica;
-* contrato ejecutable;
-* implementación;
-* prueba automática;
-* pipeline;
-* evidencia experimental de fallo;
-* estado final compatible.
+- aspecto arquitectónico;
+- escenario de calidad;
+- representación C4;
+- decisión arquitectónica;
+- contrato ejecutable;
+- implementación;
+- prueba automática;
+- pipeline;
+- evidencia experimental de fallo;
+- restauración del estado compatible.
 
 ---
 
-## Estado final S7
+# Estado final de la evidencia S7
 
-Al 16/09/2026, CampusMarket cuenta con:
+Al 17/09/2026, CampusMarket dispone de evidencia auditable para:
 
-* contrato OpenAPI ejecutable y versionado;
-* API `1.0.0`;
-* rutas y esquemas de datos explícitos;
-* correspondencia automática contrato ↔ FastAPI;
-* prueba de contrato dentro de GitHub Actions;
-* evidencia real de fallo ante cambio incompatible;
-* ADR de integración síncrona;
-* arc42 sección 6 actualizada;
-* C4 Nivel 2 con comunicaciones etiquetadas;
-* persistencia vigente MySQL;
-* pipeline final en verde;
-* proyecto oficial de SonarQube Cloud con Quality Gate aprobado.
+- contrato OpenAPI ejecutable y versionado;
+- API `1.0.0`;
+- rutas y `components.schemas`;
+- cotejo bidireccional contrato ↔ implementación;
+- historial Git del contrato;
+- prueba contractual automatizada;
+- invocación explícita de la prueba contractual en GitHub Actions;
+- run oficial exitoso;
+- run rojo real ante cambio incompatible;
+- ADR de integración síncrona;
+- arc42 sección 6;
+- C4 Nivel 2;
+- trazabilidad en `docs/aspectos.md`;
+- registro de IA con decisiones rechazadas y motivo;
+- Quality Gate público de SonarQube Cloud.
+
+**Matriz específica S7: 10 de 10 criterios documentados con evidencia auditable.**
+
+**Pendiente transversal:** integrar el scanner de SonarQube Cloud al workflow y
+obtener un run exitoso asociado a ese análisis, según la comprobación exigida
+por `CONTRATO.md`.
