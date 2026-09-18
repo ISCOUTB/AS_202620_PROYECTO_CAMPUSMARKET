@@ -91,6 +91,15 @@ Este documento registra el uso de herramientas de IA como apoyo al proyecto. Tod
 | ChatGPT | Apoyo para revisar la coherencia entre el contrato OpenAPI, FastAPI, la persistencia vigente y la documentación del proyecto. | Se contrastaron `contracts/openapi-v1.json`, FastAPI, C4, ADR-0003, ADR-0004, README y pruebas automatizadas. | Se rechazó presentar SQLite como tecnología vigente o confundir las decisiones históricas con el estado arquitectónico actual. |
 | ChatGPT | Auditoría de cierre documental de S7. | Se corrigió el formato de `docs/aspectos.md`, se aclaró el estado histórico de ADR-0002 en `docs/arc42/09-decisiones.md`, se revisaron referencias SQLite/MySQL y se mejoró el script de arranque para validar la disponibilidad de MySQL. | Se rechazó eliminar ADR, mediciones, scripts o evidencias históricas únicamente por contener referencias a SQLite, ya que forman parte de la trazabilidad real del proyecto. |
 
+### Saneamiento posterior a revisión automática S7 — 17/09/2026
+
+| Herramienta | Uso realizado | Verificación del equipo | Qué se rechazó y por qué |
+|---|---|---|---|
+| ChatGPT | Apoyo para revisar los hallazgos de la pasada temprana del agente y localizar la evidencia real de S7. | Se contrastaron `contracts/openapi-v1.json`, FastAPI, `test_contrato_openapi.py`, el workflow, `docs/aspectos.md`, README y los runs de GitHub Actions. | Se rechazó modificar arquitectura, endpoints o contrato solo para mejorar el resultado del revisor; los hallazgos principales requerían hacer visible evidencia ya existente. |
+| ChatGPT | Apoyo para sanear la evidencia S7 y hacer explícitos schemas, correspondencia contrato ↔ código, historial Git, ejecución contractual en CI y fallo ante incompatibilidad. | Se verificaron OpenAPI `3.1.0`, API `1.0.0`, `POST /publicaciones`, `GET /publicaciones`, `GET /health`, commit `485249a`, Run #93 verde y un run rojo real por cambio incompatible. | Se rechazó declarar cumplimiento únicamente mediante texto; se utilizaron rutas, commits y ejecuciones reproducibles. |
+| ChatGPT | Apoyo para reforzar la trazabilidad en `docs/aspectos.md`, README, arc42 sección 6 y C4 Nivel 2. | Se comprobó ASP-07, se corrigió el formato Markdown de la vista de ejecución y se repararon los enlaces hacia ADR-0004 sin modificar código, contrato ni ADR aceptados. | Se rechazó modificar ADR-0003 o introducir cambios arquitectónicos innecesarios durante el saneamiento documental. |
+| ChatGPT | Apoyo para revisar el estado de SonarQube Cloud y la configuración oficial del proyecto. | Se verificó el proyecto `ISCOUTB_AS_202620_PROYECTO_CAMPUSMARKET`, Quality Gate aprobado y análisis público. El workflow aún no invoca explícitamente el scanner. | Se rechazó restaurar una configuración personal, duplicar mecanismos de análisis o declarar cerrado Sonar sin scanner en CI y un run exitoso asociado. |
+
 ## Criterio de uso
 
 La IA se utiliza como apoyo para análisis, documentación, organización, comparación de alternativas y revisión técnica.

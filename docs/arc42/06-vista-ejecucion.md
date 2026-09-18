@@ -1,5 +1,3 @@
-﻿
-````markdown
 # 6. Vista de ejecución
 
 ## 6.1 Crear una publicación - flujo exitoso
@@ -46,7 +44,7 @@ sequenceDiagram
     S-->>R: publicación
     R-->>F: 201 Created + Publicacion
     F-->>E: Confirmación
-````
+```
 
 La interacción Flutter → FastAPI es **síncrona**: el consumidor realiza una
 solicitud y espera la respuesta HTTP dentro de la misma interacción.
@@ -296,5 +294,3 @@ describen en términos de disponibilidad de MySQL y no de condiciones
 
 La evolución conserva la intención arquitectónica de degradación controlada,
 pero adapta su implementación a la tecnología vigente.
-
-````
