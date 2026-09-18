@@ -59,7 +59,7 @@ Estudiante / Administrador
    PyMySQL / SQL
           ↓
         MySQL
-````
+```
 
 La sustitución de SQLite por MySQL modifica la tecnología de persistencia, pero
 mantiene la separación arquitectónica entre:
@@ -468,7 +468,7 @@ Por tanto:
 
 La decisión de migración está registrada mediante un ADR independiente:
 
-[ADR-0004 - Migración de SQLite a MySQL](../adr/0004-migrar-sqlite-a-mysql.md)
+[ADR-0004 - Migración de SQLite a MySQL](../adr/0004-migrar-persistencia-a-mysql.md)
 
 ---
 
@@ -493,7 +493,7 @@ La estrategia de integración se documenta en:
 
 La persistencia vigente se documenta en:
 
-[ADR-0004 - Migración de SQLite a MySQL](../adr/0004-migrar-sqlite-a-mysql.md)
+[ADR-0004 - Migración de SQLite a MySQL](../adr/0004-migrar-persistencia-a-mysql.md)
 
 ---
 
