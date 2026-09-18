@@ -355,8 +355,6 @@ cerrado hasta contar con las tres evidencias:
 
 ---
 
-# API de CampusMarket
-
 #API de CampusMarket
 
 Durante S7 se formalizó la interfaz entre:
