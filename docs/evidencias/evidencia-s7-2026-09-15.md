@@ -1,7 +1,7 @@
 # Evidencia S7 - Contrato de API y prueba de contrato
 
 **Periodo:** 14-20/09/2026  
-**Última actualización:** 17/09/2026  
+**Última actualización:** 18/09/2026  
 **Proyecto:** CampusMarket
 
 **Estado:** Evidencia S7 integrada y saneada a partir de la pasada temprana del revisor automático.
@@ -15,6 +15,12 @@ El 17/09/2026 se reforzó esta evidencia para hacer explícitas y auditables las
 comprobaciones solicitadas por la ficha S7: esquemas del contrato, cotejo
 bidireccional contrato-implementación, historial Git del contrato, ejecución de
 la prueba contractual en CI y evidencia de fallo ante un cambio incompatible.
+
+El 18/09/2026 se realizó una verificación final sobre `master`. El estado vigente
+corresponde al commit `5bedc833c6324cba316cefd5ccc39d1269f3b984`, y el
+GitHub Actions Run #95 fue reejecutado sobre ese mismo hash con conclusión
+`success`, conservando en verde las pruebas funcionales, arquitectónicas y
+contractuales.
 
 ---
 
@@ -44,7 +50,7 @@ compatibilidad.
 | Correspondencia contrato-API | Cumple | Cotejo explícito de `POST /publicaciones`, `GET /publicaciones` y `GET /health` contra `router.py` y `main.py`, complementado por `test_contrato_openapi.py` |
 | Versión declarada e historial | Cumple | `info.version: 1.0.0`; incorporación del contrato en commit `485249a4ac8be1f12e5bfc4c0b54af744e51e5d6` |
 | Prueba de contrato presente | Cumple | [`backend/tests/test_contrato_openapi.py`](../../backend/tests/test_contrato_openapi.py) |
-| Pipeline ejecuta la prueba | Cumple | Paso `Ejecutar prueba de contrato OpenAPI` en `.github/workflows/backend-tests.yml` y Run #93 en verde |
+| Pipeline ejecuta la prueba | Cumple | Paso `Ejecutar prueba de contrato OpenAPI` en `.github/workflows/backend-tests.yml`; Run #95 en `master` sobre `5bedc83` con conclusión `success` |
 | Falla ante cambio incompatible | Cumple | Run rojo ante `crearPublicacion` → `registrarPublicacion` y prueba local complementaria `titulo` → `nombre` |
 | ADR ligado a un escenario | Cumple | [`ADR-0003`](../adr/0003-usar-integracion-sincrona-http-json.md), ligado principalmente a EC-06, con alternativa asíncrona descartada y consecuencias documentadas |
 | arc42 sección 6 | Cumple | [`docs/arc42/06-vista-ejecucion.md`](../arc42/06-vista-ejecucion.md), con flujos de creación, consulta e indisponibilidad |
@@ -54,7 +60,7 @@ compatibilidad.
 
 > Este recuento corresponde exclusivamente a la matriz específica de S7.
 > La comprobación transversal de SonarQube Cloud se documenta por separado
-> más adelante y mantiene un pendiente técnico por permisos administrativos.
+> más adelante y mantiene un pendiente transversal por autorización para ejecutar análisis en la organización `isco-utb`.
 
 ---
 
@@ -308,21 +314,27 @@ La prueba de contrato se invoca explícitamente mediante:
   run: python -m pytest backend/tests/test_contrato_openapi.py -q
 ```
 
-La ejecución oficial correspondiente al commit que fue revisado por la pasada
-temprana del agente es:
+La verificación final del estado vigente de `master` corresponde a:
 
 ```text
-Commit: baeca7ea3cebe33818a68c1edc38e9aaf045424c
-GitHub Actions: Run #93
+Commit: 5bedc833c6324cba316cefd5ccc39d1269f3b984
+Rama: master
+GitHub Actions: Run #95
 Conclusión: success
 ```
 
 URL:
 
-https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/35115585642
+https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/35291809164
+
+El Run #95 fue reejecutado el 18/09/2026 sobre el mismo hash y volvió a finalizar
+con conclusión `success`.
 
 Esto demuestra que la prueba contractual no solamente existe en el árbol:
-forma parte de la integración continua.
+forma parte de la integración continua del estado vigente de `master`.
+
+Como antecedente, el commit `baeca7e`, utilizado por la pasada temprana del
+revisor automático, también obtuvo un pipeline exitoso mediante el Run #93.
 
 ---
 
@@ -432,42 +444,41 @@ https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/34935516
 ## Verificación posterior en `master`
 
 Después de la integración del contrato, la migración de persistencia a MySQL y
-el cierre documental de S7 se ejecutó nuevamente el pipeline.
+el saneamiento documental de S7 se volvió a ejecutar el pipeline sobre la rama
+principal.
 
-Una de las verificaciones documentadas fue:
+La verificación final vigente es:
 
 ```text
-commit: 208ada3d6e6d378f474a8e01afabb8e5385b3ef2
+commit: 5bedc833c6324cba316cefd5ccc39d1269f3b984
 rama: master
-GitHub Actions: Run #91
+GitHub Actions: Run #95
 resultado: success
 ```
 
 URL:
 
-https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/35114137881
+https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/35291809164
 
-Resultado de las pruebas funcionales y arquitectónicas:
-
-```text
-9 passed, 2 warnings
-```
-
-Resultado de la prueba de contrato ejecutada de manera independiente:
+El Run #95 ejecuta el workflow vigente de `master`, que incluye:
 
 ```text
-3 passed
+Verificación de conexión con MySQL
+Pruebas funcionales y arquitectónicas
+Prueba de contrato OpenAPI
 ```
 
-Resultado global:
+El mismo Run #95 fue reejecutado el 18/09/2026 sobre `5bedc83` y volvió a
+finalizar en verde.
 
-```text
-12 pruebas aprobadas
-GitHub Actions: success
-```
+Como antecedentes adicionales:
 
-Posteriormente, el commit `baeca7e`, utilizado por la pasada temprana del
-revisor automático, también obtuvo un pipeline exitoso mediante el Run #93.
+- Run #91 verificó la integración posterior de MySQL y las pruebas de S7;
+- Run #93 verificó el commit `baeca7e` utilizado por la pasada temprana del
+  revisor automático.
+
+Por tanto, el estado actual de `master` conserva un pipeline estable y exitoso
+para las pruebas automatizadas exigidas por la ficha S7.
 
 ---
 
@@ -708,12 +719,11 @@ https://sonarcloud.io/dashboard?id=ISCOUTB_AS_202620_PROYECTO_CAMPUSMARKET&pullR
 ## Estado transversal pendiente de saneamiento
 
 La pasada temprana del revisor automático señaló que, aunque SonarQube Cloud
-dispone de análisis público y Quality Gate aprobado, el workflow actual
+dispone de análisis público y Quality Gate aprobado, el workflow vigente
 `.github/workflows/backend-tests.yml` no invoca explícitamente un scanner de
 SonarQube Cloud.
 
-Durante el saneamiento del 17/09/2026 se verificó directamente el proyecto
-oficial de CampusMarket en SonarQube Cloud:
+El proyecto oficial verificado es:
 
 ```text
 Project Key: ISCOUTB_AS_202620_PROYECTO_CAMPUSMARKET
@@ -721,52 +731,57 @@ Organization Key: isco-utb
 Quality Gate: Passed
 ```
 
-También se comprobó que el análisis corresponde al proyecto oficial del curso
-y no a la configuración personal utilizada temporalmente durante S5.
-
-La cuenta actual del equipo no muestra acceso a:
+La configuración del análisis permanece versionada en:
 
 ```text
-Administration
-→ Analysis Method
+.sonarcloud.properties
 ```
 
-por lo que no dispone de los permisos administrativos necesarios para cambiar
-el método de análisis del proyecto oficial.
+El equipo puede consultar públicamente el proyecto oficial y su Quality Gate.
+Sin embargo, la credencial disponible para el equipo no está autorizada para
+publicar un análisis CI sobre el proyecto de la organización `isco-utb`.
 
-La configuración vigente del repositorio conserva `.sonarcloud.properties`
-para el análisis oficial de SonarQube Cloud. No se incorporó directamente un
-scanner adicional al workflow sin poder revisar o modificar previamente
-`Analysis Method`, ya que hacerlo podría duplicar mecanismos de análisis o
-provocar una ejecución fallida.
+Durante una validación temporal, realizada fuera de `master`, el scanner fue
+invocado desde GitHub Actions, pero SonarQube Cloud rechazó la publicación del
+análisis por autorización. Esa ejecución no se conserva como evidencia de
+cumplimiento y no fue incorporada a `master`.
 
-El estado verificado es:
+Por esta razón no se fusionó un paso de scanner conocido como fallido. La rama
+principal se mantuvo en el commit estable
+`5bedc833c6324cba316cefd5ccc39d1269f3b984`, cuyo Run #95 concluye
+`success` y ejecuta las pruebas funcionales, arquitectónicas y contractuales.
+
+El estado verificable queda así:
 
 ```text
 Proyecto oficial SonarQube Cloud: verificado
-Project Key oficial: verificado
-Organization Key: verificado
+Project Key: ISCOUTB_AS_202620_PROYECTO_CAMPUSMARKET
+Organization Key: isco-utb
 Quality Gate público: Passed
 Configuración .sonarcloud.properties: versionada
-Scanner explícito en workflow: pendiente
+Pipeline principal de master: success
+Scanner explícito en workflow de master: pendiente
 Run exitoso del scanner desde CI: pendiente
-Restricción actual: permisos administrativos del proyecto oficial
+Restricción actual: autorización para ejecutar análisis sobre isco-utb
 ```
 
 Por tanto, según la comprobación transversal exigida por `CONTRATO.md`, este
-punto no se declara cerrado.
+punto no se declara como cumplido mientras no exista una ejecución exitosa del
+scanner sobre el proyecto oficial.
 
-Para completar el saneamiento se requiere una cuenta con permisos
-administrativos sobre el proyecto oficial que permita:
+Para cerrar esta conformidad transversal se requiere una de estas acciones:
 
-1. revisar o modificar `Administration → Analysis Method`;
-2. configurar de forma segura el análisis basado en CI;
-3. invocar el scanner de SonarQube Cloud desde GitHub Actions;
-4. obtener un run exitoso que ejecute dicho scanner;
-5. conservar la URL pública del análisis con Quality Gate aprobado.
+1. otorgar al equipo permiso `Execute Analysis` sobre
+   `ISCOUTB_AS_202620_PROYECTO_CAMPUSMARKET`; o
+2. configurar en el repositorio un `SONAR_TOKEN` autorizado por un administrador
+   de la organización `isco-utb`.
 
-La restricción queda documentada como una limitación de permisos y no como
-evidencia de cumplimiento.
+Mientras esa autorización no exista, `master` conserva el pipeline estable de
+pruebas funcionales, arquitectónicas y contractuales, evitando introducir una
+integración conocida como fallida.
+
+La restricción se documenta como una limitación de autorización externa y no
+como evidencia de cumplimiento.
 
 ---
 
@@ -815,7 +830,7 @@ Esta cadena conecta:
 
 # Estado final de la evidencia S7
 
-Al 17/09/2026, CampusMarket dispone de evidencia auditable para:
+Al 18/09/2026, CampusMarket dispone de evidencia auditable para:
 
 - contrato OpenAPI ejecutable y versionado;
 - API `1.0.0`;
@@ -824,7 +839,8 @@ Al 17/09/2026, CampusMarket dispone de evidencia auditable para:
 - historial Git del contrato;
 - prueba contractual automatizada;
 - invocación explícita de la prueba contractual en GitHub Actions;
-- run oficial exitoso;
+- `master` en `5bedc833c6324cba316cefd5ccc39d1269f3b984`;
+- Run #95 exitoso sobre el estado vigente de `master`;
 - run rojo real ante cambio incompatible;
 - ADR de integración síncrona;
 - arc42 sección 6;
@@ -833,12 +849,20 @@ Al 17/09/2026, CampusMarket dispone de evidencia auditable para:
 - registro de IA con decisiones rechazadas y motivo;
 - Quality Gate público de SonarQube Cloud;
 - identificación del proyecto y organización oficiales de SonarQube Cloud;
-- documentación explícita de la restricción administrativa que impide migrar
-  actualmente el análisis a CI.
+- documentación explícita de la restricción de autorización que impide obtener
+  actualmente un run exitoso del scanner desde CI sobre `isco-utb`.
 
 **Matriz específica S7: 10 de 10 criterios documentados con evidencia auditable.**
 
-**Pendiente transversal:** integrar el scanner de SonarQube Cloud al workflow y
-obtener un run exitoso asociado a ese análisis. La configuración permanece
-pendiente por falta de permisos administrativos sobre `Analysis Method` en el
-proyecto oficial y no se declara cumplida mientras no exista esa ejecución.
+**Pendiente transversal:** integrar el scanner de SonarQube Cloud al workflow de
+`master` y obtener un run exitoso asociado al proyecto oficial. Este punto no se
+declara cumplido mientras no exista una credencial autorizada para ejecutar
+análisis sobre la organización `isco-utb`.
+
+El pendiente transversal no modifica la evidencia específica ya documentada
+para los diez criterios de S7; se mantiene separado y explícito para la revisión
+automática y la sustentación.
+
+
+
+
