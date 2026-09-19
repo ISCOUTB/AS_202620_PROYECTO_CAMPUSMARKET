@@ -189,7 +189,8 @@ verificar el estado del repositorio.
 | Implementación `GET /health` | [`backend/app/main.py`](backend/app/main.py) |
 | Prueba contractual | [`backend/tests/test_contrato_openapi.py`](backend/tests/test_contrato_openapi.py) |
 | Workflow CI | [`.github/workflows/backend-tests.yml`](.github/workflows/backend-tests.yml) |
-| Run oficial verde | https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/35115585642 |
+| Run oficial verde vigente | https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/35291809164 |
+| Commit vigente revisado | `5bedc833c6324cba316cefd5ccc39d1269f3b984` |
 | Run rojo por incompatibilidad | https://github.com/Nnigarp/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/34934077733 |
 | Trazabilidad de aspectos | [`docs/aspectos.md`](docs/aspectos.md) |
 | Registro de IA | [`docs/ia.md`](docs/ia.md) |
@@ -224,6 +225,8 @@ La prueba automatizada:
 compara adicionalmente la superficie OpenAPI generada por FastAPI con el
 contrato versionado.
 
+---
+
 ## Historial del contrato
 
 El contrato está versionado en:
@@ -252,6 +255,8 @@ El historial puede reproducirse mediante:
 git log --format='%h %cI %s' -- contracts/openapi-v1.json
 ```
 
+---
+
 ## Prueba contractual en CI
 
 El workflow:
@@ -265,15 +270,33 @@ ejecuta explícitamente:
   run: python -m pytest backend/tests/test_contrato_openapi.py -q
 ```
 
-Run oficial exitoso correspondiente al estado revisado:
+La ejecución oficial vigente sobre `master` corresponde a:
 
 ```text
-Run #93
-Commit: baeca7ea3cebe33818a68c1edc38e9aaf045424c
+Run #95
+Commit: 5bedc833c6324cba316cefd5ccc39d1269f3b984
+Rama: master
 Conclusión: success
 ```
 
-https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/35115585642
+URL:
+
+https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/35291809164
+
+El Run #95 fue reejecutado el 18/09/2026 y volvió a finalizar correctamente,
+confirmando el estado estable del pipeline sobre el mismo commit.
+
+La ejecución incluye:
+
+- disponibilidad del servicio MySQL de CI;
+- pruebas funcionales y arquitectónicas;
+- verificación de modularidad;
+- ejecución explícita de la prueba contractual OpenAPI.
+
+Esto demuestra que la prueba de contrato no solamente existe en el repositorio:
+forma parte de la integración continua del estado vigente de `master`.
+
+---
 
 ## Evidencia de fallo ante incompatibilidad
 
@@ -307,6 +330,8 @@ Evidencia detallada:
 
 [`docs/evidencias/fallo-contrato-s7-2026-09-15.md`](docs/evidencias/fallo-contrato-s7-2026-09-15.md)
 
+---
+
 ## Evidencia transversal
 
 La matriz de trazabilidad se encuentra en:
@@ -326,36 +351,75 @@ El registro de uso de inteligencia artificial se encuentra en:
 y documenta herramienta, uso, verificación del equipo y propuestas rechazadas
 con su justificación técnica.
 
+---
+
 ## Estado de SonarQube Cloud
 
-CampusMarket utiliza el proyecto oficial:
+CampusMarket utiliza el proyecto oficial público de SonarQube Cloud:
 
 ```text
-ISCOUTB_AS_202620_PROYECTO_CAMPUSMARKET
+Project Key: ISCOUTB_AS_202620_PROYECTO_CAMPUSMARKET
+Organization Key: isco-utb
+Quality Gate: Passed
 ```
 
-Existe evidencia pública de Quality Gate aprobado:
+Análisis público:
 
 https://sonarcloud.io/dashboard?id=ISCOUTB_AS_202620_PROYECTO_CAMPUSMARKET&pullRequest=41
 
-La configuración versionada se encuentra en:
+La configuración versionada del análisis se encuentra en:
 
 [`.sonarcloud.properties`](.sonarcloud.properties)
 
-Sin embargo, la comprobación transversal de `CONTRATO.md` exige además que el
-scanner de SonarQube Cloud sea invocado explícitamente desde el workflow y que
-exista un run exitoso de CI asociado a ese análisis.
+El proyecto oficial presenta un **Quality Gate aprobado** y corresponde a la
+organización `isco-utb` utilizada por el curso.
 
-Ese punto permanece como pendiente técnico de saneamiento y no se considera
-cerrado hasta contar con las tres evidencias:
+La comprobación transversal definida en `CONTRATO.md` exige además que el
+scanner de SonarQube Cloud sea invocado explícitamente desde GitHub Actions y
+que exista un run exitoso de CI asociado a ese análisis.
 
-1. invocación del scanner en el workflow;
-2. run exitoso que ejecute el scanner;
-3. URL pública del análisis con Quality Gate aprobado.
+Actualmente el pipeline estable de `master` no ejecuta directamente el scanner
+de SonarQube Cloud.
+
+La incorporación del scanner requiere una credencial con autorización para
+ejecutar análisis sobre el proyecto oficial de la organización `isco-utb`.
+
+El equipo no dispone actualmente de esa autorización sobre el proyecto oficial.
+Por esta razón, no se mantiene en `master` una configuración del scanner que
+dejaría el pipeline principal deliberadamente en estado fallido.
+
+El estado verificable actualmente es:
+
+```text
+Proyecto oficial SonarQube Cloud: verificado
+Project Key: ISCOUTB_AS_202620_PROYECTO_CAMPUSMARKET
+Organization Key: isco-utb
+Quality Gate público: Passed
+Configuración .sonarcloud.properties: versionada
+Pipeline vigente de master: success
+GitHub Actions Run #95: success
+Scanner explícito en workflow de master: pendiente
+Run exitoso del scanner desde CI: pendiente
+Restricción actual: autorización para ejecutar análisis sobre isco-utb
+```
+
+Por tanto, este punto transversal no se declara completamente cerrado.
+
+Para completar la conformidad se requiere:
+
+1. una credencial con autorización para ejecutar análisis sobre el proyecto
+   oficial `ISCOUTB_AS_202620_PROYECTO_CAMPUSMARKET`;
+2. invocar el scanner desde `.github/workflows/backend-tests.yml`;
+3. obtener un run exitoso del pipeline que ejecute dicho scanner; y
+4. conservar la URL pública del análisis con Quality Gate aprobado.
+
+Mientras esa autorización no se encuentre disponible, CampusMarket conserva en
+`master` el pipeline estable de pruebas funcionales, arquitectónicas y
+contractuales.
 
 ---
 
-#API de CampusMarket
+# API de CampusMarket
 
 Durante S7 se formalizó la interfaz entre:
 
@@ -462,14 +526,12 @@ El conjunto actual verifica:
   `router → service → repository → MySQL`;
 - correspondencia entre contrato OpenAPI y proveedor FastAPI.
 
-La última verificación del conjunto completo produjo:
+La evidencia vigente del pipeline se encuentra en el Run #95:
 
-```text
-12 passed
-```
+https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/35291809164
 
-El warning de `StarletteTestClient/httpx` observado durante la ejecución es una
-advertencia de deprecación de dependencia y no provoca fallo de las pruebas.
+El pipeline finaliza correctamente con las pruebas funcionales,
+arquitectónicas y contractuales.
 
 ---
 
@@ -515,18 +577,28 @@ El pipeline actual:
 De esta manera, la ejecución de CI reproduce también la dependencia vigente
 sobre MySQL sin requerir credenciales locales del equipo.
 
+El estado vigente de `master` se encuentra respaldado por:
+
+```text
+Run #95
+Commit: 5bedc833c6324cba316cefd5ccc39d1269f3b984
+Conclusión: success
+```
+
+https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/35291809164
+
 ---
 
 # SonarQube Cloud
 
-El análisis estático se realiza mediante el proyecto oficial de CampusMarket en
+El análisis estático se mantiene en el proyecto oficial de CampusMarket en
 **SonarQube Cloud**.
 
-Configuración:
+Configuración versionada:
 
 [`.sonarcloud.properties`](.sonarcloud.properties)
 
-Código fuente analizado:
+Código fuente declarado para análisis:
 
 - `backend/app`
 - `frontend/campusmarket/lib`
@@ -538,17 +610,31 @@ Pruebas:
 Proyecto oficial:
 
 ```text
-ISCOUTB_AS_202620_PROYECTO_CAMPUSMARKET
+Project Key: ISCOUTB_AS_202620_PROYECTO_CAMPUSMARKET
+Organization Key: isco-utb
 ```
 
-Durante la integración más reciente se obtuvo:
+Estado público verificado:
 
-- Quality Gate: **Passed**
-- Code scanning: **Passed**
-- Backend tests: **Passed**
+```text
+Quality Gate: Passed
+```
 
-SonarQube Cloud y GitHub Actions complementan la revisión manual de la
-arquitectura.
+Dashboard:
+
+https://sonarcloud.io/dashboard?id=ISCOUTB_AS_202620_PROYECTO_CAMPUSMARKET&pullRequest=41
+
+El pipeline vigente de GitHub Actions permanece estable y exitoso sobre
+`master`, incluyendo MySQL, pruebas funcionales, arquitectónicas y
+contractuales.
+
+La ejecución explícita del scanner de SonarQube Cloud desde ese workflow
+permanece como pendiente transversal debido a que requiere una credencial
+autorizada para ejecutar análisis sobre la organización `isco-utb`.
+
+No se mantiene en `master` una integración conocida como fallida únicamente
+para aparentar cumplimiento. El pendiente se encuentra documentado de forma
+explícita hasta disponer de la autorización requerida.
 
 ---
 
@@ -877,6 +963,13 @@ FastAPI
 test_contrato_openapi.py
 ```
 
+La evidencia consolidada se encuentra en:
+
+[`docs/evidencias/evidencia-s7-2026-09-15.md`](docs/evidencias/evidencia-s7-2026-09-15.md)
+
+La matriz específica S7 dispone actualmente de evidencia identificada para sus
+10 criterios.
+
 ---
 
 ## EC-06 - Compatibilidad del contrato
@@ -1111,6 +1204,7 @@ Las respuestas de IA no se utilizan por sí solas como evidencia del sistema.
 
 ## S7
 
+- [Evidencia consolidada S7](docs/evidencias/evidencia-s7-2026-09-15.md)
 - [Contrato OpenAPI](contracts/openapi-v1.json)
 - [Guía del contrato](contracts/README.md)
 - [Prueba de contrato](backend/tests/test_contrato_openapi.py)
@@ -1123,6 +1217,7 @@ Las respuestas de IA no se utilizan por sí solas como evidencia del sistema.
 - [Prueba funcional vigente](backend/tests/test_publicaciones_vertical.py)
 - [Prueba de modularidad](backend/tests/test_modularidad_s6.py)
 - [Registro de IA](docs/ia.md)
+- [Run #95 vigente en master](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/35291809164)
 
 ---
 
@@ -1156,10 +1251,16 @@ CampusMarket mantiene:
 - pruebas funcionales;
 - pruebas arquitectónicas;
 - prueba automática de contrato;
-- GitHub Actions;
-- SonarQube Cloud;
+- GitHub Actions con pipeline vigente exitoso;
+- SonarQube Cloud oficial con Quality Gate público aprobado;
 - trazabilidad arquitectónica;
 - registro de uso de IA.
+
+La integración explícita del scanner de SonarQube Cloud dentro de GitHub
+Actions permanece como pendiente transversal por requerir autorización para
+ejecutar análisis sobre la organización `isco-utb`.
+
+Este pendiente no modifica el estado estable del pipeline vigente de `master`.
 
 Los elementos todavía no completamente materializados se mantienen
 explícitamente identificados como tales.
@@ -1187,3 +1288,49 @@ CI
 ```
 
 con el estado real de CampusMarket.
+
+---
+
+# Estado de cierre S7
+
+El estado vigente de `master` utilizado como referencia de cierre es:
+
+```text
+Commit:
+5bedc833c6324cba316cefd5ccc39d1269f3b984
+
+GitHub Actions:
+Run #95
+
+Conclusión:
+success
+```
+
+La matriz específica de S7 dispone de evidencia auditable para:
+
+- contrato ejecutable y versionado;
+- rutas y esquemas de datos;
+- correspondencia contrato ↔ implementación;
+- versión e historial del contrato;
+- prueba contractual;
+- ejecución contractual en CI;
+- fallo ante cambio incompatible;
+- ADR de estrategia de integración;
+- vista de ejecución arc42;
+- C4 Nivel 2 con protocolo y formato.
+
+**Recuento específico S7: 10 de 10 criterios documentados con evidencia auditable.**
+
+La única conformidad pendiente identificada en este cierre pertenece a la
+matriz transversal de SonarQube Cloud:
+
+```text
+Quality Gate público: Passed
+Configuración versionada: disponible
+Scanner explícito en CI: pendiente
+Run exitoso del scanner: pendiente
+Motivo: autorización requerida sobre la organización isco-utb
+```
+
+Este pendiente se documenta explícitamente y no se declara como cumplimiento
+hasta disponer de la evidencia exigida por `CONTRATO.md`.
