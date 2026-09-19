@@ -100,6 +100,13 @@ Este documento registra el uso de herramientas de IA como apoyo al proyecto. Tod
 | ChatGPT | Apoyo para reforzar la trazabilidad en `docs/aspectos.md`, README, arc42 sección 6 y C4 Nivel 2. | Se comprobó ASP-07, se corrigió el formato Markdown de la vista de ejecución y se repararon los enlaces hacia ADR-0004 sin modificar código, contrato ni ADR aceptados. | Se rechazó modificar ADR-0003 o introducir cambios arquitectónicos innecesarios durante el saneamiento documental. |
 | ChatGPT | Apoyo para revisar el estado de SonarQube Cloud y la configuración oficial del proyecto. | Se verificó el proyecto `ISCOUTB_AS_202620_PROYECTO_CAMPUSMARKET`, Quality Gate aprobado y análisis público. El workflow aún no invoca explícitamente el scanner. | Se rechazó restaurar una configuración personal, duplicar mecanismos de análisis o declarar cerrado Sonar sin scanner en CI y un run exitoso asociado. |
 
+### Cierre documental S7 — 18/09/2026
+
+| Herramienta | Uso realizado | Verificación del equipo | Qué se rechazó y por qué |
+|---|---|---|---|
+| ChatGPT | Apoyo para realizar la auditoría final de S7, actualizar la evidencia consolidada y alinear README con el estado real de `master`, GitHub Actions y SonarQube Cloud. | Se verificó el proyecto oficial `ISCOUTB_AS_202620_PROYECTO_CAMPUSMARKET`, la organización `isco-utb`, Quality Gate `Passed`, la configuración `.sonarcloud.properties` y el pipeline estable de `master`. GitHub Actions volvió a finalizar correctamente después de los ajustes documentales. | Se rechazó declarar como cumplida la integración del scanner sin un run exitoso que lo ejecutara y se rechazó conservar en `master` una configuración conocida como fallida únicamente para aparentar cumplimiento. |
+| ChatGPT | Apoyo para evaluar una integración explícita del scanner de SonarQube Cloud desde GitHub Actions y determinar la causa de su imposibilidad actual. | La validación controlada permitió comprobar que la ejecución del scanner sobre el proyecto oficial requiere una credencial con autorización para ejecutar análisis en la organización `isco-utb`. Después de la comprobación se preservó el workflow estable de `master`. | Se rechazó utilizar el proyecto personal de SonarQube Cloud como sustituto del proyecto oficial del curso y se rechazó mantener una integración que dejara el pipeline principal en rojo por falta de autorización. |
+
 ## Criterio de uso
 
 La IA se utiliza como apoyo para análisis, documentación, organización, comparación de alternativas y revisión técnica.
