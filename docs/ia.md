@@ -107,6 +107,83 @@ Este documento registra el uso de herramientas de IA como apoyo al proyecto. Tod
 | ChatGPT | Apoyo para realizar la auditoría final de S7, actualizar la evidencia consolidada y alinear README con el estado real de `master`, GitHub Actions y SonarQube Cloud. | Se verificó el proyecto oficial `ISCOUTB_AS_202620_PROYECTO_CAMPUSMARKET`, la organización `isco-utb`, Quality Gate `Passed`, la configuración `.sonarcloud.properties` y el pipeline estable de `master`. GitHub Actions volvió a finalizar correctamente después de los ajustes documentales. | Se rechazó declarar como cumplida la integración del scanner sin un run exitoso que lo ejecutara y se rechazó conservar en `master` una configuración conocida como fallida únicamente para aparentar cumplimiento. |
 | ChatGPT | Apoyo para evaluar una integración explícita del scanner de SonarQube Cloud desde GitHub Actions y determinar la causa de su imposibilidad actual. | La validación controlada permitió comprobar que la ejecución del scanner sobre el proyecto oficial requiere una credencial con autorización para ejecutar análisis en la organización `isco-utb`. Después de la comprobación se preservó el workflow estable de `master`. | Se rechazó utilizar el proyecto personal de SonarQube Cloud como sustituto del proyecto oficial del curso y se rechazó mantener una integración que dejara el pipeline principal en rojo por falta de autorización. |
 
+---
+
+## Evidencia S8
+
+**Fecha:** 21-27/09/2026
+
+| Herramienta | Uso realizado | Verificación del equipo | Qué se rechazó y por qué |
+|---|---|---|---|
+| ChatGPT | Apoyo para interpretar literalmente la ficha oficial de S8 y separar los criterios de despliegue reproducible, CI, health check, observabilidad, secretos, costos y documentación arquitectónica. | El equipo contrastó cada criterio contra la ficha oficial, el repositorio y resultados reales de ejecución antes de declararlo cumplido. | Se rechazó considerar un criterio cumplido únicamente porque existiera un archivo o una configuración. Se exigió requisito → implementación → ejecución real → evidencia verificable. |
+| ChatGPT | Apoyo para revisar el estado inicial de S8 y organizar una matriz de cumplimiento antes de modificar el sistema. | Se contrastaron código, documentación, workflows, persistencia vigente y arquitectura real antes de implementar cambios. | Se rechazó reutilizar evidencia histórica de SQLite como si describiera el estado vigente de MySQL. |
+| ChatGPT | Apoyo para diseñar e implementar un health check dependiente de la disponibilidad real de MySQL. | Se verificó `GET /health` con MySQL disponible obteniendo HTTP `200`; con la base detenida se obtuvo HTTP `503`; al restablecerla volvió a HTTP `200`. | Se rechazó utilizar un health check que comprobara únicamente que FastAPI estuviera ejecutándose, porque no evidenciaría el estado de la dependencia principal. |
+| ChatGPT | Apoyo para estructurar logs HTTP en formato estructurado con campos operativos verificables. | En la ejecución real de Azure App Service se observaron campos como `timestamp`, `level`, `event`, `request_id`, `method`, `path`, `status_code` y `duration_ms`. | Se rechazó considerar mensajes libres de consola como evidencia equivalente a logs estructurados. |
+| ChatGPT | Apoyo para implementar una métrica operacional consultable mediante `GET /ops/metrics/ec01`. | Se generaron solicitudes reales y se observaron 10 de 10 dentro del objetivo de `2000 ms`, con un máximo aproximado de `164.41 ms` y `meets_backend_target: true`. | Se rechazó presentar esta medición como validación completa extremo a extremo de EC-01, porque mide principalmente el comportamiento del backend y no toda la experiencia desde Flutter Web. |
+| ChatGPT | Apoyo para incorporar Ruff al pipeline y revisar el workflow de GitHub Actions junto con MySQL 8.4 y las pruebas automatizadas. | El workflow ejecutó análisis estático, servicio MySQL, pruebas funcionales, arquitectónicas y de contrato. Después del merge S8, el job `test` sobre `master` terminó en `success`. | Se rechazó declarar el pipeline cerrado utilizando solamente ejecuciones de la rama de trabajo; se verificó nuevamente el estado del merge en `master`. |
+| ChatGPT | Apoyo para preparar FastAPI para Azure App Service mediante configuración por entorno, TLS hacia MySQL y CORS para el frontend público. | Se comprobó el backend público, `/health`, la preflight `OPTIONS /publicaciones` desde `https://nnigarp.github.io` y posteriormente un `POST /publicaciones` real desde Flutter Web. | Se rechazó desactivar TLS, hardcodear credenciales o utilizar una política CORS más abierta de la necesaria. |
+| ChatGPT | Apoyo para desplegar FastAPI en Azure App Service y MySQL en Azure Database for MySQL Flexible Server. | Se verificó que el backend público accede realmente a MySQL y que una publicación creada desde la interfaz pública queda persistida y puede recuperarse posteriormente. | Se rechazó considerar una captura del portal de Azure como evidencia suficiente del despliegue. La validación se realizó mediante URL pública y comportamiento funcional. |
+| ChatGPT | Apoyo para versionar la infraestructura de Azure mediante `infra/main.bicep`. | La plantilla fue compilada con `az bicep build` y validada mediante `az deployment group validate`, obteniendo `provisioningState: Succeeded` y `error: null`. | Se rechazó documentar solamente comandos manuales de creación de recursos como si fueran infraestructura reproducible. |
+| ChatGPT | Apoyo para proteger secretos mediante parámetros seguros de Bicep, App Settings y variables de entorno. | Se revisó que la contraseña real de MySQL no quedara almacenada en el código, Bicep ni documentación versionada. | Se rechazó escribir credenciales reales en archivos del repositorio o evidencias. |
+| ChatGPT | Apoyo para hacer configurable la URL del backend en Flutter mediante `CAMPUSMARKET_API_BASE_URL` y preparar el build Web de producción. | Se ejecutó `flutter analyze`, se generó el build con la URL pública de Azure y se comprobó posteriormente desde navegador. | Se rechazó mantener `localhost:8000` como backend fijo para el frontend de producción. |
+| ChatGPT | Apoyo para publicar Flutter Web mediante GitHub Pages. | El build fue publicado en la rama `gh-pages`, el workflow de Pages finalizó correctamente y la aplicación quedó accesible públicamente. | Se rechazó considerar el build local como evidencia de publicación mientras todavía no existiera una URL pública verificable. |
+| ChatGPT | Apoyo para detectar una inconsistencia documental en la interfaz que todavía indicaba `Flutter → FastAPI → SQLite`. | Se verificó el código fuente, se corrigió el texto a `CampusMarket S8: Flutter Web → FastAPI → MySQL en Azure.`, se reconstruyó y republicó el frontend, y después se comprobó visualmente la versión pública corregida. | Se rechazó dejar una interfaz públicamente desplegada que contradijera la arquitectura vigente. |
+| ChatGPT | Apoyo para actualizar arc42 sección 7 con la vista de despliegue real y sección 2 con restricciones operativas de S8. | La documentación se contrastó con GitHub Pages, Azure App Service, Azure MySQL, Bicep, health check y observabilidad realmente ejecutados. | Se rechazó conservar la descripción histórica en la que el proveedor cloud aparecía todavía como pendiente. |
+| ChatGPT | Apoyo para redactar ADR-0005 y documentar las consecuencias de distribuir frontend, backend y persistencia entre GitHub Pages y Azure. | Se contrastó la decisión con la topología realmente desplegada y con la continuidad del monolito modular. | Se rechazó describir el despliegue como una migración a microservicios, porque las fronteras de dominio del backend no cambiaron. |
+| ChatGPT | Apoyo para documentar costo mensual, supuestos y punto de ruptura. | Se utilizó la configuración realmente observada: App Service F1 y Azure MySQL `Standard_B1ms`, 1 vCore, 2 GiB y 32 GiB; la estimación aproximada observada para MySQL fue `USD 14.71/mes` antes de beneficios académicos. | Se rechazó presentar los créditos académicos como garantía permanente de costo cero o inventar una factura no observada. |
+| ChatGPT | Apoyo para definir un procedimiento de rollback reproducible a partir de un commit conocido. | Se documentó el uso de `git archive` y `az webapp deploy` para backend y la republicación de un `build/web` conocido para frontend. | Se rechazó definir rollback únicamente como “volver a una versión anterior” sin pasos ejecutables. |
+| ChatGPT | Apoyo para consolidar la evidencia S8 en `docs/evidencias/evidencia-s8-2026-09-27.md` y actualizar el README con el estado de operación real. | Se contrastaron URLs, infraestructura, CI, health, observabilidad, costos, rollback y documentación con los artefactos y resultados ejecutados durante S8. | Se rechazó utilizar solamente capturas de paneles de proveedor como sustituto de evidencia reproducible. |
+| ChatGPT | Auditoría final del PR #43 y del estado de `master`. | El PR `S8 - Despliegue y operación de CampusMarket` fue integrado al repositorio oficial. El merge commit `bea2412082b0acb2dc37262376622d63fccff5df` produjo un job `test` exitoso y SonarQube Cloud reportó `Quality Gate passed`. | Se rechazó cerrar S8 usando únicamente el hash de la rama `S8-despliegue-operacion`; la referencia de cierre debía corresponder a `master`. |
+
+### Evidencias verificables de S8
+
+La validación realizada durante S8 utilizó, entre otros, los siguientes
+artefactos:
+
+- `infra/main.bicep`;
+- `.github/workflows/backend-tests.yml`;
+- `backend/app/main.py`;
+- `backend/app/publicaciones/repository.py`;
+- `backend/tests/test_health.py`;
+- `backend/tests/test_publicaciones_vertical.py`;
+- `backend/tests/test_contrato_openapi.py`;
+- `docs/arc42/02-restricciones.md`;
+- `docs/arc42/07-vista-despliegue.md`;
+- `docs/arc42/ARC42.md`;
+- `docs/adr/0005-desplegar-campusmarket-en-azure-y-github-pages.md`;
+- `docs/evidencias/evidencia-s8-2026-09-27.md`;
+- `README.md`.
+
+### Estado de cierre revisado con apoyo de IA
+
+```text
+Repositorio:
+ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET
+
+PR:
+#43 - S8 - Despliegue y operación de CampusMarket
+
+Merge commit:
+bea2412082b0acb2dc37262376622d63fccff5df
+
+Rama:
+master
+
+GitHub Actions:
+success
+
+SonarQube Cloud:
+Quality Gate passed
+
+Frontend:
+https://nnigarp.github.io/AS_202620_PROYECTO_CAMPUSMARKET/
+
+Backend:
+https://campusmarket-s8-api-nilver.azurewebsites.net
+
+Health:
+https://campusmarket-s8-api-nilver.azurewebsites.net/health
+
 ## Criterio de uso
 
 La IA se utiliza como apoyo para análisis, documentación, organización, comparación de alternativas y revisión técnica.

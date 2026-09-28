@@ -187,7 +187,7 @@ La materialización utilizada durante S8 corresponde a:
 - FastAPI desplegado en Azure App Service;
 - MySQL desplegado mediante Azure Database for MySQL Flexible Server;
 - comunicación pública mediante HTTPS;
-- comunicación entre backend y persistencia mediante conexión segura.
+- comunicación entre backend y persistencia mediante TLS.
 
 URLs públicas verificadas:
 
@@ -301,6 +301,127 @@ entre arquitectura, código y entorno operativo.
 
 ---
 
+## R-11. Límite de costo operativo del prototipo S8
+
+**Tipo:** Económica / operación  
+**Origen:** Evidencia S8 - despliegue y operación
+
+El entorno utilizado para S8 debe mantenerse dentro de un costo compatible con
+un prototipo académico y evitar recursos sobredimensionados para la carga
+actual de CampusMarket.
+
+### Supuestos de carga
+
+Para la estimación se considera:
+
+- equipo de tres integrantes;
+- uso principalmente durante desarrollo, pruebas, demostración y evaluación;
+- concurrencia baja;
+- volumen reducido de publicaciones;
+- una única instancia de Backend API;
+- una única base de datos;
+- sin alta disponibilidad;
+- sin procesamiento masivo;
+- sin almacenamiento de archivos multimedia en Azure.
+
+### Configuración utilizada
+
+Frontend:
+
+- GitHub Pages.
+
+Backend:
+
+- Azure App Service;
+- nivel F1.
+
+Persistencia:
+
+- Azure Database for MySQL Flexible Server;
+- `Standard_B1ms`;
+- 1 vCore;
+- 2 GiB de memoria;
+- 32 GiB de almacenamiento;
+- alta disponibilidad deshabilitada.
+
+Durante la configuración de MySQL se observó en Azure una estimación aproximada
+de:
+
+`USD 14.71 / mes`
+
+antes de aplicar créditos o beneficios académicos.
+
+La cifra se conserva como **estimación observada** para la configuración del
+prototipo y no como una factura efectiva.
+
+### Punto de ruptura
+
+La configuración debe reevaluarse económicamente cuando ocurra alguno de los
+siguientes casos:
+
+- finalicen los créditos o beneficios académicos disponibles;
+- el Backend API necesite abandonar el nivel F1 de App Service;
+- MySQL requiera un SKU superior;
+- sea necesario aumentar el almacenamiento;
+- se habilite alta disponibilidad;
+- se creen instancias adicionales;
+- se incorporen nuevos servicios cloud con cobro.
+
+El componente con mayor costo potencial en el entorno actual es:
+
+**Azure Database for MySQL Flexible Server**
+
+**Justificación:** El objetivo de S8 es demostrar un despliegue real,
+reproducible y observable, pero sin sobredimensionar la infraestructura para
+una carga académica reducida.
+
+**Evidencia relacionada:**
+
+- `README.md`;
+- `docs/evidencias/evidencia-s8-2026-09-27.md`;
+- `docs/arc42/07-vista-despliegue.md`;
+- `infra/main.bicep`.
+
+---
+
+## R-12. No dependencia de tarjeta bancaria personal
+
+**Tipo:** Económica / organizativa / operación  
+**Origen:** Condición operativa del entorno académico
+
+La ejecución y demostración académica de CampusMarket no debe depender de que
+un integrante del equipo registre una tarjeta bancaria personal para poder
+mantener el entorno utilizado durante S8.
+
+La solución utilizada durante la evidencia se apoya en:
+
+- GitHub Pages para la publicación del frontend;
+- una suscripción académica de Azure disponible para estudiantes;
+- recursos dimensionados para el prototipo;
+- créditos o beneficios académicos disponibles durante el periodo de trabajo.
+
+La disponibilidad de créditos académicos no se interpreta como garantía de
+costo cero permanente.
+
+Antes de mantener el despliegue después del periodo académico debe revisarse
+nuevamente el costo efectivo de:
+
+- App Service;
+- Azure Database for MySQL;
+- almacenamiento;
+- cualquier recurso adicional incorporado.
+
+**Justificación:** La reproducibilidad académica no debe depender de que un
+integrante suministre una tarjeta personal para poder demostrar el sistema.
+
+**Evidencia relacionada:**
+
+- `README.md`;
+- `docs/evidencias/evidencia-s8-2026-09-27.md`;
+- `docs/arc42/07-vista-despliegue.md`.
+
+---
+
 ## Restricciones legales
 
 En esta etapa del proyecto no se ha identificado una restricción legal
@@ -327,6 +448,8 @@ de tomar las decisiones arquitectónicas correspondientes.
 | R-08 | Despliegue público, reproducible y verificable en S8 | Técnica / operación | Evidencia S8 |
 | R-09 | Protección de secretos y configuración sensible | Técnica / seguridad / operación | Evidencia S8 |
 | R-10 | Infraestructura principal versionada como código | Técnica / operación | Evidencia S8 |
+| R-11 | Límite de costo operativo del prototipo S8 | Económica / operación | Evidencia S8 |
+| R-12 | No dependencia de tarjeta bancaria personal | Económica / organizativa / operación | Condición operativa S8 |
 
 Estas restricciones establecen límites concretos para CampusMarket y permiten
 distinguir las condiciones que restringen el espacio de solución de los
@@ -334,6 +457,11 @@ requisitos funcionales y de los escenarios de calidad que deben verificarse
 mediante evidencia.
 
 Las restricciones históricas se conservan para mantener trazabilidad sobre la
-evolución arquitectónica del proyecto. En particular, R-07 describe la
-situación del primer corte y no debe interpretarse como la persistencia vigente
-de S8, que utiliza MySQL y un entorno público desplegado.
+evolución arquitectónica del proyecto.
+
+En particular, R-07 describe la situación del primer corte y no debe
+interpretarse como la persistencia vigente de S8.
+
+Para S8, las restricciones R-08 a R-12 describen el estado operativo vigente:
+despliegue público, protección de secretos, infraestructura reproducible,
+control de costo y ausencia de dependencia de una tarjeta bancaria personal.
