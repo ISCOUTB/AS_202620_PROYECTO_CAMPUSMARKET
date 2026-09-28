@@ -1,23 +1,61 @@
-# ADR-0005 - Desplegar CampusMarket con GitHub Pages y Microsoft Azure
+# ADR-0005 - Distribuir el despliegue de CampusMarket por pieza
 
 ## Estado
 
-Aceptado
+Aceptado y refinado por ADR-0006, ADR-0007 y ADR-0008
 
 ## Fecha
 
 2026-09-27
+
+## Nota de evolución
+
+ADR-0005 registra la decisión general tomada durante S8 de desplegar las piezas
+de CampusMarket de forma independiente según sus características operativas.
+
+Para evitar tratar el sistema completo como una única decisión de plataforma,
+esta decisión fue refinada posteriormente en tres ADR específicos:
+
+- [ADR-0006 - Publicar Flutter Web mediante GitHub Pages](./0006-publicar-frontend-flutter-web-en-github-pages.md)
+- [ADR-0007 - Desplegar FastAPI mediante Azure App Service](./0007-desplegar-api-fastapi-en-azure-app-service.md)
+- [ADR-0008 - Desplegar MySQL mediante Azure Database for MySQL Flexible Server](./0008-desplegar-mysql-en-azure-flexible-server.md)
+
+Por tanto:
+
+```text
+Frontend Flutter Web
+→ ADR-0006
+
+Backend API FastAPI
+→ ADR-0007
+
+Persistencia MySQL
+→ ADR-0008
+```
+
+ADR-0005 se conserva como decisión arquitectónica global y como evidencia de la
+evolución de S8, mientras que ADR-0006, ADR-0007 y ADR-0008 contienen la
+comparación, costo, capa gratuita o beneficio aplicable, consecuencias y
+rollback de cada plataforma concreta.
+
+---
 
 ## Contexto
 
 Hasta S7 CampusMarket podía ejecutarse y verificarse principalmente desde un
 entorno de desarrollo.
 
-Durante S8 el proyecto requiere evolucionar hacia un entorno de despliegue
-público, reproducible y observable, de forma que el corte vertical pueda ser
-verificado sin depender exclusivamente del equipo local de desarrollo.
+Durante S8 el proyecto debía evolucionar hacia un entorno:
 
-La arquitectura vigente antes de esta decisión ya establece:
+- público;
+- reproducible;
+- observable;
+- verificable desde fuera de la red de la universidad;
+- compatible con las restricciones de costo del prototipo;
+- sin exponer secretos;
+- con mecanismos de rollback.
+
+La arquitectura lógica existente antes de esta decisión ya establece:
 
 - Flutter Web como frontend;
 - FastAPI como Backend API;
@@ -26,103 +64,150 @@ La arquitectura vigente antes de esta decisión ya establece:
 - monolito modular como estilo arquitectónico del backend;
 - Gestión de Publicaciones como propietario de los datos de publicaciones.
 
-La decisión de despliegue no debe modificar innecesariamente estas fronteras.
+El despliegue no debía modificar innecesariamente estas fronteras.
 
-También se requiere mantener:
-
-- acceso público al sistema;
-- comunicación mediante HTTPS;
-- health check verificable;
-- protección de credenciales;
-- infraestructura reproducible;
-- posibilidad de rollback;
-- observabilidad del backend;
-- un costo adecuado para un prototipo académico.
+---
 
 ## Problema
 
-Un sistema que solamente funciona desde el equipo de desarrollo no permite
-verificar de forma independiente sus características operativas.
+CampusMarket está compuesto por piezas con necesidades operativas diferentes.
 
-Era necesario determinar dónde ejecutar cada pieza materializada de
-CampusMarket:
+El frontend Flutter Web se convierte en contenido estático después del build.
 
-- frontend Flutter Web;
-- Backend API FastAPI;
-- persistencia MySQL.
+FastAPI requiere un proceso Python activo capaz de responder solicitudes HTTP.
 
-La solución debía permitir conservar la topología lógica:
+MySQL requiere almacenamiento persistente y una conexión controlada desde el
+backend.
+
+Por tanto, la pregunta arquitectónica no es:
+
+> ¿En qué plataforma se despliega todo CampusMarket?
+
+sino:
+
+> ¿Dónde debe ejecutarse cada pieza concreta de CampusMarket?
+
+Las piezas materializadas en S8 son:
+
+1. Frontend Flutter Web.
+2. Backend API FastAPI.
+3. Persistencia MySQL.
+
+---
+
+## Restricciones relevantes
+
+La decisión debe respetar:
+
+- despliegue accesible públicamente;
+- HTTPS;
+- health check verificable;
+- logs estructurados;
+- métrica operacional;
+- protección de secretos;
+- infraestructura reproducible;
+- costo compatible con un prototipo académico;
+- ausencia de dependencia de una tarjeta bancaria personal para demostrar el
+  entorno académico;
+- posibilidad de reversión;
+- preservación del monolito modular.
+
+Las restricciones completas se encuentran en:
+
+[`docs/arc42/02-restricciones.md`](../arc42/02-restricciones.md)
+
+En particular:
+
+- R-08 - despliegue público, reproducible y verificable;
+- R-09 - protección de secretos;
+- R-10 - infraestructura como código;
+- R-11 - límite de costo operativo;
+- R-12 - no dependencia de tarjeta bancaria personal.
+
+---
+
+## Alternativas globales consideradas
+
+### Alternativa A - Ejecutar todo únicamente en entorno local
+
+No se adopta.
+
+Ventajas:
+
+- simplicidad;
+- ausencia de infraestructura externa;
+- menor configuración inicial.
+
+Desventajas:
+
+- no produce una URL pública;
+- depende del equipo del desarrollador;
+- no permite validación independiente;
+- no demuestra arquitectura de despliegue;
+- no satisface la evidencia S8.
+
+---
+
+### Alternativa B - Desplegar todas las piezas en una única plataforma
+
+No se adopta como principio general.
+
+Por ejemplo, sería posible intentar servir Flutter y FastAPI desde un mismo
+entorno y administrar MySQL dentro de infraestructura propia.
+
+Ventajas:
+
+- menos destinos de despliegue;
+- posible simplificación inicial de operación.
+
+Desventajas:
+
+- mezcla piezas con necesidades operativas diferentes;
+- aumenta el acoplamiento entre frontend y backend;
+- dificulta rollback independiente;
+- puede obligar a redesplegar piezas no modificadas;
+- dificulta asignar costos y restricciones por componente.
+
+---
+
+### Alternativa C - Seleccionar plataforma por pieza
+
+Se adopta.
+
+Cada pieza se evalúa de forma independiente según:
+
+- tipo de ejecución;
+- persistencia requerida;
+- costo;
+- disponibilidad de capa gratuita o beneficio académico;
+- necesidad de tarjeta;
+- observabilidad;
+- reproducibilidad;
+- rollback.
+
+La selección resultante es:
 
 ```text
 Flutter Web
-    ↓
+→ GitHub Pages
+→ ADR-0006
+
 FastAPI
-    ↓
+→ Azure App Service
+→ ADR-0007
+
 MySQL
+→ Azure Database for MySQL Flexible Server
+→ ADR-0008
 ```
 
-sin introducir una división innecesaria del monolito modular.
+---
 
 ## Decisión
 
-Se adopta la siguiente distribución para S8:
+Se adopta una **estrategia de despliegue por pieza**.
 
-### Frontend
-
-Flutter Web se publica mediante:
-
-**GitHub Pages**
-
-URL pública:
-
-`https://nnigarp.github.io/AS_202620_PROYECTO_CAMPUSMARKET/`
-
-La aplicación se compila para producción proporcionando la URL pública del
-backend mediante:
-
-`CAMPUSMARKET_API_BASE_URL`
-
-### Backend
-
-FastAPI se despliega mediante:
-
-**Microsoft Azure App Service sobre Linux**
-
-Aplicación:
-
-`campusmarket-s8-api-nilver`
-
-URL pública:
-
-`https://campusmarket-s8-api-nilver.azurewebsites.net`
-
-La ejecución utiliza Python 3.12 y Uvicorn.
-
-### Persistencia
-
-La persistencia se despliega mediante:
-
-**Azure Database for MySQL Flexible Server**
-
-La versión utilizada durante S8 corresponde a MySQL 8.4.
-
-La base utilizada por el corte vertical es:
-
-`campusmarket`
-
-El acceso se realiza exclusivamente desde el backend mediante PyMySQL.
-
-### Infraestructura como código
-
-La infraestructura principal de Azure se describe mediante:
-
-`infra/main.bicep`
-
-La definición incluye los recursos necesarios para el Backend API y la
-persistencia, utilizando parámetros para valores dependientes del entorno y un
-parámetro seguro para la contraseña administrativa de MySQL.
-
-## Topología resultante
+La topología resultante es:
 
 ```text
 Usuario
@@ -143,245 +228,364 @@ Azure Database for MySQL
 Flexible Server
 ```
 
-Esta decisión modifica la infraestructura de ejecución, pero no cambia las
-fronteras de dominio del backend.
+La asignación de plataformas es:
 
-La dirección interna continúa siendo:
+| Pieza | Plataforma | ADR específico |
+|---|---|---|
+| Frontend Flutter Web | GitHub Pages | ADR-0006 |
+| Backend API FastAPI | Azure App Service | ADR-0007 |
+| Persistencia MySQL | Azure Database for MySQL Flexible Server | ADR-0008 |
 
-```text
-router
-   ↓
-service
-   ↓
-repository
-   ↓
-PyMySQL
-   ↓
-MySQL
-```
+---
 
 ## Justificación
 
-### Separación de responsabilidades de despliegue
+### Frontend
 
-El frontend es un artefacto web estático una vez compilado.
+Flutter Web produce contenido estático después de:
 
-Por esta razón puede publicarse independientemente del Backend API mediante
-GitHub Pages.
+```text
+flutter build web
+```
 
-FastAPI requiere un proceso de servidor en ejecución, por lo que se despliega
-en Azure App Service.
+Por esta razón se publica de manera independiente mediante GitHub Pages.
 
-MySQL requiere persistencia administrada y acceso desde el backend, por lo que
-se utiliza Azure Database for MySQL Flexible Server.
+La decisión específica, sus alternativas, costo y rollback se encuentran en:
 
-Esta distribución permite seleccionar un mecanismo de despliegue adecuado para
-cada tipo de componente sin modificar la arquitectura lógica del sistema.
+[ADR-0006](./0006-publicar-frontend-flutter-web-en-github-pages.md)
 
-### Reproducibilidad
+---
 
-La infraestructura principal utilizada en Azure está versionada mediante
-Bicep.
+### Backend
 
-La plantilla fue compilada y validada satisfactoriamente durante S8.
+FastAPI necesita un proceso de servidor activo, configuración por entorno,
+observabilidad y conectividad con MySQL.
 
-El backend también puede reconstruirse desde un commit conocido mediante
-`git archive` y desplegarse nuevamente con Azure CLI.
+Por esta razón se ejecuta mediante Azure App Service.
 
-El frontend puede reconstruirse desde el código Flutter y volver a publicarse
-en `gh-pages`.
+La decisión específica se encuentra en:
 
-### Seguridad
+[ADR-0007](./0007-desplegar-api-fastapi-en-azure-app-service.md)
 
-Las credenciales reales de la base de datos no se almacenan en el repositorio.
+---
+
+### Persistencia
+
+MySQL requiere almacenamiento persistente y acceso controlado desde el backend.
+
+Por esta razón se utiliza Azure Database for MySQL Flexible Server.
+
+La decisión específica se encuentra en:
+
+[ADR-0008](./0008-desplegar-mysql-en-azure-flexible-server.md)
+
+---
+
+## Arquitectura resultante
+
+La estrategia de despliegue no modifica la arquitectura interna del backend.
+
+La dirección continúa siendo:
+
+```text
+Flutter Web
+    ↓ HTTPS / JSON
+FastAPI
+    ↓
+router
+    ↓
+service
+    ↓
+repository
+    ↓ PyMySQL / TLS
+MySQL
+```
+
+El despliegue modifica **dónde se ejecutan las piezas**, no sus
+responsabilidades de dominio.
+
+---
+
+## Infraestructura como código
+
+Los recursos principales utilizados en Azure se encuentran declarados en:
+
+`infra/main.bicep`
+
+La plantilla incluye infraestructura correspondiente al Backend API y la
+persistencia.
+
+Durante S8 fue verificada mediante:
+
+```text
+az bicep build
+```
+
+y:
+
+```text
+az deployment group validate
+```
+
+Resultado observado:
+
+```text
+provisioningState: Succeeded
+error: null
+```
+
+Los detalles específicos de cada plataforma se mantienen en los ADR
+correspondientes.
+
+---
+
+## Seguridad
+
+Las credenciales reales de MySQL no se almacenan en el repositorio.
 
 La configuración sensible se proporciona mediante:
 
 - parámetros seguros de Bicep;
-- App Settings;
+- App Settings de Azure;
 - variables de entorno.
 
-La comunicación pública utiliza HTTPS y la conexión entre backend y MySQL
+La comunicación pública utiliza HTTPS.
+
+La comunicación:
+
+```text
+FastAPI → MySQL
+```
+
 utiliza TLS.
 
-### Observabilidad
+El frontend nunca recibe credenciales de persistencia.
 
-El backend dispone de:
+---
 
-`GET /health`
+## Observabilidad
 
-y de logs estructurados para solicitudes HTTP.
+El Backend API dispone de:
 
-También dispone de:
+```text
+GET /health
+```
 
-`GET /ops/metrics/ec01`
+y genera logs estructurados con información como:
 
-como mecanismo de consulta de información operacional asociada a EC-01.
+```text
+timestamp
+level
+event
+request_id
+method
+path
+status_code
+duration_ms
+```
 
-## Alternativas consideradas
+También expone:
 
-### Alternativa 1 - Mantener todo únicamente en entorno local
+```text
+GET /ops/metrics/ec01
+```
 
-No se adopta.
+como métrica operacional asociada con EC-01.
 
-Ventajas:
+---
 
-- menor complejidad operativa;
-- no requiere recursos cloud;
-- facilita el desarrollo inicial.
+## Costo
 
-Desventajas:
+El costo no se evalúa como un único precio del sistema.
 
-- no produce una URL pública;
-- depende del equipo del desarrollador;
-- dificulta la verificación independiente;
-- no demuestra una arquitectura de despliegue real.
+Se evalúa por pieza.
 
-Esta alternativa deja de ser suficiente para S8.
+### Frontend
 
-### Alternativa 2 - Servir frontend y backend desde un único App Service
+GitHub Pages.
 
-No se adopta para el despliegue S8.
+Durante S8 no se observó costo adicional para el repositorio público utilizado.
 
-Era posible incorporar el build estático de Flutter dentro del mismo entorno
-que ejecuta FastAPI.
+Detalle:
 
-Ventajas:
+[ADR-0006](./0006-publicar-frontend-flutter-web-en-github-pages.md)
 
-- una única URL principal;
-- menor cantidad de destinos de despliegue.
+### Backend
 
-Desventajas:
+Azure App Service F1.
 
-- mezcla la publicación de un frontend estático con el ciclo operativo del
-  Backend API;
-- obliga a redesplegar el backend ante cambios exclusivamente visuales;
-- incrementa el acoplamiento operativo entre dos artefactos que pueden
-  publicarse independientemente.
+El prototipo utiliza el nivel F1 dentro del entorno académico disponible.
 
-### Alternativa 3 - GitHub Pages + Azure App Service + Azure MySQL
+Detalle:
 
-Se adopta.
+[ADR-0007](./0007-desplegar-api-fastapi-en-azure-app-service.md)
 
-Ventajas:
+### Persistencia
 
-- cada pieza utiliza un mecanismo apropiado para su naturaleza;
-- frontend y backend pueden desplegarse independientemente;
-- se obtiene una URL pública;
-- la persistencia utiliza un servicio MySQL administrado;
-- permite health checks y logs del backend;
-- mantiene las fronteras del monolito modular;
-- permite versionar la infraestructura Azure mediante Bicep.
+Azure Database for MySQL Flexible Server.
 
-Desventajas:
+Configuración utilizada:
 
-- existen varios recursos operativos que deben coordinarse;
-- se requiere configurar CORS entre GitHub Pages y Azure App Service;
-- la base de datos representa el principal componente con costo potencial;
-- la operación es más compleja que un entorno exclusivamente local.
+```text
+Standard_B1ms
+1 vCore
+2 GiB RAM
+32 GiB
+Alta disponibilidad: deshabilitada
+```
 
-## Consecuencias positivas
+Estimación observada durante S8:
 
-- CampusMarket queda accesible públicamente.
-- El corte vertical puede probarse fuera del equipo de desarrollo.
-- El frontend puede desplegarse independientemente.
-- El Backend API dispone de health check.
-- MySQL se ejecuta como servicio administrado.
-- La comunicación pública utiliza HTTPS.
-- La infraestructura Azure queda versionada.
-- Los secretos reales permanecen fuera del repositorio.
-- El backend produce logs estructurados.
-- Se dispone de un procedimiento de rollback.
+```text
+~USD 14.71 / mes
+```
 
-## Consecuencias negativas
+antes de aplicar créditos o beneficios académicos.
 
-- El despliegue requiere coordinar GitHub Pages, Azure App Service y MySQL.
-- CORS debe configurarse correctamente entre frontend y backend.
-- El entorno cloud requiere controlar consumo y costos.
-- La persistencia administrada introduce mayor complejidad operativa que una
-  base local.
-- Los cambios de configuración cloud deben mantenerse coherentes con la
-  documentación y la infraestructura versionada.
+Detalle:
+
+[ADR-0008](./0008-desplegar-mysql-en-azure-flexible-server.md)
+
+---
 
 ## Verificación realizada
 
-Durante S8 se verificó:
+Durante S8 se verificó realmente:
 
-- frontend accesible desde GitHub Pages;
-- Backend API accesible desde Azure;
-- `GET /health` con HTTP 200 y MySQL disponible;
-- HTTP 503 ante indisponibilidad controlada de MySQL;
-- recuperación posterior a HTTP 200;
-- CORS desde el origen público de GitHub Pages;
-- creación real de una publicación desde Flutter Web;
-- persistencia real en MySQL;
+- frontend público mediante GitHub Pages;
+- backend público mediante Azure App Service;
+- MySQL ejecutándose en Azure;
+- comunicación HTTPS;
+- conexión TLS con MySQL;
+- CORS desde el origen público;
+- `/health` HTTP 200;
+- degradación HTTP 503 sin MySQL;
+- recuperación posterior HTTP 200;
+- creación de una publicación desde Flutter Web;
 - consulta posterior de publicaciones;
+- persistencia real;
 - logs estructurados;
-- métrica operacional de EC-01;
+- métrica EC-01;
+- build Flutter Web;
 - pipeline del backend en verde;
-- despliegue de GitHub Pages en verde;
-- compilación satisfactoria de Bicep;
-- validación satisfactoria de la plantilla de infraestructura.
+- infraestructura Bicep compilada y validada.
+
+---
 
 ## Rollback
 
-El backend puede regresar a una versión conocida generando un paquete desde un
-commit previamente validado:
+El rollback se define de manera independiente por pieza.
 
-```text
-git archive --format=zip -o campusmarket-rollback.zip <KNOWN_GOOD_SHA>
-```
+### Frontend
 
-y desplegándolo nuevamente mediante:
+Se reconstruye y republica un `build/web` correspondiente a un commit
+previamente validado.
 
-```text
-az webapp deploy \
-  --resource-group rg-campusmarket-s8 \
-  --name campusmarket-s8-api-nilver \
-  --src-path campusmarket-rollback.zip \
-  --type zip
-```
+Detalle:
 
-Después del rollback deben volver a comprobarse:
+[ADR-0006](./0006-publicar-frontend-flutter-web-en-github-pages.md)
 
-- `/health`;
-- `GET /publicaciones`;
-- creación de una publicación.
+### Backend
 
-Para el frontend, el rollback consiste en republicar en `gh-pages` un
-`build/web` correspondiente a una versión previamente validada.
+Se genera un ZIP a partir de un commit conocido y se redespliega mediante Azure
+CLI.
 
-## Relación con decisiones anteriores
+Detalle:
+
+[ADR-0007](./0007-desplegar-api-fastapi-en-azure-app-service.md)
+
+### Persistencia
+
+Se recrea una instancia MySQL compatible, se recuperan datos cuando
+corresponda y se actualizan las variables de conexión del backend.
+
+Detalle:
+
+[ADR-0008](./0008-desplegar-mysql-en-azure-flexible-server.md)
+
+---
+
+## Consecuencias positivas
+
+- cada pieza utiliza una plataforma apropiada para su naturaleza;
+- frontend, API y persistencia pueden evolucionar independientemente;
+- los costos pueden analizarse por componente;
+- el rollback puede realizarse por pieza;
+- se mantiene el monolito modular;
+- existe una URL pública verificable;
+- la infraestructura Azure queda versionada;
+- los secretos permanecen fuera del código;
+- se dispone de observabilidad operacional.
+
+---
+
+## Consecuencias negativas
+
+- existen tres piezas operativas que deben coordinarse;
+- deben mantenerse configuraciones entre proveedores;
+- CORS debe mantenerse correctamente;
+- el costo de MySQL debe vigilarse;
+- los beneficios académicos no garantizan costo cero permanente;
+- los cambios de plataforma deben mantenerse alineados con arc42, ADR e IaC.
+
+---
+
+## Relación con ADR anteriores
 
 ### ADR-0001 - Monolito modular
 
 Continúa vigente.
 
-El despliegue no convierte los contextos de negocio en microservicios.
+El despliegue no convierte el backend en microservicios.
 
 ### ADR-0002 - Manejo de bloqueo temporal de SQLite
 
-Se mantiene como decisión histórica correspondiente al primer corte.
+Se conserva como evidencia histórica del primer corte.
 
-No describe la persistencia vigente de S8.
+No describe la persistencia vigente.
 
 ### ADR-0003 - Integración síncrona HTTP/JSON
 
-Continúa vigente conceptualmente.
+Continúa vigente.
 
-En el entorno público la comunicación se realiza mediante HTTPS/JSON.
+En el entorno público la comunicación utiliza HTTPS/JSON.
 
-### ADR-0004 - Migrar la persistencia de SQLite a MySQL
+### ADR-0004 - Migrar persistencia de SQLite a MySQL
 
 Continúa vigente.
 
-ADR-0005 define dónde se ejecuta la instancia MySQL utilizada por el entorno
-público, sin modificar la decisión de encapsular la persistencia detrás del
-Repository.
+Define MySQL como tecnología de persistencia.
+
+ADR-0008 define específicamente dónde se ejecuta esa persistencia durante S8.
+
+---
+
+## ADR que refinan esta decisión
+
+Las decisiones vigentes por plataforma son:
+
+### Frontend
+
+[ADR-0006 - Publicar Flutter Web mediante GitHub Pages](./0006-publicar-frontend-flutter-web-en-github-pages.md)
+
+### Backend API
+
+[ADR-0007 - Desplegar FastAPI mediante Azure App Service](./0007-desplegar-api-fastapi-en-azure-app-service.md)
+
+### Persistencia
+
+[ADR-0008 - Desplegar MySQL mediante Azure Database for MySQL Flexible Server](./0008-desplegar-mysql-en-azure-flexible-server.md)
+
+Estos tres ADR son la fuente específica para evaluar la decisión de plataforma
+de cada pieza.
+
+---
 
 ## Documentación relacionada
 
-- `docs/arc42/07-vista-despliegue.md`
 - `docs/arc42/02-restricciones.md`
+- `docs/arc42/07-vista-despliegue.md`
 - `docs/arc42/ARC42.md`
+- `docs/evidencias/evidencia-s8-2026-09-27.md`
+- `README.md`
 - `infra/main.bicep`
