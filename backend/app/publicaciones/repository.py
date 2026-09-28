@@ -1,4 +1,5 @@
 import os
+import ssl
 
 import pymysql
 from pymysql.cursors import DictCursor
@@ -10,16 +11,27 @@ class PersistenceUnavailableError(RuntimeError):
 
 def _connect():
     try:
-        return pymysql.connect(
-            host=os.getenv("CAMPUSMARKET_DB_HOST", "localhost"),
-            port=int(os.getenv("CAMPUSMARKET_DB_PORT", "3306")),
-            user=os.getenv("CAMPUSMARKET_DB_USER", "campusmarket_app"),
-            password=os.getenv("CAMPUSMARKET_DB_PASSWORD", ""),
-            database=os.getenv("CAMPUSMARKET_DB_NAME", "campusmarket"),
-            cursorclass=DictCursor,
-            autocommit=False,
-            connect_timeout=2,
-        )
+        connection_options = {
+            "host": os.getenv("CAMPUSMARKET_DB_HOST", "localhost"),
+            "port": int(os.getenv("CAMPUSMARKET_DB_PORT", "3306")),
+            "user": os.getenv("CAMPUSMARKET_DB_USER", "campusmarket_app"),
+            "password": os.getenv("CAMPUSMARKET_DB_PASSWORD", ""),
+            "database": os.getenv("CAMPUSMARKET_DB_NAME", "campusmarket"),
+            "cursorclass": DictCursor,
+            "autocommit": False,
+            "connect_timeout": 2,
+        }
+
+        use_ssl = os.getenv(
+            "CAMPUSMARKET_DB_SSL",
+            "false",
+        ).strip().lower() in {"1", "true", "yes", "on"}
+
+        if use_ssl:
+            connection_options["ssl"] = ssl.create_default_context()
+
+        return pymysql.connect(**connection_options)
+
     except pymysql.MySQLError as error:
         raise PersistenceUnavailableError(
             "La persistencia está temporalmente no disponible."
