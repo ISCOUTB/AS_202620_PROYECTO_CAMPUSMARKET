@@ -93,7 +93,7 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
                     style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
-                  const Text('Corte vertical S4: Flutter → FastAPI → SQLite.'),
+                  const Text('CampusMarket S8: Flutter Web → FastAPI → MySQL en Azure.'),
                   const SizedBox(height: 24),
 
                   TextFormField(
