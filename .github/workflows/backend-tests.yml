@@ -9,6 +9,7 @@ on:
       - S7-interfaces-contratos
       - S7-ajustes-finales-contrato
       - S7-api-mysql-c4
+      - S8-despliegue-operacion
 
   pull_request:
     branches:
@@ -57,6 +58,12 @@ jobs:
 
       - name: Instalar dependencias
         run: python -m pip install -r backend/requirements.txt
+
+      - name: Instalar Ruff
+        run: python -m pip install ruff==0.16.9
+
+      - name: Ejecutar análisis estático con Ruff
+        run: python -m ruff check backend/app backend/tests
 
       - name: Verificar conexión con MySQL
         run: |

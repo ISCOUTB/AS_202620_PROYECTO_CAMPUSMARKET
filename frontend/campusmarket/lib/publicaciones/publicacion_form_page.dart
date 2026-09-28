@@ -2,14 +2,12 @@ import 'package:flutter/material.dart';
 
 import 'publicaciones_api.dart';
 
-
 class PublicacionFormPage extends StatefulWidget {
   const PublicacionFormPage({super.key});
 
   @override
   State<PublicacionFormPage> createState() => _PublicacionFormPageState();
 }
-
 
 class _PublicacionFormPageState extends State<PublicacionFormPage> {
   final _formKey = GlobalKey<FormState>();
@@ -50,9 +48,7 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            'Publicación #${creada['id']} guardada correctamente.',
-          ),
+          content: Text('Publicación #${creada['id']} guardada correctamente.'),
         ),
       );
 
@@ -62,20 +58,14 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
     } on PublicacionTemporalmenteNoDisponible catch (error) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(error.mensaje),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.mensaje)));
     } catch (_) {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'No fue posible guardar la publicación.',
-          ),
-        ),
+        const SnackBar(content: Text('No fue posible guardar la publicación.')),
       );
     } finally {
       if (mounted) {
@@ -87,9 +77,7 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('CampusMarket · Nueva publicación'),
-      ),
+      appBar: AppBar(title: const Text('CampusMarket · Nueva publicación')),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 600),
@@ -102,15 +90,10 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
                 children: [
                   const Text(
                     'Publicar un producto',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
-                    'Corte vertical S4: Flutter → FastAPI → SQLite.',
-                  ),
+                  const Text('CampusMarket S8: Flutter Web → FastAPI → MySQL en Azure.'),
                   const SizedBox(height: 24),
 
                   TextFormField(
@@ -173,10 +156,7 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
                       border: OutlineInputBorder(),
                     ),
                     items: const [
-                      DropdownMenuItem(
-                        value: 'venta',
-                        child: Text('Venta'),
-                      ),
+                      DropdownMenuItem(value: 'venta', child: Text('Venta')),
                       DropdownMenuItem(
                         value: 'alquiler',
                         child: Text('Alquiler'),
@@ -198,14 +178,8 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
                       border: OutlineInputBorder(),
                     ),
                     items: const [
-                      DropdownMenuItem(
-                        value: 'nuevo',
-                        child: Text('Nuevo'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'usado',
-                        child: Text('Usado'),
-                      ),
+                      DropdownMenuItem(value: 'nuevo', child: Text('Nuevo')),
+                      DropdownMenuItem(value: 'usado', child: Text('Usado')),
                       DropdownMenuItem(
                         value: 'reacondicionado',
                         child: Text('Reacondicionado'),
@@ -223,9 +197,7 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
                   FilledButton(
                     onPressed: _guardando ? null : _guardar,
                     child: Text(
-                      _guardando
-                          ? 'Guardando...'
-                          : 'Crear publicación',
+                      _guardando ? 'Guardando...' : 'Crear publicación',
                     ),
                   ),
                 ],
