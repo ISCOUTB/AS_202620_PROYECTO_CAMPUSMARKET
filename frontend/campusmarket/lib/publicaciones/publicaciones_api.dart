@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
-
 class PublicacionTemporalmenteNoDisponible implements Exception {
   const PublicacionTemporalmenteNoDisponible(this.mensaje);
 
@@ -12,9 +11,13 @@ class PublicacionTemporalmenteNoDisponible implements Exception {
   String toString() => mensaje;
 }
 
-
 class PublicacionesApi {
-  PublicacionesApi({this.baseUrl = 'http://localhost:8000'});
+  PublicacionesApi({String? baseUrl}) : baseUrl = baseUrl ?? _configuredBaseUrl;
+
+  static const String _configuredBaseUrl = String.fromEnvironment(
+    'CAMPUSMARKET_API_BASE_URL',
+    defaultValue: 'http://localhost:8000',
+  );
 
   final String baseUrl;
 
@@ -59,14 +62,10 @@ class PublicacionesApi {
   }
 
   Future<List<dynamic>> listarPublicaciones() async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/publicaciones'),
-    );
+    final response = await http.get(Uri.parse('$baseUrl/publicaciones'));
 
     if (response.statusCode != 200) {
-      throw Exception(
-        'No fue posible consultar las publicaciones.',
-      );
+      throw Exception('No fue posible consultar las publicaciones.');
     }
 
     return jsonDecode(response.body) as List<dynamic>;
