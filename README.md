@@ -13,26 +13,29 @@ productos dentro de la comunidad universitaria.
 
 # Estado arquitectónico vigente
 
-CampusMarket adopta un **monolito modular**, decisión registrada en:
+CampusMarket utiliza un **monolito modular** como estrategia arquitectónica del
+backend.
+
+La decisión se encuentra registrada en:
 
 [ADR-0001 - Usar monolito modular](docs/adr/0001-usar-monolito-modular.md)
 
-Las capacidades principales se organizan alrededor de los contextos:
+Las capacidades principales del sistema se organizan alrededor de los contextos:
 
-- `usuarios`
-- `publicaciones`
-- `catalogo`
-- `administracion`
+- `usuarios`;
+- `publicaciones`;
+- `catalogo`;
+- `administracion`.
 
 Actualmente la capacidad funcional materializada con mayor profundidad es:
 
 **Gestión de Publicaciones**
 
-El recorrido ejecutable vigente es:
+La arquitectura lógica vigente es:
 
 ```text
 Flutter Web
-    ↓ HTTP/JSON
+    ↓ HTTPS / JSON
     ↓ contrato OpenAPI
 FastAPI
     ↓
@@ -41,74 +44,341 @@ router.py
 service.py
     ↓
 repository.py
-    ↓ PyMySQL / SQL
+    ↓ PyMySQL / TLS
 MySQL
 ```
 
-La persistencia vigente es **MySQL**.
+La persistencia vigente es:
+
+**MySQL**
 
 SQLite permanece únicamente como parte de la historia arquitectónica del
-primer corte, principalmente S4 y S5.
+primer corte.
 
-La migración fue realizada posteriormente como respuesta a una observación
-docente y se encuentra registrada en:
+La evolución de SQLite hacia MySQL se encuentra documentada en:
 
 [ADR-0004 - Migrar persistencia de SQLite a MySQL](docs/adr/0004-migrar-persistencia-a-mysql.md)
 
 ---
 
-# Tecnologías actuales
+# Tecnologías vigentes
 
 | Elemento | Tecnología |
 |---|---|
-| Frontend | Flutter / Dart |
-| Backend | FastAPI / Python |
+| Frontend | Flutter Web / Dart |
+| Backend | FastAPI / Python 3.12 |
+| Servidor ASGI | Uvicorn |
 | Estilo arquitectónico | Monolito modular |
-| Persistencia vigente | MySQL |
-| Driver de persistencia | PyMySQL |
-| API | HTTP/JSON REST |
-| Contrato de API | OpenAPI 3.1 |
-| Versión del contrato | `1.0.0` |
-| Pruebas backend | pytest |
+| Persistencia | MySQL 8.4 |
+| Driver | PyMySQL |
+| API | REST / HTTPS / JSON |
+| Contrato | OpenAPI 3.1 |
+| Versión API | `1.0.0` |
+| Pruebas | pytest |
+| Análisis estático CI | Ruff |
 | Integración continua | GitHub Actions |
-| Análisis estático | SonarQube Cloud |
-| Diagramas arquitectónicos | PlantUML |
-
-La integración entre Flutter y FastAPI es actualmente **síncrona** mediante
-HTTP/JSON.
-
-La decisión se documenta en:
-
-[ADR-0003 - Integración síncrona HTTP/JSON](docs/adr/0003-usar-integracion-sincrona-http-json.md)
+| Calidad | SonarQube Cloud |
+| IaC | Azure Bicep |
+| Frontend público | GitHub Pages |
+| Backend público | Azure App Service |
+| Base de datos pública | Azure Database for MySQL Flexible Server |
+| Diagramas | PlantUML |
 
 ---
 
-# Requisitos previos
+# S8 - Despliegue y operación
 
-Para ejecutar el estado vigente del proyecto se requiere:
+Durante S8 CampusMarket pasó de un entorno principalmente local a un entorno
+público, reproducible y verificable.
 
-- Python 3.12;
-- Flutter disponible en `PATH`;
-- Google Chrome;
-- MySQL disponible;
-- dependencias Python instaladas;
-- configuración de conexión a MySQL mediante variables de entorno.
+La topología desplegada es:
 
-Desde la raíz del repositorio:
-
-```bash
-pip install -r backend/requirements.txt
+```text
+Usuario
+   |
+   | HTTPS
+   v
+GitHub Pages
+Flutter Web
+   |
+   | HTTPS / JSON
+   v
+Azure App Service
+FastAPI
+   |
+   | TLS / SQL
+   v
+Azure Database for MySQL
+Flexible Server
 ```
 
-Las dependencias del backend se encuentran en:
-
-[`backend/requirements.txt`](backend/requirements.txt)
+Este despliegue modifica la infraestructura de ejecución, pero no modifica las
+fronteras internas del monolito modular.
 
 ---
 
-# Configuración de MySQL
+## URLs públicas
 
-La aplicación utiliza las siguientes variables de entorno:
+### Frontend
+
+`https://nnigarp.github.io/AS_202620_PROYECTO_CAMPUSMARKET/`
+
+### Backend
+
+`https://campusmarket-s8-api-nilver.azurewebsites.net`
+
+### Health check
+
+`https://campusmarket-s8-api-nilver.azurewebsites.net/health`
+
+La aplicación pública identifica la arquitectura vigente como:
+
+```text
+CampusMarket S8: Flutter Web → FastAPI → MySQL en Azure.
+```
+
+---
+
+# Verificación del corte vertical público
+
+Durante S8 se verificó desde un navegador el recorrido:
+
+```text
+GitHub Pages
+    ↓
+Flutter Web
+    ↓ HTTPS / JSON
+Azure App Service
+    ↓
+FastAPI
+    ↓
+Gestión de Publicaciones
+    ↓
+Repository
+    ↓ TLS
+Azure MySQL
+```
+
+Desde la aplicación pública se creó correctamente una publicación.
+
+La interfaz confirmó:
+
+```text
+Publicación #2 guardada correctamente.
+```
+
+La publicación también pudo recuperarse posteriormente mediante:
+
+```text
+GET /publicaciones
+```
+
+Esto verifica que el recorrido público atraviesa realmente:
+
+- frontend desplegado;
+- CORS;
+- API desplegada;
+- lógica de aplicación;
+- repositorio;
+- conexión TLS;
+- MySQL.
+
+---
+
+# CORS
+
+El Backend API autoriza explícitamente el origen público del frontend:
+
+```text
+https://nnigarp.github.io
+```
+
+Durante la validación se realizó una solicitud:
+
+```text
+OPTIONS /publicaciones
+```
+
+desde ese origen.
+
+Resultado:
+
+```text
+HTTP 200
+Access-Control-Allow-Origin: https://nnigarp.github.io
+```
+
+Posteriormente fue posible ejecutar:
+
+```text
+POST /publicaciones
+```
+
+desde Flutter Web.
+
+---
+
+# Infraestructura como código
+
+Los recursos principales utilizados por CampusMarket en Azure se encuentran
+declarados mediante Bicep en:
+
+[`infra/main.bicep`](infra/main.bicep)
+
+La plantilla incluye recursos asociados con:
+
+- Azure App Service Plan;
+- Azure Web App;
+- Azure Database for MySQL Flexible Server;
+- base de datos `campusmarket`;
+- configuración del backend;
+- reglas de acceso necesarias;
+- parámetros dependientes del entorno.
+
+La contraseña administrativa de MySQL se proporciona mediante un parámetro
+seguro y no se almacena directamente en el archivo.
+
+## Compilación
+
+La plantilla fue comprobada mediante:
+
+```bash
+az bicep build --file infra/main.bicep
+```
+
+Resultado:
+
+```text
+BICEP_BUILD_OK
+```
+
+## Validación
+
+La infraestructura fue validada mediante:
+
+```bash
+az deployment group validate \
+  --resource-group rg-campusmarket-s8 \
+  --template-file infra/main.bicep \
+  --parameters mysqlAdministratorPassword="<VALOR_SEGURO>"
+```
+
+Resultado:
+
+```text
+provisioningState: Succeeded
+error: null
+```
+
+---
+
+# Recursos desplegados
+
+## Frontend
+
+Tecnología:
+
+```text
+Flutter Web
+```
+
+Plataforma:
+
+```text
+GitHub Pages
+```
+
+Rama de publicación:
+
+```text
+gh-pages
+```
+
+URL:
+
+`https://nnigarp.github.io/AS_202620_PROYECTO_CAMPUSMARKET/`
+
+---
+
+## Backend
+
+Tecnología:
+
+```text
+FastAPI / Python 3.12
+```
+
+Plataforma:
+
+```text
+Azure App Service sobre Linux
+```
+
+Aplicación:
+
+```text
+campusmarket-s8-api-nilver
+```
+
+Región:
+
+```text
+Mexico Central
+```
+
+Comando de ejecución:
+
+```bash
+python -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
+```
+
+URL:
+
+`https://campusmarket-s8-api-nilver.azurewebsites.net`
+
+---
+
+## Persistencia
+
+Servicio:
+
+```text
+Azure Database for MySQL Flexible Server
+```
+
+Configuración utilizada durante S8:
+
+```text
+MySQL 8.4
+Standard_B1ms
+1 vCore
+2 GiB RAM
+32 GiB almacenamiento
+Alta disponibilidad: deshabilitada
+```
+
+Base de datos:
+
+```text
+campusmarket
+```
+
+El backend accede a la persistencia mediante:
+
+```text
+PyMySQL
+```
+
+y utiliza TLS para la conexión.
+
+---
+
+# Configuración y secretos
+
+La aplicación utiliza variables de entorno para separar la configuración del
+código fuente.
+
+Variables principales:
 
 ```text
 CAMPUSMARKET_DB_HOST
@@ -116,9 +386,46 @@ CAMPUSMARKET_DB_PORT
 CAMPUSMARKET_DB_USER
 CAMPUSMARKET_DB_PASSWORD
 CAMPUSMARKET_DB_NAME
+CAMPUSMARKET_DB_SSL
 ```
 
-Ejemplo para PowerShell:
+Las credenciales reales no deben almacenarse en el repositorio.
+
+En Azure, los valores sensibles se proporcionan mediante:
+
+- App Settings;
+- variables de entorno;
+- parámetros seguros de Bicep.
+
+El archivo `.env`, cuando se utiliza localmente, permanece excluido mediante
+`.gitignore`.
+
+No se incluyen contraseñas reales dentro de la documentación del proyecto.
+
+---
+
+# Reproducción local
+
+## Requisitos
+
+- Python 3.12;
+- Flutter disponible en `PATH`;
+- Google Chrome;
+- MySQL disponible;
+- dependencias Python instaladas;
+- variables de conexión configuradas.
+
+Desde la raíz del repositorio:
+
+```bash
+pip install -r backend/requirements.txt
+```
+
+---
+
+## Configuración MySQL local
+
+Ejemplo PowerShell:
 
 ```powershell
 $env:CAMPUSMARKET_DB_HOST="localhost"
@@ -126,374 +433,237 @@ $env:CAMPUSMARKET_DB_PORT="3306"
 $env:CAMPUSMARKET_DB_USER="campusmarket_app"
 $env:CAMPUSMARKET_DB_PASSWORD="<PASSWORD_LOCAL>"
 $env:CAMPUSMARKET_DB_NAME="campusmarket"
+$env:CAMPUSMARKET_DB_SSL="false"
 ```
 
-Las credenciales reales no deben almacenarse en el repositorio.
-
-El archivo `.env`, cuando se utiliza localmente, se mantiene fuera del control
-de versiones mediante `.gitignore`.
-
-El acceso productivo a MySQL se encuentra encapsulado en:
-
-[`backend/app/publicaciones/repository.py`](backend/app/publicaciones/repository.py)
+Nunca reemplazar `<PASSWORD_LOCAL>` por una credencial real dentro de un archivo
+versionado.
 
 ---
 
-# Arranque del prototipo
+# Ejecución del backend
 
-## Windows
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\run_s4.ps1
-```
-
-## Linux/macOS
+Desde la raíz:
 
 ```bash
-bash scripts/run_s4.sh
+python -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
 ```
 
-Los scripts permiten iniciar:
+Backend local:
 
-- Backend FastAPI: `http://localhost:8000`
-- Frontend Flutter Web: `http://localhost:3000`
+```text
+http://localhost:8000
+```
 
-> **Importante:** estos scripts no levantan una instancia MySQL.
-> Antes de iniciar CampusMarket, MySQL debe estar disponible y las variables de
-> conexión deben encontrarse configuradas.
+Health local:
 
-La evidencia histórica del arranque con un solo comando se encuentra en:
-
-[Arranque con un solo comando](docs/evidencias/arranque-un-comando-2026-09-04.md)
-
-Esta evidencia corresponde al estado del primer corte.
+```text
+http://localhost:8000/health
+```
 
 ---
 
-# Evidencia auditable S7 para revisión automática
+# Ejecución del frontend
 
-La evidencia completa de S7 se encuentra en:
-
-[`docs/evidencias/evidencia-s7-2026-09-15.md`](docs/evidencias/evidencia-s7-2026-09-15.md)
-
-Esta sección concentra las rutas y ejecuciones que utiliza la ficha S7 para
-verificar el estado del repositorio.
-
-| Comprobación | Evidencia |
-|---|---|
-| Contrato OpenAPI ejecutable | [`contracts/openapi-v1.json`](contracts/openapi-v1.json) |
-| OpenAPI / versión | OpenAPI `3.1.0`, API `1.0.0` |
-| Schemas del contrato | `HealthResponse`, `PublicacionCreate`, `Publicacion`, `ErrorResponse`, `HTTPValidationError`, `ValidationError` |
-| Implementación `POST /publicaciones` | [`backend/app/publicaciones/router.py`](backend/app/publicaciones/router.py) |
-| Implementación `GET /publicaciones` | [`backend/app/publicaciones/router.py`](backend/app/publicaciones/router.py) |
-| Implementación `GET /health` | [`backend/app/main.py`](backend/app/main.py) |
-| Prueba contractual | [`backend/tests/test_contrato_openapi.py`](backend/tests/test_contrato_openapi.py) |
-| Workflow CI | [`.github/workflows/backend-tests.yml`](.github/workflows/backend-tests.yml) |
-| Run oficial verde vigente | https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/35291809164 |
-| Commit vigente revisado | `5bedc833c6324cba316cefd5ccc39d1269f3b984` |
-| Run rojo por incompatibilidad | https://github.com/Nnigarp/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/34934077733 |
-| Trazabilidad de aspectos | [`docs/aspectos.md`](docs/aspectos.md) |
-| Registro de IA | [`docs/ia.md`](docs/ia.md) |
-| ADR de integración | [`docs/adr/0003-usar-integracion-sincrona-http-json.md`](docs/adr/0003-usar-integracion-sincrona-http-json.md) |
-| arc42 sección 6 | [`docs/arc42/06-vista-ejecucion.md`](docs/arc42/06-vista-ejecucion.md) |
-| C4 Nivel 2 | [`docs/c4/02-contenedores.puml`](docs/c4/02-contenedores.puml) |
-
-## Cotejo mínimo contrato ↔ código
-
-La ficha S7 exige comprobar dos rutas desde el contrato hacia el código y una
-ruta desde el código hacia el contrato.
-
-```text
-Contrato POST /publicaciones
-→ backend/app/publicaciones/router.py
-→ operation_id = crearPublicacion
-
-Contrato GET /publicaciones
-→ backend/app/publicaciones/router.py
-→ operation_id = listarPublicaciones
-
-Código GET /health
-→ backend/app/main.py
-→ contrato OpenAPI GET /health
-→ operationId = consultarSalud
-```
-
-La prueba automatizada:
-
-[`backend/tests/test_contrato_openapi.py`](backend/tests/test_contrato_openapi.py)
-
-compara adicionalmente la superficie OpenAPI generada por FastAPI con el
-contrato versionado.
-
----
-
-## Historial del contrato
-
-El contrato está versionado en:
-
-```text
-contracts/openapi-v1.json
-```
-
-La versión declarada es:
-
-```text
-OpenAPI 3.1.0
-API 1.0.0
-```
-
-El contrato fue incorporado al historial mediante:
-
-```text
-485249a4ac8be1f12e5bfc4c0b54af744e51e5d6
-Implementar contrato OpenAPI y prueba de contrato S7
-```
-
-El historial puede reproducirse mediante:
+Desde:
 
 ```bash
-git log --format='%h %cI %s' -- contracts/openapi-v1.json
+cd frontend/campusmarket
+```
+
+puede verificarse primero:
+
+```bash
+flutter analyze
+```
+
+Para ejecución local:
+
+```bash
+flutter run -d chrome
+```
+
+El frontend utiliza por defecto:
+
+```text
+http://localhost:8000
+```
+
+como Backend API cuando no se proporciona una configuración distinta.
+
+---
+
+# Build del frontend desplegado
+
+El frontend de producción se genera mediante:
+
+```bash
+flutter build web \
+  --release \
+  --dart-define=CAMPUSMARKET_API_BASE_URL=https://campusmarket-s8-api-nilver.azurewebsites.net \
+  --base-href "/AS_202620_PROYECTO_CAMPUSMARKET/"
+```
+
+El artefacto resultante queda en:
+
+```text
+frontend/campusmarket/build/web
+```
+
+y se publica mediante la rama:
+
+```text
+gh-pages
+```
+
+Antes del build se verificó:
+
+```bash
+flutter analyze
+```
+
+con resultado:
+
+```text
+No issues found!
 ```
 
 ---
 
-## Prueba contractual en CI
+# Despliegue reproducible del backend
 
-El workflow:
+Un estado conocido del repositorio puede empaquetarse mediante:
 
-[`.github/workflows/backend-tests.yml`](.github/workflows/backend-tests.yml)
-
-ejecuta explícitamente:
-
-```yaml
-- name: Ejecutar prueba de contrato OpenAPI
-  run: python -m pytest backend/tests/test_contrato_openapi.py -q
+```bash
+git archive --format=zip \
+  -o campusmarket-s8.zip \
+  <COMMIT>
 ```
 
-La ejecución oficial vigente sobre `master` corresponde a:
+El ZIP puede desplegarse posteriormente mediante:
+
+```bash
+az webapp deploy \
+  --resource-group rg-campusmarket-s8 \
+  --name campusmarket-s8-api-nilver \
+  --src-path campusmarket-s8.zip \
+  --type zip
+```
+
+Después del despliegue deben comprobarse como mínimo:
 
 ```text
-Run #95
-Commit: 5bedc833c6324cba316cefd5ccc39d1269f3b984
-Rama: master
-Conclusión: success
+GET /health
+GET /publicaciones
+POST /publicaciones
 ```
-
-URL:
-
-https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/35291809164
-
-El Run #95 fue reejecutado el 18/09/2026 y volvió a finalizar correctamente,
-confirmando el estado estable del pipeline sobre el mismo commit.
-
-La ejecución incluye:
-
-- disponibilidad del servicio MySQL de CI;
-- pruebas funcionales y arquitectónicas;
-- verificación de modularidad;
-- ejecución explícita de la prueba contractual OpenAPI.
-
-Esto demuestra que la prueba de contrato no solamente existe en el repositorio:
-forma parte de la integración continua del estado vigente de `master`.
 
 ---
 
-## Evidencia de fallo ante incompatibilidad
+# Health check
 
-También se demostró que la prueba contractual puede fallar cuando el proveedor
-rompe el contrato.
-
-Cambio temporal:
-
-```diff
-- operation_id="crearPublicacion",
-+ operation_id="registrarPublicacion",
-```
-
-Run rojo:
-
-https://github.com/Nnigarp/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/34934077733
-
-Resultado:
+CampusMarket expone:
 
 ```text
-conclusion: failure
-FAILED test_proveedor_fastapi_cumple_el_contrato_versionado
-1 failed, 10 passed, 2 warnings
-Process completed with exit code 1.
+GET /health
 ```
 
-La incompatibilidad fue restaurada posteriormente y las ejecuciones siguientes
-regresaron a verde.
+Con MySQL disponible se verificó:
 
-Evidencia detallada:
+```text
+HTTP 200
+```
 
-[`docs/evidencias/fallo-contrato-s7-2026-09-15.md`](docs/evidencias/fallo-contrato-s7-2026-09-15.md)
+Respuesta:
+
+```json
+{
+  "status": "ok",
+  "service": "campusmarket-api"
+}
+```
+
+También se verificó el comportamiento de degradación.
+
+Con MySQL no disponible:
+
+```text
+HTTP 503
+```
+
+Después de recuperar la dependencia:
+
+```text
+HTTP 200
+```
+
+El endpoint permite distinguir una API operativa de una API cuya dependencia de
+persistencia no está disponible.
 
 ---
 
-## Evidencia transversal
+# Observabilidad
 
-La matriz de trazabilidad se encuentra en:
+## Logs estructurados
 
-[`docs/aspectos.md`](docs/aspectos.md)
-
-y utiliza las ocho columnas requeridas:
+Las solicitudes HTTP generan registros estructurados con información como:
 
 ```text
-ID · Aspecto · Requisito · C4 · ADR · Código · Pruebas · Evidencia
+timestamp
+level
+event
+request_id
+method
+path
+status_code
+duration_ms
 ```
 
-El registro de uso de inteligencia artificial se encuentra en:
+Ejemplo conceptual de los datos emitidos:
 
-[`docs/ia.md`](docs/ia.md)
+```json
+{
+  "event": "http_request",
+  "request_id": "...",
+  "method": "GET",
+  "path": "/health",
+  "status_code": 200,
+  "duration_ms": 145.20
+}
+```
 
-y documenta herramienta, uso, verificación del equipo y propuestas rechazadas
-con su justificación técnica.
+Los registros fueron observados durante la ejecución real de Azure App Service.
 
 ---
 
-## Estado de SonarQube Cloud
+## Métrica operacional EC-01
 
-CampusMarket utiliza el proyecto oficial público de SonarQube Cloud:
-
-```text
-Project Key: ISCOUTB_AS_202620_PROYECTO_CAMPUSMARKET
-Organization Key: isco-utb
-Quality Gate: Passed
-```
-
-Análisis público:
-
-https://sonarcloud.io/dashboard?id=ISCOUTB_AS_202620_PROYECTO_CAMPUSMARKET&pullRequest=41
-
-La configuración versionada del análisis se encuentra en:
-
-[`.sonarcloud.properties`](.sonarcloud.properties)
-
-El proyecto oficial presenta un **Quality Gate aprobado** y corresponde a la
-organización `isco-utb` utilizada por el curso.
-
-La comprobación transversal definida en `CONTRATO.md` exige además que el
-scanner de SonarQube Cloud sea invocado explícitamente desde GitHub Actions y
-que exista un run exitoso de CI asociado a ese análisis.
-
-Actualmente el pipeline estable de `master` no ejecuta directamente el scanner
-de SonarQube Cloud.
-
-La incorporación del scanner requiere una credencial con autorización para
-ejecutar análisis sobre el proyecto oficial de la organización `isco-utb`.
-
-El equipo no dispone actualmente de esa autorización sobre el proyecto oficial.
-Por esta razón, no se mantiene en `master` una configuración del scanner que
-dejaría el pipeline principal deliberadamente en estado fallido.
-
-El estado verificable actualmente es:
+CampusMarket expone:
 
 ```text
-Proyecto oficial SonarQube Cloud: verificado
-Project Key: ISCOUTB_AS_202620_PROYECTO_CAMPUSMARKET
-Organization Key: isco-utb
-Quality Gate público: Passed
-Configuración .sonarcloud.properties: versionada
-Pipeline vigente de master: success
-GitHub Actions Run #95: success
-Scanner explícito en workflow de master: pendiente
-Run exitoso del scanner desde CI: pendiente
-Restricción actual: autorización para ejecutar análisis sobre isco-utb
+GET /ops/metrics/ec01
 ```
 
-Por tanto, este punto transversal no se declara completamente cerrado.
+La métrica está relacionada con:
 
-Para completar la conformidad se requiere:
+**EC-01 - Consulta de productos**
 
-1. una credencial con autorización para ejecutar análisis sobre el proyecto
-   oficial `ISCOUTB_AS_202620_PROYECTO_CAMPUSMARKET`;
-2. invocar el scanner desde `.github/workflows/backend-tests.yml`;
-3. obtener un run exitoso del pipeline que ejecute dicho scanner; y
-4. conservar la URL pública del análisis con Quality Gate aprobado.
+Durante S8 se generaron solicitudes reales al backend.
 
-Mientras esa autorización no se encuentre disponible, CampusMarket conserva en
-`master` el pipeline estable de pruebas funcionales, arquitectónicas y
-contractuales.
-
----
-
-# API de CampusMarket
-
-Durante S7 se formalizó la interfaz entre:
-
-**Frontend Flutter → Backend FastAPI**
-
-La integración utiliza:
-
-- HTTP;
-- JSON;
-- estilo REST;
-- comunicación síncrona;
-- contrato OpenAPI versionado.
-
-El contrato fuente se encuentra en:
-
-[`contracts/openapi-v1.json`](contracts/openapi-v1.json)
-
-La guía asociada se encuentra en:
-
-[`contracts/README.md`](contracts/README.md)
-
-## Operaciones actualmente materializadas
-
-| Método | Ruta | Propósito |
-|---|---|---|
-| `GET` | `/health` | Consultar disponibilidad del backend |
-| `GET` | `/publicaciones` | Consultar publicaciones |
-| `POST` | `/publicaciones` | Crear una publicación |
-
-La API mantiene identificadores de operación estables para facilitar generación
-de clientes y verificación de compatibilidad.
-
----
-
-# Contrato OpenAPI y API-first
-
-CampusMarket utiliza un contrato OpenAPI versionado como referencia explícita
-de la interfaz entre consumidor y proveedor.
-
-La relación es:
+Resultado observado:
 
 ```text
-Flutter
-   ↓
-HTTP/JSON
-   ↓
-Contrato OpenAPI
-   ↓
-FastAPI
+Solicitudes observadas: 10
+Solicitudes <= 2000 ms: 10
+Máximo aproximado: 164.41 ms
+Mínimo aproximado: 137.75 ms
+meets_backend_target: true
 ```
 
-La prueba:
+La medición corresponde al recorrido del backend.
 
-[`backend/tests/test_contrato_openapi.py`](backend/tests/test_contrato_openapi.py)
-
-compara el contrato versionado con el esquema generado por FastAPI.
-
-La intención es detectar automáticamente cambios incompatibles como:
-
-- eliminar una ruta;
-- renombrar una operación;
-- retirar un campo requerido;
-- cambiar tipos;
-- hacer obligatorio un campo previamente opcional;
-- eliminar respuestas acordadas.
-
-Durante S7 se realizó una demostración controlada de ruptura del contrato.
-
-Evidencia:
-
-[Demostración de cambio incompatible S7](docs/evidencias/fallo-contrato-s7-2026-09-15.md)
-
-Después de restaurar la compatibilidad, el conjunto completo de pruebas volvió
-a verde.
+No se presenta como una medición completa extremo a extremo del tiempo
+percibido desde Flutter Web.
 
 ---
 
@@ -512,226 +682,424 @@ Las pruebas principales incluyen:
 - [`backend/tests/test_modularidad_s6.py`](backend/tests/test_modularidad_s6.py)
 - [`backend/tests/test_contrato_openapi.py`](backend/tests/test_contrato_openapi.py)
 
-El conjunto actual verifica:
+El conjunto vigente verifica, entre otros aspectos:
 
-- disponibilidad del backend mediante `/health`;
+- disponibilidad mediante `/health`;
+- dependencia real del health check con MySQL;
 - creación de publicaciones;
 - consulta de publicaciones;
-- persistencia real en MySQL;
-- respuesta HTTP `201` en creación válida;
-- respuesta controlada HTTP `503` cuando la persistencia no está disponible;
+- persistencia real;
+- respuesta HTTP `201`;
+- degradación HTTP `503`;
 - propiedad única del dato `publicaciones`;
-- ausencia de escritura directa desde otros contextos;
-- dirección interna:
-  `router → service → repository → MySQL`;
-- correspondencia entre contrato OpenAPI y proveedor FastAPI.
-
-La evidencia vigente del pipeline se encuentra en el Run #95:
-
-https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/35291809164
-
-El pipeline finaliza correctamente con las pruebas funcionales,
-arquitectónicas y contractuales.
+- dirección `router → service → repository → MySQL`;
+- correspondencia contrato OpenAPI ↔ FastAPI.
 
 ---
 
-# Verificación del frontend
+# Análisis estático
 
-Desde:
-
-```bash
-cd frontend/campusmarket
-```
-
-puede ejecutarse:
+El pipeline ejecuta:
 
 ```bash
-flutter analyze
+python -m ruff check backend
 ```
 
-Durante las verificaciones realizadas se obtuvo:
-
-```text
-No issues found!
-```
+Ruff forma parte de la verificación automática de S8.
 
 ---
 
 # Integración continua
 
-Las pruebas automatizadas se ejecutan mediante:
+El workflow se encuentra en:
 
 [`.github/workflows/backend-tests.yml`](.github/workflows/backend-tests.yml)
 
-El pipeline actual:
+El pipeline:
 
 1. obtiene el repositorio;
 2. configura Python 3.12;
-3. instala las dependencias;
-4. levanta un servicio MySQL para CI;
-5. configura los parámetros de conexión;
-6. comprueba disponibilidad de MySQL;
-7. ejecuta las pruebas funcionales y arquitectónicas;
-8. ejecuta explícitamente la prueba de contrato OpenAPI.
+3. instala dependencias;
+4. levanta MySQL 8.4;
+5. configura las variables de prueba;
+6. verifica la disponibilidad de MySQL;
+7. ejecuta Ruff;
+8. ejecuta pruebas funcionales y arquitectónicas;
+9. ejecuta la prueba de contrato OpenAPI.
 
-De esta manera, la ejecución de CI reproduce también la dependencia vigente
-sobre MySQL sin requerir credenciales locales del equipo.
+---
 
-El estado vigente de `master` se encuentra respaldado por:
+# Cierre S8 en master
+
+S8 fue integrada al repositorio oficial mediante:
+
+**Pull Request #43**
+
+Título:
 
 ```text
-Run #95
-Commit: 5bedc833c6324cba316cefd5ccc39d1269f3b984
-Conclusión: success
+S8 - Despliegue y operación de CampusMarket
 ```
 
-https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/35291809164
+Merge commit:
+
+```text
+bea2412082b0acb2dc37262376622d63fccff5df
+```
+
+Rama:
+
+```text
+master
+```
+
+El pipeline ejecutado sobre ese merge finalizó correctamente.
+
+GitHub Actions:
+
+`https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/36377033900`
+
+Resultado:
+
+```text
+conclusion: success
+```
+
+También se verificó:
+
+```text
+SonarQube Cloud
+Quality Gate: Passed
+```
 
 ---
 
 # SonarQube Cloud
 
-El análisis estático se mantiene en el proyecto oficial de CampusMarket en
-**SonarQube Cloud**.
-
-Configuración versionada:
-
-[`.sonarcloud.properties`](.sonarcloud.properties)
-
-Código fuente declarado para análisis:
-
-- `backend/app`
-- `frontend/campusmarket/lib`
-
-Pruebas:
-
-- `backend/tests`
-
-Proyecto oficial:
+Proyecto:
 
 ```text
 Project Key: ISCOUTB_AS_202620_PROYECTO_CAMPUSMARKET
 Organization Key: isco-utb
 ```
 
-Estado público verificado:
+Estado verificado después del merge de S8:
 
 ```text
 Quality Gate: Passed
 ```
 
-Dashboard:
+El análisis oficial continúa asociado al proyecto público de CampusMarket.
 
-https://sonarcloud.io/dashboard?id=ISCOUTB_AS_202620_PROYECTO_CAMPUSMARKET&pullRequest=41
+La configuración se encuentra en:
 
-El pipeline vigente de GitHub Actions permanece estable y exitoso sobre
-`master`, incluyendo MySQL, pruebas funcionales, arquitectónicas y
-contractuales.
+[`.sonarcloud.properties`](.sonarcloud.properties)
 
-La ejecución explícita del scanner de SonarQube Cloud desde ese workflow
-permanece como pendiente transversal debido a que requiere una credencial
-autorizada para ejecutar análisis sobre la organización `isco-utb`.
+---
 
-No se mantiene en `master` una integración conocida como fallida únicamente
-para aparentar cumplimiento. El pendiente se encuentra documentado de forma
-explícita hasta disponer de la autorización requerida.
+# Costo estimado del despliegue
+
+La estimación se separa por pieza.
+
+## Frontend
+
+Plataforma:
+
+```text
+GitHub Pages
+```
+
+Durante S8 no se observó un costo adicional para el repositorio público
+utilizado por el equipo.
+
+---
+
+## Backend
+
+Plataforma:
+
+```text
+Azure App Service
+```
+
+Nivel utilizado:
+
+```text
+F1
+```
+
+Fue seleccionado para mantener el Backend API del prototipo dentro de una
+configuración de costo mínimo.
+
+---
+
+## Persistencia
+
+Servicio:
+
+```text
+Azure Database for MySQL Flexible Server
+```
+
+Configuración:
+
+```text
+Standard_B1ms
+1 vCore
+2 GiB RAM
+32 GiB almacenamiento
+Alta disponibilidad: deshabilitada
+```
+
+Durante la configuración se observó en Azure una estimación aproximada de:
+
+```text
+USD 14.71 / mes
+```
+
+antes de aplicar créditos o beneficios académicos.
+
+Esta cifra corresponde a una **estimación observada**, no a una factura real.
+
+---
+
+## Supuestos de carga
+
+Para el prototipo académico se consideran:
+
+- tres integrantes del equipo;
+- uso principalmente durante desarrollo, demostración y evaluación;
+- concurrencia baja;
+- número reducido de publicaciones;
+- una única API;
+- una única base de datos;
+- sin alta disponibilidad;
+- sin procesamiento masivo;
+- sin archivos multimedia persistidos en Azure.
+
+El volumen actual no justifica incrementar las capacidades contratadas.
+
+---
+
+## Punto de ruptura
+
+La configuración actual deja de mantenerse bajo las condiciones de costo
+académicas actuales cuando ocurre alguno de estos casos:
+
+- se terminan los créditos o beneficios académicos disponibles;
+- el backend requiere abandonar App Service F1;
+- MySQL requiere un SKU superior;
+- se incrementa el almacenamiento;
+- se habilita alta disponibilidad;
+- se despliegan instancias adicionales;
+- se incorporan nuevos servicios Azure con cobro.
+
+El principal costo potencial de la arquitectura S8 corresponde a:
+
+**Azure Database for MySQL Flexible Server**
+
+---
+
+# Rollback
+
+## Backend
+
+El backend puede regresar a un commit previamente validado.
+
+Generar el artefacto:
+
+```bash
+git archive --format=zip \
+  -o campusmarket-rollback.zip \
+  <KNOWN_GOOD_SHA>
+```
+
+Desplegarlo nuevamente:
+
+```bash
+az webapp deploy \
+  --resource-group rg-campusmarket-s8 \
+  --name campusmarket-s8-api-nilver \
+  --src-path campusmarket-rollback.zip \
+  --type zip
+```
+
+Después se deben verificar:
+
+```text
+GET /health
+GET /publicaciones
+POST /publicaciones
+```
+
+---
+
+## Frontend
+
+El frontend puede regresar a una versión conocida:
+
+1. seleccionar el commit validado;
+2. reconstruir `build/web`;
+3. publicar nuevamente el artefacto mediante `gh-pages`;
+4. comprobar la URL pública;
+5. ejecutar nuevamente el corte vertical.
+
+---
+
+# Documentación S8
+
+## Evidencia consolidada
+
+[`docs/evidencias/evidencia-s8-2026-09-27.md`](docs/evidencias/evidencia-s8-2026-09-27.md)
+
+## Vista de despliegue
+
+[`docs/arc42/07-vista-despliegue.md`](docs/arc42/07-vista-despliegue.md)
+
+## Restricciones
+
+[`docs/arc42/02-restricciones.md`](docs/arc42/02-restricciones.md)
+
+## arc42 consolidado
+
+[`docs/arc42/ARC42.md`](docs/arc42/ARC42.md)
+
+## Decisión de despliegue
+
+[`docs/adr/0005-desplegar-campusmarket-en-azure-y-github-pages.md`](docs/adr/0005-desplegar-campusmarket-en-azure-y-github-pages.md)
+
+## Infraestructura
+
+[`infra/main.bicep`](infra/main.bicep)
+
+## Registro de IA
+
+[`docs/ia.md`](docs/ia.md)
+
+---
+
+# Contrato OpenAPI
+
+Durante S7 se formalizó la interfaz:
+
+```text
+Flutter
+   ↓ HTTPS / JSON
+Contrato OpenAPI
+   ↓
+FastAPI
+```
+
+El contrato se mantiene en:
+
+[`contracts/openapi-v1.json`](contracts/openapi-v1.json)
+
+Versión:
+
+```text
+OpenAPI 3.1.0
+API 1.0.0
+```
+
+Operaciones materializadas:
+
+| Método | Ruta | Propósito |
+|---|---|---|
+| `GET` | `/health` | Consultar salud del backend |
+| `GET` | `/publicaciones` | Consultar publicaciones |
+| `POST` | `/publicaciones` | Crear publicación |
+
+La prueba contractual se encuentra en:
+
+[`backend/tests/test_contrato_openapi.py`](backend/tests/test_contrato_openapi.py)
+
+---
+
+# Dominio y modularidad
+
+Los contextos definidos son:
+
+- Gestión de Usuarios;
+- Gestión de Publicaciones;
+- Catálogo;
+- Administración.
+
+Regla arquitectónica principal:
+
+> Cada dato de dominio tiene un único módulo responsable de escribirlo.
+
+La entidad materializada actualmente es:
+
+```text
+publicaciones
+```
+
+y su propietario es:
+
+**Gestión de Publicaciones**
+
+El escritor productivo se encuentra en:
+
+[`backend/app/publicaciones/repository.py`](backend/app/publicaciones/repository.py)
+
+La prueba:
+
+[`backend/tests/test_modularidad_s6.py`](backend/tests/test_modularidad_s6.py)
+
+verifica la dirección:
+
+```text
+router → service → repository → MySQL
+```
 
 ---
 
 # Diagramas C4
 
-Los diagramas arquitectónicos se mantienen como **diagramas como código**
-mediante PlantUML.
-
-## C4 Nivel 1 - Contexto
+## Nivel 1 - Contexto
 
 - [Documentación](docs/c4/01-contexto.md)
-- [Fuente PlantUML](docs/c4/01-contexto.puml)
+- [PlantUML](docs/c4/01-contexto.puml)
 
-Representa CampusMarket como un único sistema frente a:
-
-- Estudiante;
-- Administrador.
-
-El cambio de SQLite a MySQL no modifica el Nivel 1 porque se trata de una
-decisión interna del sistema.
-
----
-
-## C4 Nivel 2 - Contenedores
+## Nivel 2 - Contenedores
 
 - [Documentación](docs/c4/02-contenedores.md)
-- [Fuente PlantUML](docs/c4/02-contenedores.puml)
+- [PlantUML](docs/c4/02-contenedores.puml)
 
-El estado vigente representa:
+Estado lógico:
 
 ```text
 Frontend Web
-    ↓ HTTP/JSON
+    ↓ HTTPS / JSON
 Backend API
-    ↓ PyMySQL / SQL
+    ↓ PyMySQL / TLS
 MySQL
 ```
 
-Los contenedores vigentes son:
-
-- **Frontend Web** — Flutter / Dart;
-- **Backend API** — FastAPI / Python;
-- **Persistencia** — MySQL.
-
-SQLite se conserva únicamente como referencia histórica de los cortes
-anteriores.
-
----
-
-## C4 Nivel 3 - Componentes del Backend
+## Nivel 3 - Backend
 
 - [Documentación](docs/c4/03-componentes-backend.md)
-- [Fuente PlantUML](docs/c4/03-componentes-backend.puml)
+- [PlantUML](docs/c4/03-componentes-backend.puml)
 
-El Nivel 3 realiza un acercamiento al contenedor **Backend API**.
-
-La materialización vigente es:
+Descomposición materializada:
 
 ```text
-Frontend Web
-     ↓
 API de Publicaciones
-     ↓
+        ↓
 Servicio de Publicaciones
-     ↓
+        ↓
 Repositorio de Publicaciones
-     ↓
+        ↓
 MySQL
 ```
 
-Correspondencia:
-
-| Componente | Implementación |
-|---|---|
-| Entrada de aplicación | `backend/app/main.py` |
-| API de Publicaciones | `backend/app/publicaciones/router.py` |
-| Servicio de Publicaciones | `backend/app/publicaciones/service.py` |
-| Repositorio de Publicaciones | `backend/app/publicaciones/repository.py` |
-| Persistencia | MySQL |
-
-Los contextos:
-
-- `usuarios`;
-- `catalogo`;
-- `administracion`;
-
-se mantienen como límites arquitectónicos definidos, pero todavía no se
-declaran como capacidades funcionales completamente materializadas.
-
 ---
 
-# S4 - Corte vertical inicial
+# Evolución histórica
 
-> **Estado histórico:** esta sección describe la arquitectura existente durante
-> S4 y no la persistencia vigente.
+## S4
 
-Durante S4 se construyó el primer corte vertical:
+Primer corte vertical:
 
 ```text
 Flutter Web
@@ -743,453 +1111,196 @@ Gestión de Publicaciones
 SQLite
 ```
 
-La funcionalidad permitía crear y consultar publicaciones.
-
-La correspondencia principal era:
-
-**Frontend**
-
-- [`publicacion_form_page.dart`](frontend/campusmarket/lib/publicaciones/publicacion_form_page.dart)
-- [`publicaciones_api.dart`](frontend/campusmarket/lib/publicaciones/publicaciones_api.dart)
-
-**Backend**
-
-- [`router.py`](backend/app/publicaciones/router.py)
-- [`service.py`](backend/app/publicaciones/service.py)
-- [`repository.py`](backend/app/publicaciones/repository.py)
-
-Esta evidencia se conserva porque representa la evolución real del proyecto.
+Esta sección pertenece al estado histórico inicial.
 
 ---
 
-# S5 - Reto arquitectónico del primer corte
+## S5
 
-> **Estado histórico:** S5 fue ejecutado mientras SQLite era la persistencia
-> vigente.
+Se evaluó la degradación ante bloqueo temporal de SQLite.
 
-## Restricción R-07
+Línea base:
 
-Durante el primer corte se definió:
+```text
+HTTP 500
+7.323 s
+```
 
-**R-07 - Persistencia sin nueva infraestructura durante el primer corte**
+Después de ADR-0002:
 
-Documentación:
+```text
+HTTP 503
+1.283 s
+```
 
-[`docs/arc42/02-restricciones.md`](docs/arc42/02-restricciones.md)
-
-La restricción establecía durante ese corte:
-
-- mantener SQLite;
-- conservar el monolito modular;
-- no incorporar una base externa;
-- no agregar colas;
-- no agregar cachés distribuidas;
-- no crear nuevos servicios desplegables.
-
----
-
-## EC-05 - Degradación ante bloqueo temporal
-
-El escenario analizó un bloqueo temporal de SQLite durante la creación de una
-publicación.
-
-### Línea base histórica
-
-| Métrica | Resultado |
-|---|---:|
-| HTTP durante bloqueo | `500` |
-| Tiempo durante bloqueo | `7.323 s` |
-| Escritura parcial | `No` |
-| Recuperación posterior | `201` |
-| Tiempo de recuperación | `0.007 s` |
-
-Evidencia:
-
-[Línea base de bloqueo SQLite](docs/evidencias/linea-base-bloqueo-sqlite-2026-09-05.md)
-
----
-
-## ADR-0002
-
-La respuesta arquitectónica se documentó mediante:
+La decisión se conserva como evidencia histórica:
 
 [ADR-0002 - Manejo de bloqueo temporal de SQLite](docs/adr/0002-manejo-bloqueo-sqlite.md)
 
-Durante S5 se aplicó:
-
-- timeout SQLite de `0.5 s`;
-- detección de `SQLITE_BUSY`;
-- detección de `SQLITE_LOCKED`;
-- HTTP `503 Service Unavailable`;
-- ausencia de reintentos automáticos;
-- preservación de la transacción;
-- recuperación posterior.
-
-### Resultado histórico
-
-| Métrica | Línea base | Después | Umbral |
-|---|---:|---:|---:|
-| HTTP durante bloqueo | `500` | `503` | `503` |
-| Tiempo durante bloqueo | `7.323 s` | `1.283 s` | `≤ 2 s` |
-| Escritura parcial | `No` | `No` | `No` |
-| Recuperación posterior | `201` | `201` | `201` |
-
-Evidencia:
-
-[Medición posterior a ADR-0002](docs/evidencias/medicion-bloqueo-sqlite-2026-09-06.md)
-
-Estas mediciones no deben interpretarse como resultados obtenidos sobre MySQL.
-
-El escenario se conserva como evidencia histórica de S5.
-
 ---
 
-# S6 - Dominio y modularidad
+## S6
 
-Durante S6 se formalizaron:
+Se formalizaron:
 
 - lenguaje ubicuo;
 - contextos delimitados;
-- relaciones entre contextos;
+- mapa de contextos;
 - propiedad única de datos;
-- auditoría de modularidad;
 - C4 Nivel 3;
-- pruebas automáticas de reglas arquitectónicas.
-
-Los contextos definidos son:
-
-- **Gestión de Usuarios**
-- **Gestión de Publicaciones**
-- **Catálogo**
-- **Administración**
+- reglas automáticas de modularidad.
 
 Documentación:
 
-- [Conceptos transversales](docs/arc42/08-conceptos-transversales.md)
-- [C4 Nivel 3](docs/c4/03-componentes-backend.md)
-- [Fuente PlantUML C4 Nivel 3](docs/c4/03-componentes-backend.puml)
-- [Auditoría de modularidad](docs/evidencias/auditoria-modularidad-s6-2026-09-12.md)
-- [Trazabilidad](docs/aspectos.md)
+[`docs/arc42/08-conceptos-transversales.md`](docs/arc42/08-conceptos-transversales.md)
 
 ---
 
-## Propiedad de datos
+## S7
 
-La regla arquitectónica adoptada es:
+Se formalizaron:
 
-> Cada dato de dominio tiene un único módulo responsable de escribirlo.
+- contrato OpenAPI;
+- API-first;
+- integración síncrona HTTP/JSON;
+- prueba contractual;
+- demostración de incompatibilidad;
+- migración a MySQL.
 
-La entidad actualmente materializada es:
-
-```text
-publicaciones
-```
-
-Su propietario es:
-
-**Gestión de Publicaciones**
-
-El escritor productivo permanece en:
-
-[`backend/app/publicaciones/repository.py`](backend/app/publicaciones/repository.py)
-
-Los campos persistidos son:
-
-| Campo | Propietario |
-|---|---|
-| `id` | Gestión de Publicaciones |
-| `titulo` | Gestión de Publicaciones |
-| `descripcion` | Gestión de Publicaciones |
-| `precio` | Gestión de Publicaciones |
-| `modalidad` | Gestión de Publicaciones |
-| `estado` | Gestión de Publicaciones |
-
-La sustitución SQLite → MySQL no modifica esta propiedad arquitectónica.
-
----
-
-## Verificación automática de modularidad
-
-La prueba:
-
-[`backend/tests/test_modularidad_s6.py`](backend/tests/test_modularidad_s6.py)
-
-verifica actualmente:
-
-- `repository.py` como único escritor productivo de `publicaciones`;
-- ausencia de acceso directo desde otros contextos;
-- ausencia de importación del repositorio interno por otros módulos;
-- dirección:
-
-```text
-router → service → repository → MySQL
-```
-
-S6 definió la regla arquitectónica.
-
-S7 y ADR-0004 conservaron la regla después de migrar la persistencia a MySQL.
-
----
-
-# S7 - API-first e integración
-
-Durante S7 se hizo explícita la interfaz entre:
-
-**Frontend Flutter → Backend FastAPI**
-
-Se definieron:
-
-- contrato OpenAPI versionado;
-- proveedor FastAPI;
-- consumidor Flutter;
-- comunicación síncrona HTTP/JSON;
-- prueba automática de contrato;
-- demostración de ruptura incompatible;
-- correspondencia con C4 y arc42.
-
-La trazabilidad principal es:
-
-```text
-ASP-07
-   ↓
-EC-06
-   ↓
-ADR-0003
-   ↓
-OpenAPI
-   ↓
-FastAPI
-   ↓
-test_contrato_openapi.py
-```
-
-La evidencia consolidada se encuentra en:
+Evidencia:
 
 [`docs/evidencias/evidencia-s7-2026-09-15.md`](docs/evidencias/evidencia-s7-2026-09-15.md)
 
-La matriz específica S7 dispone actualmente de evidencia identificada para sus
-10 criterios.
+---
+
+## S8
+
+Se materializaron:
+
+- despliegue público;
+- GitHub Pages;
+- Azure App Service;
+- Azure MySQL;
+- HTTPS;
+- CORS;
+- health check dependiente de persistencia;
+- logs estructurados;
+- métrica operacional;
+- Ruff;
+- infraestructura Bicep;
+- validación IaC;
+- protección de secretos;
+- costos;
+- rollback;
+- arc42 sección 7;
+- restricciones operativas;
+- ADR de despliegue;
+- pipeline verde sobre `master`.
 
 ---
 
-## EC-06 - Compatibilidad del contrato
-
-Documentación:
-
-[`docs/arc42/10-escenarios-de-calidad.md`](docs/arc42/10-escenarios-de-calidad.md)
-
-El escenario busca detectar cambios incompatibles antes de fusionarlos a la
-rama principal.
-
-La verificación automática utiliza:
-
-[`backend/tests/test_contrato_openapi.py`](backend/tests/test_contrato_openapi.py)
-
----
-
-## ADR-0003
-
-[ADR-0003 - Integración síncrona HTTP/JSON](docs/adr/0003-usar-integracion-sincrona-http-json.md)
-
-La decisión mantiene:
-
-```text
-Flutter ↔ FastAPI
-```
-
-mediante comunicación síncrona HTTP/JSON.
-
-No se incorporan colas ni mensajería asíncrona porque las operaciones actuales
-requieren confirmación inmediata y no existe evidencia que justifique esa
-complejidad adicional.
-
----
-
-# Evolución de persistencia - MySQL
-
-Después del primer corte se recibió una observación docente indicando que la
-persistencia debía evolucionar desde SQLite hacia MySQL.
-
-La decisión se registra mediante:
-
-[ADR-0004 - Migrar persistencia de SQLite a MySQL](docs/adr/0004-migrar-persistencia-a-mysql.md)
-
-La migración:
-
-**modifica**
-
-- motor de persistencia;
-- driver;
-- configuración de conexión;
-- pruebas de integración;
-- CI;
-- C4;
-- arc42.
-
-La migración **no modifica**:
-
-- monolito modular;
-- contextos delimitados;
-- propietario de `publicaciones`;
-- comunicación Flutter → FastAPI;
-- contrato OpenAPI;
-- dirección `router → service → repository`.
-
-La persistencia vigente es:
-
-```text
-MySQL
-```
-
-y el acceso se realiza mediante:
-
-```text
-PyMySQL
-```
-
----
-
-# ADR vigentes e históricos
+# ADR
 
 ## Vigentes
 
-- [ADR-0001 - Usar monolito modular](docs/adr/0001-usar-monolito-modular.md)
+- [ADR-0001 - Monolito modular](docs/adr/0001-usar-monolito-modular.md)
 - [ADR-0003 - Integración síncrona HTTP/JSON](docs/adr/0003-usar-integracion-sincrona-http-json.md)
 - [ADR-0004 - Migrar persistencia a MySQL](docs/adr/0004-migrar-persistencia-a-mysql.md)
+- [ADR-0005 - Despliegue Azure y GitHub Pages](docs/adr/0005-desplegar-campusmarket-en-azure-y-github-pages.md)
 
 ## Histórico
 
 - [ADR-0002 - Manejo de bloqueo temporal de SQLite](docs/adr/0002-manejo-bloqueo-sqlite.md)
 
-ADR-0002 continúa siendo válido como evidencia del contexto en el que fue
-tomado, pero no describe el motor de persistencia vigente.
-
----
-
-# Trazabilidad arquitectónica
-
-La trazabilidad general se mantiene en:
-
-[`docs/aspectos.md`](docs/aspectos.md)
-
-La cadena general es:
-
-```text
-Aspecto
-   ↓
-Requisito / escenario
-   ↓
-ADR
-   ↓
-C4
-   ↓
-Código
-   ↓
-Prueba
-   ↓
-Evidencia
-```
-
-A partir de S7 también se incorpora:
-
-```text
-Aspecto
-   ↓
-Contrato OpenAPI
-   ↓
-Proveedor FastAPI
-   ↓
-Prueba de contrato
-```
-
-Para la migración de persistencia:
-
-```text
-Observación docente
-        ↓
-ADR-0004
-        ↓
-C4
-        ↓
-arc42
-        ↓
-repository.py
-        ↓
-PyMySQL
-        ↓
-MySQL
-        ↓
-pruebas
-```
+ADR-0002 permanece como evidencia válida del contexto del primer corte, pero no
+describe la persistencia vigente.
 
 ---
 
 # Documentación arc42
 
-La documentación arquitectónica principal se encuentra en:
-
-- [Secciones principales](docs/arc42/ARC42.md)
+- [arc42 consolidado](docs/arc42/ARC42.md)
 - [Sección 2 - Restricciones](docs/arc42/02-restricciones.md)
 - [Sección 3 - Contexto](docs/arc42/03-contexto.md)
 - [Sección 4 - Estrategia de solución](docs/arc42/04-estrategia-de-solucion.md)
 - [Sección 5 - Bloques de construcción](docs/arc42/05-bloques-de-construccion.md)
 - [Sección 6 - Vista de ejecución](docs/arc42/06-vista-ejecucion.md)
+- [Sección 7 - Vista de despliegue](docs/arc42/07-vista-despliegue.md)
 - [Sección 8 - Conceptos transversales](docs/arc42/08-conceptos-transversales.md)
 - [Sección 9 - Decisiones](docs/arc42/09-decisiones.md)
+- [Sección 10 - Árbol de utilidad](docs/arc42/10-arbol-de-utilidad.md)
 - [Sección 10 - Escenarios de calidad](docs/arc42/10-escenarios-de-calidad.md)
 - [Sección 12 - Glosario](docs/arc42/12-glosario.md)
 
 ---
 
-# Registro de uso de Inteligencia Artificial
+# Trazabilidad
+
+La trazabilidad general se mantiene en:
+
+[`docs/aspectos.md`](docs/aspectos.md)
+
+Cadena utilizada:
+
+```text
+Aspecto
+   ↓
+Restricción / escenario
+   ↓
+ADR
+   ↓
+C4 / arc42
+   ↓
+Código
+   ↓
+Pruebas
+   ↓
+CI
+   ↓
+Despliegue
+   ↓
+Evidencia
+```
+
+---
+
+# Uso de Inteligencia Artificial
 
 El registro se encuentra en:
 
 [`docs/ia.md`](docs/ia.md)
 
-El documento registra:
+Para cada uso de IA se documenta:
 
-- fecha;
-- herramienta utilizada;
+- herramienta;
 - uso realizado;
-- verificación realizada por el equipo;
+- verificación del equipo;
 - propuestas rechazadas;
-- justificación del rechazo.
+- motivo del rechazo.
 
-La IA se utiliza como apoyo para:
+Las respuestas generadas por IA no se consideran evidencia por sí solas.
 
-- análisis;
-- estructuración documental;
-- comparación de alternativas;
-- revisión arquitectónica;
-- elaboración de pruebas;
-- auditoría de consistencia;
-- trazabilidad.
+Durante S8 se aplicó como criterio:
 
-El equipo conserva la responsabilidad sobre:
-
-- decisiones arquitectónicas;
-- código incorporado;
-- pruebas ejecutadas;
-- mediciones;
-- validación del repositorio;
-- aceptación o rechazo de propuestas.
-
-Las respuestas de IA no se utilizan por sí solas como evidencia del sistema.
+```text
+requisito literal
+→ implementación
+→ ejecución real
+→ evidencia verificable
+→ documentación
+```
 
 ---
 
 # Evidencias principales
 
-## Primer corte / S1-S5
+## S1-S5
 
 - [Correcciones S1-S4](correcciones.md)
-- [Restricciones arquitectónicas](docs/arc42/02-restricciones.md)
 - [ADR-0001](docs/adr/0001-usar-monolito-modular.md)
 - [ADR-0002](docs/adr/0002-manejo-bloqueo-sqlite.md)
 - [C4 Nivel 1](docs/c4/01-contexto.md)
 - [C4 Nivel 2](docs/c4/02-contenedores.md)
-- [Arranque histórico con un comando](docs/evidencias/arranque-un-comando-2026-09-04.md)
 - [Línea base S5](docs/evidencias/linea-base-bloqueo-sqlite-2026-09-05.md)
 - [Medición S5](docs/evidencias/medicion-bloqueo-sqlite-2026-09-06.md)
 
@@ -1197,140 +1308,81 @@ Las respuestas de IA no se utilizan por sí solas como evidencia del sistema.
 
 - [Conceptos transversales](docs/arc42/08-conceptos-transversales.md)
 - [C4 Nivel 3](docs/c4/03-componentes-backend.md)
-- [Fuente PlantUML C4 Nivel 3](docs/c4/03-componentes-backend.puml)
-- [Auditoría de modularidad](docs/evidencias/auditoria-modularidad-s6-2026-09-12.md)
-- [Prueba automática de modularidad](backend/tests/test_modularidad_s6.py)
-- [Trazabilidad](docs/aspectos.md)
+- [Auditoría modular](docs/evidencias/auditoria-modularidad-s6-2026-09-12.md)
+- [Prueba modularidad](backend/tests/test_modularidad_s6.py)
 
 ## S7
 
-- [Evidencia consolidada S7](docs/evidencias/evidencia-s7-2026-09-15.md)
+- [Evidencia S7](docs/evidencias/evidencia-s7-2026-09-15.md)
 - [Contrato OpenAPI](contracts/openapi-v1.json)
-- [Guía del contrato](contracts/README.md)
 - [Prueba de contrato](backend/tests/test_contrato_openapi.py)
 - [ADR-0003](docs/adr/0003-usar-integracion-sincrona-http-json.md)
 - [ADR-0004](docs/adr/0004-migrar-persistencia-a-mysql.md)
-- [Vista de ejecución](docs/arc42/06-vista-ejecucion.md)
-- [C4 Nivel 2](docs/c4/02-contenedores.md)
-- [C4 Nivel 3](docs/c4/03-componentes-backend.md)
-- [Demostración de incompatibilidad](docs/evidencias/fallo-contrato-s7-2026-09-15.md)
-- [Prueba funcional vigente](backend/tests/test_publicaciones_vertical.py)
-- [Prueba de modularidad](backend/tests/test_modularidad_s6.py)
+- [Fallo incompatible](docs/evidencias/fallo-contrato-s7-2026-09-15.md)
+
+## S8
+
+- [Evidencia consolidada S8](docs/evidencias/evidencia-s8-2026-09-27.md)
+- [Vista de despliegue](docs/arc42/07-vista-despliegue.md)
+- [Restricciones operativas](docs/arc42/02-restricciones.md)
+- [ADR-0005](docs/adr/0005-desplegar-campusmarket-en-azure-y-github-pages.md)
+- [Infraestructura Bicep](infra/main.bicep)
+- [Workflow CI](.github/workflows/backend-tests.yml)
 - [Registro de IA](docs/ia.md)
-- [Run #95 vigente en master](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/35291809164)
 
 ---
 
-# Estado actual del proyecto
+# Estado final verificable S8
 
-La arquitectura vigente es:
+- [x] frontend accesible públicamente;
+- [x] backend accesible públicamente;
+- [x] MySQL desplegado y utilizado por el backend;
+- [x] HTTPS;
+- [x] CORS funcional;
+- [x] `GET /health` HTTP `200`;
+- [x] degradación HTTP `503` sin MySQL;
+- [x] recuperación posterior HTTP `200`;
+- [x] publicación creada desde Flutter Web público;
+- [x] persistencia real;
+- [x] infraestructura Bicep versionada;
+- [x] Bicep compilado;
+- [x] Bicep validado;
+- [x] logs estructurados;
+- [x] métrica operacional asociada a EC-01;
+- [x] Ruff en CI;
+- [x] secretos fuera del código fuente;
+- [x] estimación de costo documentada;
+- [x] rollback documentado;
+- [x] arc42 actualizado;
+- [x] ADR de despliegue documentado;
+- [x] PR #43 integrado;
+- [x] pipeline exitoso sobre `master`;
+- [x] SonarQube Cloud Quality Gate aprobado.
 
-```text
-Flutter Web
-    ↓ HTTP/JSON síncrono
-    ↓ OpenAPI
-FastAPI
-    ↓
-Gestión de Publicaciones
-    ↓
-Repository
-    ↓ PyMySQL
-MySQL
-```
-
-CampusMarket mantiene:
-
-- monolito modular;
-- cuatro contextos delimitados;
-- propiedad única de los datos;
-- C4 Nivel 1, 2 y 3;
-- documentación arc42;
-- contrato OpenAPI versionado;
-- API HTTP/JSON síncrona;
-- persistencia MySQL;
-- pruebas funcionales;
-- pruebas arquitectónicas;
-- prueba automática de contrato;
-- GitHub Actions con pipeline vigente exitoso;
-- SonarQube Cloud oficial con Quality Gate público aprobado;
-- trazabilidad arquitectónica;
-- registro de uso de IA.
-
-La integración explícita del scanner de SonarQube Cloud dentro de GitHub
-Actions permanece como pendiente transversal por requerir autorización para
-ejecutar análisis sobre la organización `isco-utb`.
-
-Este pendiente no modifica el estado estable del pipeline vigente de `master`.
-
-Los elementos todavía no completamente materializados se mantienen
-explícitamente identificados como tales.
-
-SQLite no se presenta como tecnología vigente.
-
-Permanece únicamente dentro de la documentación histórica correspondiente al
-momento en que realmente formó parte de la arquitectura.
-
-La evolución SQLite → MySQL conserva las fronteras del monolito modular y hace
-coincidir nuevamente:
+## Referencia de cierre S8
 
 ```text
-documentación
-    ↓
-C4
-    ↓
-ADR
-    ↓
-código
-    ↓
-pruebas
-    ↓
-CI
-```
+Repositorio:
+ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET
 
-con el estado real de CampusMarket.
+Rama:
+master
 
----
-
-# Estado de cierre S7
-
-El estado vigente de `master` utilizado como referencia de cierre es:
-
-```text
-Commit:
-5bedc833c6324cba316cefd5ccc39d1269f3b984
+Merge commit S8:
+bea2412082b0acb2dc37262376622d63fccff5df
 
 GitHub Actions:
-Run #95
+https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/36377033900
 
-Conclusión:
+Resultado:
 success
+
+Frontend:
+https://nnigarp.github.io/AS_202620_PROYECTO_CAMPUSMARKET/
+
+Backend:
+https://campusmarket-s8-api-nilver.azurewebsites.net
+
+Health:
+https://campusmarket-s8-api-nilver.azurewebsites.net/health
 ```
-
-La matriz específica de S7 dispone de evidencia auditable para:
-
-- contrato ejecutable y versionado;
-- rutas y esquemas de datos;
-- correspondencia contrato ↔ implementación;
-- versión e historial del contrato;
-- prueba contractual;
-- ejecución contractual en CI;
-- fallo ante cambio incompatible;
-- ADR de estrategia de integración;
-- vista de ejecución arc42;
-- C4 Nivel 2 con protocolo y formato.
-
-**Recuento específico S7: 10 de 10 criterios documentados con evidencia auditable.**
-
-La única conformidad pendiente identificada en este cierre pertenece a la
-matriz transversal de SonarQube Cloud:
-
-```text
-Quality Gate público: Passed
-Configuración versionada: disponible
-Scanner explícito en CI: pendiente
-Run exitoso del scanner: pendiente
-Motivo: autorización requerida sobre la organización isco-utb
-```
-
-Este pendiente se documenta explícitamente y no se declara como cumplimiento
-hasta disponer de la evidencia exigida por `CONTRATO.md`.
