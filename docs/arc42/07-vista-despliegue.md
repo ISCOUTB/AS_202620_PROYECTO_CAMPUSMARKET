@@ -79,6 +79,45 @@ MySQL
 Esta topología mantiene las fronteras del monolito modular definidas previamente y modifica principalmente la infraestructura de ejecución.
 
 ---
+### Mapeo explícito pieza → plataforma
+
+La vista de despliegue de S8 trata cada pieza de CampusMarket de forma
+independiente.
+
+```text
+┌─────────────────────────────────────────────┐
+│ PIEZA 1 · FRONTEND                          │
+│ Flutter Web                                 │
+│                                             │
+│ Ejecuta en: GitHub Pages                    │
+│ Publicación: rama gh-pages                  │
+│ Protocolo de salida: HTTPS / JSON           │
+│ ADR: ADR-0006                               │
+└─────────────────────────────────────────────┘
+                     │
+                     │ HTTPS / JSON
+                     ▼
+┌─────────────────────────────────────────────┐
+│ PIEZA 2 · BACKEND API                       │
+│ FastAPI / Python 3.12                       │
+│                                             │
+│ Ejecuta en: Azure App Service               │
+│ App: campusmarket-s8-api-nilver             │
+│ Health: GET /health                         │
+│ ADR: ADR-0007                               │
+└─────────────────────────────────────────────┘
+                     │
+                     │ TLS / SQL
+                     ▼
+┌─────────────────────────────────────────────┐
+│ PIEZA 3 · PERSISTENCIA                      │
+│ MySQL 8.4                                   │
+│                                             │
+│ Ejecuta en: Azure Database for MySQL        │
+│              Flexible Server                │
+│ Base: campusmarket                          │
+│ ADR: ADR-0008                               │
+└─────────────────────────────────────────────┘
 
 ## 7.3 Frontend
 
