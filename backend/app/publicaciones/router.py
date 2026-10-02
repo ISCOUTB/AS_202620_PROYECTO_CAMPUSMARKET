@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 
 from .image_storage import (
     InvalidImageError,
+    delete_publication_image,
     save_publication_image,
 )
 from .repository import (
@@ -118,6 +119,8 @@ async def subir_imagen(
     publication_id: int,
     archivo: UploadFile = File(...),
 ):
+    imagen_url: str | None = None
+
     try:
         if not publication_exists(publication_id):
             raise HTTPException(
@@ -153,12 +156,22 @@ async def subir_imagen(
             detail=str(error),
         ) from error
 
+    except ValueError as error:
+        if imagen_url is not None:
+            delete_publication_image(imagen_url)
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(error),
+        ) from error
+
     except PersistenceUnavailableError as error:
+        if imagen_url is not None:
+            delete_publication_image(imagen_url)
+
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=(
                 "La persistencia está temporalmente no disponible."
             ),
         ) from error
-
-    
