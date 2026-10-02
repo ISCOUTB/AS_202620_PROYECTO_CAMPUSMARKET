@@ -14,22 +14,13 @@ class MarketplaceShell extends StatefulWidget {
 class _MarketplaceShellState extends State<MarketplaceShell> {
   int _indice = 0;
 
-  void _irInicio() {
-    setState(() {
-      _indice = 0;
-    });
-  }
+  void _irInicio() => setState(() => _indice = 0);
+  void _irCatalogo() => setState(() => _indice = 1);
+  void _irPublicar() => setState(() => _indice = 2);
 
-  void _irCatalogo() {
-    setState(() {
-      _indice = 1;
-    });
-  }
-
-  void _irPublicar() {
-    setState(() {
-      _indice = 2;
-    });
+  void _seleccionar(int indice) {
+    if (indice == _indice) return;
+    setState(() => _indice = indice);
   }
 
   @override
@@ -42,7 +33,9 @@ class _MarketplaceShellState extends State<MarketplaceShell> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final desktop = constraints.maxWidth >= 900;
+        final width = constraints.maxWidth;
+        final desktop = width >= 1100;
+        final tablet = width >= 700 && width < 1100;
 
         if (desktop) {
           return Scaffold(
@@ -85,22 +78,79 @@ class _MarketplaceShellState extends State<MarketplaceShell> {
           );
         }
 
+        if (tablet) {
+          return Scaffold(
+            appBar: AppBar(
+              titleSpacing: 20,
+              title: InkWell(
+                borderRadius: BorderRadius.circular(14),
+                onTap: _irInicio,
+                child: const _CampusMarketBrand(compact: true),
+              ),
+            ),
+            body: Row(
+              children: [
+                NavigationRail(
+                  selectedIndex: _indice,
+                  onDestinationSelected: _seleccionar,
+                  labelType: NavigationRailLabelType.all,
+                  groupAlignment: -0.75,
+                  leading: Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: IconButton.filledTonal(
+                      tooltip: 'Publicar producto',
+                      onPressed: _irPublicar,
+                      icon: const Icon(Icons.add),
+                    ),
+                  ),
+                  destinations: const [
+                    NavigationRailDestination(
+                      icon: Icon(Icons.home_outlined),
+                      selectedIcon: Icon(Icons.home),
+                      label: Text('Inicio'),
+                    ),
+                    NavigationRailDestination(
+                      icon: Icon(Icons.storefront_outlined),
+                      selectedIcon: Icon(Icons.storefront),
+                      label: Text('Catálogo'),
+                    ),
+                    NavigationRailDestination(
+                      icon: Icon(Icons.add_circle_outline),
+                      selectedIcon: Icon(Icons.add_circle),
+                      label: Text('Publicar'),
+                    ),
+                  ],
+                ),
+                const VerticalDivider(width: 1),
+                Expanded(
+                  child: IndexedStack(index: _indice, children: paginas),
+                ),
+              ],
+            ),
+          );
+        }
+
         return Scaffold(
           appBar: AppBar(
+            titleSpacing: 16,
             title: InkWell(
               borderRadius: BorderRadius.circular(14),
               onTap: _irInicio,
               child: const _CampusMarketBrand(compact: true),
             ),
+            actions: [
+              IconButton(
+                tooltip: 'Publicar producto',
+                onPressed: _irPublicar,
+                icon: const Icon(Icons.add_circle_outline),
+              ),
+              const SizedBox(width: 8),
+            ],
           ),
           body: IndexedStack(index: _indice, children: paginas),
           bottomNavigationBar: NavigationBar(
             selectedIndex: _indice,
-            onDestinationSelected: (indice) {
-              setState(() {
-                _indice = indice;
-              });
-            },
+            onDestinationSelected: _seleccionar,
             destinations: const [
               NavigationDestination(
                 icon: Icon(Icons.home_outlined),
@@ -135,36 +185,43 @@ class _CampusMarketBrand extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: compact ? 38 : 42,
-          height: compact ? 38 : 42,
-          decoration: BoxDecoration(
-            color: colors.primaryContainer,
-            borderRadius: BorderRadius.circular(13),
+    return Semantics(
+      button: true,
+      label: 'CampusMarket, ir al inicio',
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: compact ? 38 : 42,
+            height: compact ? 38 : 42,
+            decoration: BoxDecoration(
+              color: colors.primaryContainer,
+              borderRadius: BorderRadius.circular(13),
+            ),
+            child: Icon(Icons.school_outlined, color: colors.primary),
           ),
-          child: Icon(Icons.school_outlined, color: colors.primary),
-        ),
-        const SizedBox(width: 11),
-        RichText(
-          text: TextSpan(
-            style: (compact ? theme.textTheme.titleMedium : theme.textTheme.titleLarge)
-                ?.copyWith(fontWeight: FontWeight.w900),
-            children: [
-              TextSpan(
-                text: 'Campus',
-                style: TextStyle(color: colors.onSurface),
-              ),
-              TextSpan(
-                text: 'Market',
-                style: TextStyle(color: colors.primary),
-              ),
-            ],
+          const SizedBox(width: 11),
+          RichText(
+            text: TextSpan(
+              style:
+                  (compact
+                          ? theme.textTheme.titleMedium
+                          : theme.textTheme.titleLarge)
+                      ?.copyWith(fontWeight: FontWeight.w900),
+              children: [
+                TextSpan(
+                  text: 'Campus',
+                  style: TextStyle(color: colors.onSurface),
+                ),
+                TextSpan(
+                  text: 'Market',
+                  style: TextStyle(color: colors.primary),
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
