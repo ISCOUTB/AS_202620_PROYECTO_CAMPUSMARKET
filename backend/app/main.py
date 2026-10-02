@@ -3,14 +3,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
+from backend.app.catalogo.router import router as catalogo_router
 from backend.app.observability import (
     get_ec01_metric,
     log_http_request,
 )
 from backend.app.publicaciones.repository import database_is_available
 from backend.app.publicaciones.router import router as publicaciones_router
-from backend.app.catalogo.router import router as catalogo_router
-
 
 
 class HealthResponse(BaseModel):

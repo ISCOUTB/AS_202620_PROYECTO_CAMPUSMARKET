@@ -2,9 +2,8 @@ from time import perf_counter
 
 from fastapi.testclient import TestClient
 
-from backend.app.main import app
 import backend.app.catalogo.service as catalogo_service
-
+from backend.app.main import app
 
 client = TestClient(app)
 

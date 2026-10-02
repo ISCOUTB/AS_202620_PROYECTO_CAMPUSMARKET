@@ -9,7 +9,6 @@ from backend.app.publicaciones.service import (
 
 from .service import buscar_publicaciones, obtener_publicacion
 
-
 router = APIRouter(prefix="/catalogo", tags=["catalogo"])
 
 
