@@ -5,7 +5,12 @@ import 'package:http/http.dart' as http;
 import 'publicacion_catalogo.dart';
 
 class CatalogoApi {
-  const CatalogoApi({this.baseUrl = 'http://127.0.0.1:8000'});
+  const CatalogoApi({String? baseUrl}) : baseUrl = baseUrl ?? _configuredBaseUrl;
+
+  static const _configuredBaseUrl = String.fromEnvironment(
+    'CAMPUSMARKET_API_BASE_URL',
+    defaultValue: 'http://localhost:8000',
+  );
 
   final String baseUrl;
 
@@ -54,7 +59,10 @@ class CatalogoApi {
 
     return data
         .map(
-          (item) => PublicacionCatalogo.fromJson(item as Map<String, dynamic>),
+          (item) => PublicacionCatalogo.fromJson(
+            item as Map<String, dynamic>,
+            baseUrl: baseUrl,
+          ),
         )
         .toList();
   }
@@ -74,6 +82,7 @@ class CatalogoApi {
 
     return PublicacionCatalogo.fromJson(
       jsonDecode(response.body) as Map<String, dynamic>,
+      baseUrl: baseUrl,
     );
   }
 }
