@@ -29,26 +29,9 @@ class CatalogoDetallePage extends StatelessWidget {
               builder: (context, constraints) {
                 final desktop = constraints.maxWidth >= 800;
 
-                final visual = Container(
-                  height: desktop ? 480 : 300,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(28),
-                    gradient: LinearGradient(
-                      colors: [
-                        colors.primaryContainer,
-                        colors.surfaceContainerHighest,
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                  ),
-                  child: Center(
-                    child: Icon(
-                      Icons.shopping_bag_outlined,
-                      size: desktop ? 120 : 80,
-                      color: colors.primary,
-                    ),
-                  ),
+                final visual = _GaleriaPublicacion(
+                  publicacion: publicacion,
+                  height: desktop ? 480 : 320,
                 );
 
                 final informacion = Padding(
@@ -149,6 +132,105 @@ class CatalogoDetallePage extends StatelessWidget {
               },
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _GaleriaPublicacion extends StatelessWidget {
+  const _GaleriaPublicacion({
+    required this.publicacion,
+    required this.height,
+  });
+
+  final PublicacionCatalogo publicacion;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final imagenes = publicacion.imagenes;
+
+    if (imagenes.isEmpty) {
+      return Container(
+        height: height,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(28),
+          gradient: LinearGradient(
+            colors: [
+              colors.primaryContainer,
+              colors.surfaceContainerHighest,
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Center(
+          child: Icon(
+            Icons.shopping_bag_outlined,
+            size: 110,
+            color: colors.primary,
+          ),
+        ),
+      );
+    }
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(28),
+      child: SizedBox(
+        height: height,
+        child: Stack(
+          children: [
+            PageView.builder(
+              itemCount: imagenes.length,
+              itemBuilder: (context, index) {
+                final imagen = imagenes[index];
+
+                return Image.network(
+                  imagen.imagenUrl,
+                  width: double.infinity,
+                  height: height,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return ColoredBox(
+                      color: colors.surfaceContainerHighest,
+                      child: Center(
+                        child: Icon(
+                          Icons.broken_image_outlined,
+                          size: 72,
+                          color: colors.onSurfaceVariant,
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+            if (imagenes.length > 1)
+              Positioned(
+                right: 16,
+                bottom: 16,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: colors.surface.withValues(alpha: 0.88),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 7,
+                    ),
+                    child: Text(
+                      '${imagenes.length} fotos · desliza para verlas',
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );
