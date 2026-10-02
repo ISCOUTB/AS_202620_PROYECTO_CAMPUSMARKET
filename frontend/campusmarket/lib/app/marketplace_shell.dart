@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../catalogo/catalogo_page.dart';
 import '../publicaciones/publicacion_form_page.dart';
+import 'inicio_page.dart';
 
 class MarketplaceShell extends StatefulWidget {
   const MarketplaceShell({super.key});
@@ -13,20 +14,32 @@ class MarketplaceShell extends StatefulWidget {
 class _MarketplaceShellState extends State<MarketplaceShell> {
   int _indice = 0;
 
-  void _irCatalogo() {
+  void _irInicio() {
     setState(() {
       _indice = 0;
     });
   }
 
-  void _irPublicar() {
+  void _irCatalogo() {
     setState(() {
       _indice = 1;
     });
   }
 
+  void _irPublicar() {
+    setState(() {
+      _indice = 2;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final paginas = [
+      InicioPage(onIrCatalogo: _irCatalogo, onIrPublicar: _irPublicar),
+      const CatalogoPage(),
+      const PublicacionFormPage(),
+    ];
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final desktop = constraints.maxWidth >= 900;
@@ -36,37 +49,51 @@ class _MarketplaceShellState extends State<MarketplaceShell> {
             appBar: AppBar(
               toolbarHeight: 76,
               titleSpacing: 32,
-              title: const _CampusMarketBrand(),
+              title: InkWell(
+                borderRadius: BorderRadius.circular(14),
+                onTap: _irInicio,
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 6),
+                  child: _CampusMarketBrand(),
+                ),
+              ),
               actions: [
+                _DesktopNavButton(
+                  icon: Icons.home_outlined,
+                  label: 'Inicio',
+                  selected: _indice == 0,
+                  onPressed: _irInicio,
+                ),
+                const SizedBox(width: 6),
                 _DesktopNavButton(
                   icon: Icons.storefront_outlined,
                   label: 'Catálogo',
-                  selected: _indice == 0,
+                  selected: _indice == 1,
                   onPressed: _irCatalogo,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
                 _DesktopNavButton(
                   icon: Icons.add_circle_outline,
                   label: 'Publicar',
-                  selected: _indice == 1,
+                  selected: _indice == 2,
                   onPressed: _irPublicar,
                 ),
                 const SizedBox(width: 24),
               ],
             ),
-            body: IndexedStack(
-              index: _indice,
-              children: const [CatalogoPage(), PublicacionFormPage()],
-            ),
+            body: IndexedStack(index: _indice, children: paginas),
           );
         }
 
         return Scaffold(
-          appBar: AppBar(title: const _CampusMarketBrand()),
-          body: IndexedStack(
-            index: _indice,
-            children: const [CatalogoPage(), PublicacionFormPage()],
+          appBar: AppBar(
+            title: InkWell(
+              borderRadius: BorderRadius.circular(14),
+              onTap: _irInicio,
+              child: const _CampusMarketBrand(compact: true),
+            ),
           ),
+          body: IndexedStack(index: _indice, children: paginas),
           bottomNavigationBar: NavigationBar(
             selectedIndex: _indice,
             onDestinationSelected: (indice) {
@@ -75,6 +102,11 @@ class _MarketplaceShellState extends State<MarketplaceShell> {
               });
             },
             destinations: const [
+              NavigationDestination(
+                icon: Icon(Icons.home_outlined),
+                selectedIcon: Icon(Icons.home),
+                label: 'Inicio',
+              ),
               NavigationDestination(
                 icon: Icon(Icons.storefront_outlined),
                 selectedIcon: Icon(Icons.storefront),
@@ -94,7 +126,9 @@ class _MarketplaceShellState extends State<MarketplaceShell> {
 }
 
 class _CampusMarketBrand extends StatelessWidget {
-  const _CampusMarketBrand();
+  const _CampusMarketBrand({this.compact = false});
+
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -105,8 +139,8 @@ class _CampusMarketBrand extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 42,
-          height: 42,
+          width: compact ? 38 : 42,
+          height: compact ? 38 : 42,
           decoration: BoxDecoration(
             color: colors.primaryContainer,
             borderRadius: BorderRadius.circular(13),
@@ -116,9 +150,8 @@ class _CampusMarketBrand extends StatelessWidget {
         const SizedBox(width: 11),
         RichText(
           text: TextSpan(
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w900,
-            ),
+            style: (compact ? theme.textTheme.titleMedium : theme.textTheme.titleLarge)
+                ?.copyWith(fontWeight: FontWeight.w900),
             children: [
               TextSpan(
                 text: 'Campus',
