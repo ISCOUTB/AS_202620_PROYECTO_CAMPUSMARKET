@@ -312,7 +312,7 @@ class _GaleriaPublicacionState extends State<_GaleriaPublicacion> {
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: imagenes.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 10),
+                separatorBuilder: (_, _) => const SizedBox(width: 10),
                 itemBuilder: (context, index) {
                   final seleccionada = index == _indiceActual;
 
@@ -337,7 +337,7 @@ class _GaleriaPublicacionState extends State<_GaleriaPublicacion> {
                         child: Image.network(
                           imagenes[index].imagenUrl,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => ColoredBox(
+                          errorBuilder: (_, _, _) => ColoredBox(
                             color: colors.surfaceContainerHighest,
                             child: Icon(
                               Icons.broken_image_outlined,
