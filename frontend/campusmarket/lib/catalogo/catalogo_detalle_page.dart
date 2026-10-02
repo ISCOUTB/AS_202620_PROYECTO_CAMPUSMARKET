@@ -138,7 +138,7 @@ class CatalogoDetallePage extends StatelessWidget {
   }
 }
 
-class _GaleriaPublicacion extends StatelessWidget {
+class _GaleriaPublicacion extends StatefulWidget {
   const _GaleriaPublicacion({
     required this.publicacion,
     required this.height,
@@ -148,13 +148,47 @@ class _GaleriaPublicacion extends StatelessWidget {
   final double height;
 
   @override
+  State<_GaleriaPublicacion> createState() => _GaleriaPublicacionState();
+}
+
+class _GaleriaPublicacionState extends State<_GaleriaPublicacion> {
+  late final PageController _controller;
+  int _indiceActual = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = PageController();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _irA(int index) {
+    final imagenes = widget.publicacion.imagenes;
+    if (imagenes.isEmpty) {
+      return;
+    }
+
+    final destino = index.clamp(0, imagenes.length - 1);
+    _controller.animateToPage(
+      destino,
+      duration: const Duration(milliseconds: 260),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    final imagenes = publicacion.imagenes;
+    final imagenes = widget.publicacion.imagenes;
 
     if (imagenes.isEmpty) {
       return Container(
-        height: height,
+        height: widget.height,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(28),
           gradient: LinearGradient(
@@ -176,62 +210,179 @@ class _GaleriaPublicacion extends StatelessWidget {
       );
     }
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(28),
-      child: SizedBox(
-        height: height,
-        child: Stack(
-          children: [
-            PageView.builder(
-              itemCount: imagenes.length,
-              itemBuilder: (context, index) {
-                final imagen = imagenes[index];
+    final altoPrincipal = imagenes.length > 1
+        ? widget.height - 94
+        : widget.height;
 
-                return Image.network(
-                  imagen.imagenUrl,
-                  width: double.infinity,
-                  height: height,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return ColoredBox(
-                      color: colors.surfaceContainerHighest,
+    return SizedBox(
+      height: widget.height,
+      child: Column(
+        children: [
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(28),
+              child: Stack(
+                children: [
+                  PageView.builder(
+                    controller: _controller,
+                    itemCount: imagenes.length,
+                    onPageChanged: (index) {
+                      setState(() => _indiceActual = index);
+                    },
+                    itemBuilder: (context, index) {
+                      final imagen = imagenes[index];
+
+                      return Image.network(
+                        imagen.imagenUrl,
+                        width: double.infinity,
+                        height: altoPrincipal,
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) {
+                          return ColoredBox(
+                            color: colors.surfaceContainerHighest,
+                            child: Center(
+                              child: Icon(
+                                Icons.broken_image_outlined,
+                                size: 72,
+                                color: colors.onSurfaceVariant,
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                  if (imagenes.length > 1) ...[
+                    Positioned(
+                      left: 14,
+                      top: 0,
+                      bottom: 0,
                       child: Center(
-                        child: Icon(
-                          Icons.broken_image_outlined,
-                          size: 72,
-                          color: colors.onSurfaceVariant,
+                        child: _BotonGaleria(
+                          icono: Icons.chevron_left,
+                          habilitado: _indiceActual > 0,
+                          onPressed: () => _irA(_indiceActual - 1),
                         ),
                       ),
-                    );
-                  },
-                );
-              },
-            ),
-            if (imagenes.length > 1)
-              Positioned(
-                right: 16,
-                bottom: 16,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: colors.surface.withValues(alpha: 0.88),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 7,
                     ),
-                    child: Text(
-                      '${imagenes.length} fotos · desliza para verlas',
-                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
+                    Positioned(
+                      right: 14,
+                      top: 0,
+                      bottom: 0,
+                      child: Center(
+                        child: _BotonGaleria(
+                          icono: Icons.chevron_right,
+                          habilitado: _indiceActual < imagenes.length - 1,
+                          onPressed: () => _irA(_indiceActual + 1),
+                        ),
                       ),
                     ),
-                  ),
-                ),
+                    Positioned(
+                      right: 16,
+                      bottom: 16,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: colors.surface.withValues(alpha: 0.9),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 7,
+                          ),
+                          child: Text(
+                            '${_indiceActual + 1} / ${imagenes.length}',
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelMedium
+                                ?.copyWith(fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
+            ),
+          ),
+          if (imagenes.length > 1) ...[
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 76,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: imagenes.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 10),
+                itemBuilder: (context, index) {
+                  final seleccionada = index == _indiceActual;
+
+                  return InkWell(
+                    borderRadius: BorderRadius.circular(14),
+                    onTap: () => _irA(index),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      width: 92,
+                      padding: const EdgeInsets.all(3),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: seleccionada
+                              ? colors.primary
+                              : colors.outlineVariant,
+                          width: seleccionada ? 2.5 : 1,
+                        ),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: Image.network(
+                          imagenes[index].imagenUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => ColoredBox(
+                            color: colors.surfaceContainerHighest,
+                            child: Icon(
+                              Icons.broken_image_outlined,
+                              color: colors.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
           ],
-        ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BotonGaleria extends StatelessWidget {
+  const _BotonGaleria({
+    required this.icono,
+    required this.habilitado,
+    required this.onPressed,
+  });
+
+  final IconData icono;
+  final bool habilitado;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Material(
+      color: colors.surface.withValues(alpha: habilitado ? 0.92 : 0.55),
+      shape: const CircleBorder(),
+      elevation: habilitado ? 2 : 0,
+      child: IconButton(
+        tooltip: icono == Icons.chevron_left
+            ? 'Imagen anterior'
+            : 'Imagen siguiente',
+        onPressed: habilitado ? onPressed : null,
+        icon: Icon(icono),
       ),
     );
   }
