@@ -30,6 +30,9 @@ def save_publication_image(
             "Formato no permitido. Usa JPG, JPEG, PNG o WEBP."
         )
 
+    if not content:
+        raise InvalidImageError("La imagen está vacía.")
+
     if len(content) > MAX_FILE_SIZE:
         raise InvalidImageError(
             "La imagen supera el tamaño máximo de 5 MB."
@@ -45,3 +48,14 @@ def save_publication_image(
 
     return f"/uploads/publicaciones/{publication_id}/{filename}"
 
+
+def delete_publication_image(imagen_url: str) -> None:
+    """Compensa un fallo de persistencia eliminando el archivo ya escrito."""
+    relative_path = imagen_url.removeprefix("/uploads/publicaciones/")
+    destination = UPLOAD_ROOT / relative_path
+
+    try:
+        destination.unlink(missing_ok=True)
+    except OSError:
+        # La compensación no debe ocultar el error principal de persistencia.
+        return
