@@ -13,6 +13,11 @@ class CatalogoDetallePage extends StatelessWidget {
         : '\$${value.toStringAsFixed(2)}';
   }
 
+  String _capitalizar(String value) {
+    if (value.isEmpty) return value;
+    return value[0].toUpperCase() + value.substring(1);
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -21,119 +26,263 @@ class CatalogoDetallePage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Detalle de publicación')),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.fromLTRB(24, 24, 24, 48),
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1100),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final desktop = constraints.maxWidth >= 800;
+            constraints: const BoxConstraints(maxWidth: 1240),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final desktop = constraints.maxWidth >= 900;
 
-                final visual = _GaleriaPublicacion(
-                  publicacion: publicacion,
-                  height: desktop ? 480 : 320,
-                );
+                    final visual = Card(
+                      clipBehavior: Clip.antiAlias,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: _GaleriaPublicacion(
+                          publicacion: publicacion,
+                          height: desktop ? 520 : 380,
+                        ),
+                      ),
+                    );
 
-                final informacion = Padding(
-                  padding: EdgeInsets.only(
-                    left: desktop ? 40 : 0,
-                    top: desktop ? 0 : 28,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          Chip(
-                            avatar: const Icon(
-                              Icons.verified_outlined,
-                              size: 18,
+                    final informacion = Card(
+                      child: Padding(
+                        padding: EdgeInsets.all(desktop ? 30 : 22),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                _EtiquetaDetalle(
+                                  icono: Icons.verified_outlined,
+                                  texto: _capitalizar(publicacion.estado),
+                                ),
+                                _EtiquetaDetalle(
+                                  icono: publicacion.modalidad == 'venta'
+                                      ? Icons.sell_outlined
+                                      : Icons.key_outlined,
+                                  texto: _capitalizar(publicacion.modalidad),
+                                ),
+                              ],
                             ),
-                            label: Text(publicacion.estado),
-                          ),
-                          Chip(
-                            avatar: Icon(
-                              publicacion.modalidad == 'venta'
-                                  ? Icons.sell_outlined
-                                  : Icons.key_outlined,
-                              size: 18,
+                            const SizedBox(height: 22),
+                            Text(
+                              publicacion.titulo,
+                              style: theme.textTheme.displaySmall?.copyWith(
+                                fontWeight: FontWeight.w900,
+                                height: 1.08,
+                              ),
                             ),
-                            label: Text(publicacion.modalidad),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      Text(
-                        publicacion.titulo,
-                        style: theme.textTheme.displaySmall?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        _precio(publicacion.precio),
-                        style: theme.textTheme.headlineLarge?.copyWith(
-                          color: colors.primary,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(height: 30),
-                      Text(
-                        'Descripción',
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        publicacion.descripcion,
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          height: 1.6,
-                          color: colors.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-                      SizedBox(
-                        width: double.infinity,
-                        child: FilledButton.icon(
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'El contacto entre usuarios se implementará cuando exista su contrato backend.',
+                            const SizedBox(height: 14),
+                            Text(
+                              _precio(publicacion.precio),
+                              style: theme.textTheme.headlineLarge?.copyWith(
+                                color: colors.primary,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            const SizedBox(height: 28),
+                            Divider(color: colors.outlineVariant),
+                            const SizedBox(height: 22),
+                            Row(
+                              children: [
+                                Icon(Icons.notes_outlined, color: colors.primary),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Descripción',
+                                  style: theme.textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              publicacion.descripcion,
+                              style: theme.textTheme.bodyLarge?.copyWith(
+                                height: 1.65,
+                                color: colors.onSurfaceVariant,
+                              ),
+                            ),
+                            const SizedBox(height: 28),
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: colors.primaryContainer.withValues(
+                                  alpha: 0.35,
+                                ),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Icon(
+                                    Icons.info_outline,
+                                    color: colors.primary,
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(
+                                      'El contacto entre usuarios se habilitará cuando exista un contrato backend verificable para esa capacidad.',
+                                      style: theme.textTheme.bodyMedium?.copyWith(
+                                        color: colors.onSurfaceVariant,
+                                        height: 1.45,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 18),
+                            SizedBox(
+                              width: double.infinity,
+                              child: FilledButton.icon(
+                                onPressed: null,
+                                icon: const Icon(Icons.chat_bubble_outline),
+                                label: const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 15),
+                                  child: Text('Contacto no disponible todavía'),
                                 ),
                               ),
-                            );
-                          },
-                          icon: const Icon(Icons.chat_bubble_outline),
-                          label: const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 15),
-                            child: Text('Contactar'),
-                          ),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
+                    );
+
+                    if (!desktop) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          visual,
+                          const SizedBox(height: 20),
+                          informacion,
+                        ],
+                      );
+                    }
+
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(flex: 6, child: visual),
+                        const SizedBox(width: 24),
+                        Expanded(flex: 5, child: informacion),
+                      ],
+                    );
+                  },
+                ),
+                const SizedBox(height: 24),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(22),
+                    child: Wrap(
+                      spacing: 36,
+                      runSpacing: 18,
+                      children: [
+                        _DatoResumen(
+                          icono: Icons.image_outlined,
+                          titulo: 'Fotografías',
+                          valor: '${publicacion.imagenes.length}',
+                        ),
+                        _DatoResumen(
+                          icono: Icons.verified_outlined,
+                          titulo: 'Estado',
+                          valor: _capitalizar(publicacion.estado),
+                        ),
+                        _DatoResumen(
+                          icono: Icons.swap_horiz,
+                          titulo: 'Modalidad',
+                          valor: _capitalizar(publicacion.modalidad),
+                        ),
+                      ],
+                    ),
                   ),
-                );
-
-                if (desktop) {
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(flex: 6, child: visual),
-                      Expanded(flex: 5, child: informacion),
-                    ],
-                  );
-                }
-
-                return Column(children: [visual, informacion]);
-              },
+                ),
+              ],
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+class _EtiquetaDetalle extends StatelessWidget {
+  const _EtiquetaDetalle({required this.icono, required this.texto});
+
+  final IconData icono;
+  final String texto;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: colors.primaryContainer.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icono, size: 17, color: colors.primary),
+          const SizedBox(width: 6),
+          Text(texto, style: const TextStyle(fontWeight: FontWeight.w700)),
+        ],
+      ),
+    );
+  }
+}
+
+class _DatoResumen extends StatelessWidget {
+  const _DatoResumen({
+    required this.icono,
+    required this.titulo,
+    required this.valor,
+  });
+
+  final IconData icono;
+  final String titulo;
+  final String valor;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(
+            color: colors.primaryContainer,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icono, color: colors.primary),
+        ),
+        const SizedBox(width: 10),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(titulo, style: theme.textTheme.labelMedium),
+            Text(
+              valor,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -169,9 +318,7 @@ class _GaleriaPublicacionState extends State<_GaleriaPublicacion> {
 
   void _irA(int index) {
     final imagenes = widget.publicacion.imagenes;
-    if (imagenes.isEmpty) {
-      return;
-    }
+    if (imagenes.isEmpty) return;
 
     final destino = index.clamp(0, imagenes.length - 1);
     _controller.animateToPage(
@@ -190,12 +337,9 @@ class _GaleriaPublicacionState extends State<_GaleriaPublicacion> {
       return Container(
         height: widget.height,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(22),
           gradient: LinearGradient(
-            colors: [
-              colors.primaryContainer,
-              colors.surfaceContainerHighest,
-            ],
+            colors: [colors.primaryContainer, colors.surfaceContainerHighest],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -210,9 +354,7 @@ class _GaleriaPublicacionState extends State<_GaleriaPublicacion> {
       );
     }
 
-    final altoPrincipal = imagenes.length > 1
-        ? widget.height - 94
-        : widget.height;
+    final altoPrincipal = imagenes.length > 1 ? widget.height - 94 : widget.height;
 
     return SizedBox(
       height: widget.height,
@@ -220,88 +362,89 @@ class _GaleriaPublicacionState extends State<_GaleriaPublicacion> {
         children: [
           Expanded(
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(28),
-              child: Stack(
-                children: [
-                  PageView.builder(
-                    controller: _controller,
-                    itemCount: imagenes.length,
-                    onPageChanged: (index) {
-                      setState(() => _indiceActual = index);
-                    },
-                    itemBuilder: (context, index) {
-                      final imagen = imagenes[index];
-
-                      return Image.network(
-                        imagen.imagenUrl,
-                        width: double.infinity,
-                        height: altoPrincipal,
-                        fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) {
-                          return ColoredBox(
-                            color: colors.surfaceContainerHighest,
-                            child: Center(
-                              child: Icon(
-                                Icons.broken_image_outlined,
-                                size: 72,
-                                color: colors.onSurfaceVariant,
+              borderRadius: BorderRadius.circular(22),
+              child: ColoredBox(
+                color: colors.surfaceContainerLowest,
+                child: Stack(
+                  children: [
+                    PageView.builder(
+                      controller: _controller,
+                      itemCount: imagenes.length,
+                      onPageChanged: (index) {
+                        setState(() => _indiceActual = index);
+                      },
+                      itemBuilder: (context, index) {
+                        final imagen = imagenes[index];
+                        return Image.network(
+                          imagen.imagenUrl,
+                          width: double.infinity,
+                          height: altoPrincipal,
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) {
+                            return ColoredBox(
+                              color: colors.surfaceContainerHighest,
+                              child: Center(
+                                child: Icon(
+                                  Icons.broken_image_outlined,
+                                  size: 72,
+                                  color: colors.onSurfaceVariant,
+                                ),
                               ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                    if (imagenes.length > 1) ...[
+                      Positioned(
+                        left: 14,
+                        top: 0,
+                        bottom: 0,
+                        child: Center(
+                          child: _BotonGaleria(
+                            icono: Icons.chevron_left,
+                            habilitado: _indiceActual > 0,
+                            onPressed: () => _irA(_indiceActual - 1),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        right: 14,
+                        top: 0,
+                        bottom: 0,
+                        child: Center(
+                          child: _BotonGaleria(
+                            icono: Icons.chevron_right,
+                            habilitado: _indiceActual < imagenes.length - 1,
+                            onPressed: () => _irA(_indiceActual + 1),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        right: 16,
+                        bottom: 16,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: colors.surface.withValues(alpha: 0.92),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 7,
                             ),
-                          );
-                        },
-                      );
-                    },
-                  ),
-                  if (imagenes.length > 1) ...[
-                    Positioned(
-                      left: 14,
-                      top: 0,
-                      bottom: 0,
-                      child: Center(
-                        child: _BotonGaleria(
-                          icono: Icons.chevron_left,
-                          habilitado: _indiceActual > 0,
-                          onPressed: () => _irA(_indiceActual - 1),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      right: 14,
-                      top: 0,
-                      bottom: 0,
-                      child: Center(
-                        child: _BotonGaleria(
-                          icono: Icons.chevron_right,
-                          habilitado: _indiceActual < imagenes.length - 1,
-                          onPressed: () => _irA(_indiceActual + 1),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      right: 16,
-                      bottom: 16,
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: colors.surface.withValues(alpha: 0.9),
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 7,
-                          ),
-                          child: Text(
-                            '${_indiceActual + 1} / ${imagenes.length}',
-                            style: Theme.of(context)
-                                .textTheme
-                                .labelMedium
-                                ?.copyWith(fontWeight: FontWeight.w700),
+                            child: Text(
+                              '${_indiceActual + 1} / ${imagenes.length}',
+                              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
           ),
@@ -315,7 +458,6 @@ class _GaleriaPublicacionState extends State<_GaleriaPublicacion> {
                 separatorBuilder: (_, _) => const SizedBox(width: 10),
                 itemBuilder: (context, index) {
                   final seleccionada = index == _indiceActual;
-
                   return InkWell(
                     borderRadius: BorderRadius.circular(14),
                     onTap: () => _irA(index),
@@ -326,9 +468,7 @@ class _GaleriaPublicacionState extends State<_GaleriaPublicacion> {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                          color: seleccionada
-                              ? colors.primary
-                              : colors.outlineVariant,
+                          color: seleccionada ? colors.primary : colors.outlineVariant,
                           width: seleccionada ? 2.5 : 1,
                         ),
                       ),
@@ -378,9 +518,7 @@ class _BotonGaleria extends StatelessWidget {
       shape: const CircleBorder(),
       elevation: habilitado ? 2 : 0,
       child: IconButton(
-        tooltip: icono == Icons.chevron_left
-            ? 'Imagen anterior'
-            : 'Imagen siguiente',
+        tooltip: icono == Icons.chevron_left ? 'Imagen anterior' : 'Imagen siguiente',
         onPressed: habilitado ? onPressed : null,
         icon: Icon(icono),
       ),
