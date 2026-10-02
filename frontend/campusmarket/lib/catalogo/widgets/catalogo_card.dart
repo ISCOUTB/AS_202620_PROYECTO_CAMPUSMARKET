@@ -14,7 +14,6 @@ class CatalogoCard extends StatelessWidget {
 
   String _formatearPrecio(double value) {
     final entero = value.truncateToDouble() == value;
-
     return entero
         ? '\$${value.toStringAsFixed(0)}'
         : '\$${value.toStringAsFixed(2)}';
@@ -23,73 +22,104 @@ class CatalogoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colors = theme.colorScheme;
     final imagenPrincipal = publicacion.imagenPrincipal;
 
     return Card(
       clipBehavior: Clip.antiAlias,
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.7),
-        ),
-      ),
       child: InkWell(
         onTap: onTap,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(
-              height: 180,
-              width: double.infinity,
-              child: imagenPrincipal == null
-                  ? _PlaceholderImagen(colorScheme: colorScheme)
-                  : Image.network(
-                      imagenPrincipal.imagenUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return _PlaceholderImagen(colorScheme: colorScheme);
-                      },
+            AspectRatio(
+              aspectRatio: 16 / 10,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  imagenPrincipal == null
+                      ? _PlaceholderImagen(colorScheme: colors)
+                      : Image.network(
+                          imagenPrincipal.imagenUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return _PlaceholderImagen(colorScheme: colors);
+                          },
+                        ),
+                  Positioned(
+                    left: 12,
+                    top: 12,
+                    child: _Etiqueta(
+                      texto: publicacion.estado,
+                      icono: Icons.verified_outlined,
                     ),
+                  ),
+                  Positioned(
+                    right: 12,
+                    top: 12,
+                    child: Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: colors.surface.withValues(alpha: 0.9),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        publicacion.modalidad == 'venta'
+                            ? Icons.sell_outlined
+                            : Icons.key_outlined,
+                        size: 19,
+                        color: colors.primary,
+                      ),
+                    ),
+                  ),
+                  if (publicacion.imagenes.length > 1)
+                    Positioned(
+                      right: 12,
+                      bottom: 12,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 9,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colors.surface.withValues(alpha: 0.9),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.photo_library_outlined, size: 15),
+                            const SizedBox(width: 4),
+                            Text('${publicacion.imagenes.length}'),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        _Etiqueta(
-                          texto: publicacion.estado,
-                          icono: Icons.verified_outlined,
-                        ),
-                        const Spacer(),
-                        Icon(
-                          publicacion.modalidad == 'venta'
-                              ? Icons.sell_outlined
-                              : Icons.key_outlined,
-                          size: 18,
-                          color: colorScheme.primary,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
                     Text(
                       publicacion.titulo,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w800,
+                        height: 1.18,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       _formatearPrecio(publicacion.precio),
                       style: theme.textTheme.headlineSmall?.copyWith(
-                        color: colorScheme.primary,
-                        fontWeight: FontWeight.w800,
+                        color: colors.primary,
+                        fontWeight: FontWeight.w900,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -98,7 +128,8 @@ class CatalogoCard extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
+                        color: colors.onSurfaceVariant,
+                        height: 1.35,
                       ),
                     ),
                     const Spacer(),
@@ -158,24 +189,31 @@ class _Etiqueta extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final colors = Theme.of(context).colorScheme;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: colorScheme.secondaryContainer,
+        color: colors.surface.withValues(alpha: 0.92),
         borderRadius: BorderRadius.circular(999),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icono, size: 15, color: colorScheme.onSecondaryContainer),
+          Icon(icono, size: 14, color: colors.primary),
           const SizedBox(width: 5),
           Text(
             texto[0].toUpperCase() + texto.substring(1),
             style: TextStyle(
-              color: colorScheme.onSecondaryContainer,
-              fontWeight: FontWeight.w600,
+              color: colors.onSurface,
+              fontWeight: FontWeight.w700,
               fontSize: 12,
             ),
           ),
