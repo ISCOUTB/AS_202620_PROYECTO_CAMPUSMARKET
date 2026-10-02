@@ -103,78 +103,87 @@ class _CatalogoPageState extends State<CatalogoPage> {
     return Scaffold(
       backgroundColor: colors.surface,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1400),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _HeroCatalogo(
-                    busquedaController: _busquedaController,
-                    onBuscar: _cargar,
-                  ),
-                  const SizedBox(height: 28),
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      final desktop = constraints.maxWidth >= 950;
+        child: LayoutBuilder(
+          builder: (context, viewport) {
+            final horizontalPadding = viewport.maxWidth < 600 ? 14.0 : 24.0;
 
-                      final filtros = _PanelFiltros(
-                        modalidad: _modalidad,
-                        estado: _estado,
-                        precioMinController: _precioMinController,
-                        precioMaxController: _precioMaxController,
-                        onModalidadChanged: (value) {
-                          setState(() {
-                            _modalidad = value;
-                          });
-
-                          _cargar();
-                        },
-                        onEstadoChanged: (value) {
-                          setState(() {
-                            _estado = value;
-                          });
-
-                          _cargar();
-                        },
-                        onAplicar: _cargar,
-                        onLimpiar: _limpiarFiltros,
-                      );
-
-                      final resultados = _ResultadosCatalogo(
-                        publicaciones: _publicaciones,
-                        cargando: _cargando,
-                        error: _error,
-                        onRetry: _cargar,
-                        onTap: _abrirDetalle,
-                      );
-
-                      if (desktop) {
-                        return Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SizedBox(width: 280, child: filtros),
-                            const SizedBox(width: 24),
-                            Expanded(child: resultados),
-                          ],
-                        );
-                      }
-
-                      return Column(
-                        children: [
-                          filtros,
-                          const SizedBox(height: 24),
-                          resultados,
-                        ],
-                      );
-                    },
-                  ),
-                ],
+            return SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(
+                horizontalPadding,
+                24,
+                horizontalPadding,
+                36,
               ),
-            ),
-          ),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1400),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _HeroCatalogo(
+                        busquedaController: _busquedaController,
+                        onBuscar: _cargar,
+                      ),
+                      const SizedBox(height: 28),
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final desktop = constraints.maxWidth >= 950;
+
+                          final filtros = _PanelFiltros(
+                            modalidad: _modalidad,
+                            estado: _estado,
+                            precioMinController: _precioMinController,
+                            precioMaxController: _precioMaxController,
+                            onModalidadChanged: (value) {
+                              setState(() {
+                                _modalidad = value;
+                              });
+                              _cargar();
+                            },
+                            onEstadoChanged: (value) {
+                              setState(() {
+                                _estado = value;
+                              });
+                              _cargar();
+                            },
+                            onAplicar: _cargar,
+                            onLimpiar: _limpiarFiltros,
+                          );
+
+                          final resultados = _ResultadosCatalogo(
+                            publicaciones: _publicaciones,
+                            cargando: _cargando,
+                            error: _error,
+                            onRetry: _cargar,
+                            onTap: _abrirDetalle,
+                          );
+
+                          if (desktop) {
+                            return Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SizedBox(width: 280, child: filtros),
+                                const SizedBox(width: 24),
+                                Expanded(child: resultados),
+                              ],
+                            );
+                          }
+
+                          return Column(
+                            children: [
+                              filtros,
+                              const SizedBox(height: 24),
+                              resultados,
+                            ],
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
         ),
       ),
     );
@@ -195,174 +204,190 @@ class _HeroCatalogo extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(28),
-        gradient: LinearGradient(
-          colors: [colors.primaryContainer, colors.surfaceContainerHighest],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final compact = constraints.maxWidth < 700;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 700;
 
-          final contenido = Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 7,
-                ),
-                decoration: BoxDecoration(
-                  color: colors.secondaryContainer,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.groups_outlined,
-                      size: 17,
-                      color: colors.onSecondaryContainer,
+        return Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(compact ? 22 : 32),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(compact ? 22 : 28),
+            gradient: LinearGradient(
+              colors: [
+                colors.primaryContainer,
+                colors.surfaceContainerHighest,
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: Builder(
+            builder: (context) {
+              final contenido = Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 7,
                     ),
-                    const SizedBox(width: 6),
+                    decoration: BoxDecoration(
+                      color: colors.secondaryContainer,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.groups_outlined,
+                          size: 17,
+                          color: colors.onSecondaryContainer,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Comunidad universitaria',
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            color: colors.onSecondaryContainer,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Text(
+                    'Compra, vende y conecta\nen tu universidad',
+                    style: (compact
+                            ? theme.textTheme.headlineMedium
+                            : theme.textTheme.displaySmall)
+                        ?.copyWith(
+                          fontWeight: FontWeight.w900,
+                          height: 1.05,
+                        ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Explora publicaciones de la comunidad universitaria '
+                    'y encuentra productos por modalidad, estado y precio.',
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: colors.onSurfaceVariant,
+                      height: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Wrap(
+                    spacing: 18,
+                    runSpacing: 12,
+                    children: const [
+                      _Beneficio(
+                        icono: Icons.shield_outlined,
+                        texto: 'Seguro y confiable',
+                      ),
+                      _Beneficio(
+                        icono: Icons.school_outlined,
+                        texto: 'Comunidad universitaria',
+                      ),
+                      _Beneficio(
+                        icono: Icons.recycling_outlined,
+                        texto: 'Segunda vida a productos',
+                      ),
+                    ],
+                  ),
+                ],
+              );
+
+              final buscador = Container(
+                padding: const EdgeInsets.all(22),
+                decoration: BoxDecoration(
+                  color: colors.surface,
+                  borderRadius: BorderRadius.circular(22),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Text(
-                      'Comunidad universitaria',
-                      style: theme.textTheme.labelLarge?.copyWith(
-                        color: colors.onSecondaryContainer,
-                        fontWeight: FontWeight.w700,
+                      '¿Qué estás buscando?',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Busca por título o descripción.',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: colors.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    TextField(
+                      controller: busquedaController,
+                      textInputAction: TextInputAction.search,
+                      onSubmitted: (_) => onBuscar(),
+                      decoration: InputDecoration(
+                        hintText: 'Ej. calculadora, libro, portátil...',
+                        prefixIcon: const Icon(Icons.search),
+                        suffixIcon: IconButton(
+                          tooltip: 'Buscar',
+                          onPressed: onBuscar,
+                          icon: const Icon(Icons.arrow_forward),
+                        ),
+                        filled: true,
+                        fillColor: colors.surfaceContainerLowest,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(
+                            color: colors.outlineVariant,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.icon(
+                        onPressed: onBuscar,
+                        icon: const Icon(Icons.search),
+                        label: const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 13),
+                          child: Text('Buscar en el catálogo'),
+                        ),
                       ),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 18),
-              Text(
-                'Compra, vende y conecta\nen tu universidad',
-                style: theme.textTheme.displaySmall?.copyWith(
-                  fontWeight: FontWeight.w900,
-                  height: 1.05,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Explora publicaciones de la comunidad universitaria '
-                'y encuentra productos por modalidad, estado y precio.',
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  color: colors.onSurfaceVariant,
-                  height: 1.5,
-                ),
-              ),
-              const SizedBox(height: 24),
-              Wrap(
-                spacing: 18,
-                runSpacing: 12,
-                children: const [
-                  _Beneficio(
-                    icono: Icons.shield_outlined,
-                    texto: 'Seguro y confiable',
-                  ),
-                  _Beneficio(
-                    icono: Icons.school_outlined,
-                    texto: 'Comunidad universitaria',
-                  ),
-                  _Beneficio(
-                    icono: Icons.recycling_outlined,
-                    texto: 'Segunda vida a productos',
-                  ),
+              );
+
+              if (compact) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    contenido,
+                    const SizedBox(height: 24),
+                    buscador,
+                  ],
+                );
+              }
+
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(flex: 3, child: contenido),
+                  const SizedBox(width: 40),
+                  Expanded(flex: 2, child: buscador),
                 ],
-              ),
-            ],
-          );
-
-          final buscador = Container(
-            padding: const EdgeInsets.all(22),
-            decoration: BoxDecoration(
-              color: colors.surface,
-              borderRadius: BorderRadius.circular(22),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '¿Qué estás buscando?',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Busca por título o descripción.',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: colors.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 18),
-                TextField(
-                  controller: busquedaController,
-                  textInputAction: TextInputAction.search,
-                  onSubmitted: (_) => onBuscar(),
-                  decoration: InputDecoration(
-                    hintText: 'Ej. calculadora, libro, portátil...',
-                    prefixIcon: const Icon(Icons.search),
-                    suffixIcon: IconButton(
-                      tooltip: 'Buscar',
-                      onPressed: onBuscar,
-                      icon: const Icon(Icons.arrow_forward),
-                    ),
-                    filled: true,
-                    fillColor: colors.surfaceContainerLowest,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(color: colors.outlineVariant),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 14),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.icon(
-                    onPressed: onBuscar,
-                    icon: const Icon(Icons.search),
-                    label: const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 13),
-                      child: Text('Buscar en el catálogo'),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-
-          if (compact) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [contenido, const SizedBox(height: 28), buscador],
-            );
-          }
-
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(flex: 3, child: contenido),
-              const SizedBox(width: 40),
-              Expanded(flex: 2, child: buscador),
-            ],
-          );
-        },
-      ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }
@@ -410,13 +435,10 @@ class _PanelFiltros extends StatelessWidget {
 
   final String? modalidad;
   final String? estado;
-
   final TextEditingController precioMinController;
   final TextEditingController precioMaxController;
-
   final ValueChanged<String?> onModalidadChanged;
   final ValueChanged<String?> onEstadoChanged;
-
   final VoidCallback onAplicar;
   final VoidCallback onLimpiar;
 
@@ -546,7 +568,6 @@ class _ResultadosCatalogo extends StatelessWidget {
   final List<PublicacionCatalogo> publicaciones;
   final bool cargando;
   final String? error;
-
   final VoidCallback onRetry;
   final ValueChanged<PublicacionCatalogo> onTap;
 
@@ -633,11 +654,17 @@ class _ResultadosCatalogo extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         var columnas = 1;
+        var proporcion = 0.88;
 
-        if (constraints.maxWidth >= 1150) {
+        if (constraints.maxWidth >= 1050) {
+          columnas = 4;
+          proporcion = 0.72;
+        } else if (constraints.maxWidth >= 930) {
           columnas = 3;
-        } else if (constraints.maxWidth >= 720) {
+          proporcion = 0.78;
+        } else if (constraints.maxWidth >= 560) {
           columnas = 2;
+          proporcion = 0.88;
         }
 
         return Column(
@@ -669,16 +696,14 @@ class _ResultadosCatalogo extends StatelessWidget {
                 crossAxisCount: columnas,
                 crossAxisSpacing: 18,
                 mainAxisSpacing: 18,
-                childAspectRatio: 0.78,
+                childAspectRatio: proporcion,
               ),
               itemBuilder: (context, index) {
                 final publicacion = publicaciones[index];
 
                 return CatalogoCard(
                   publicacion: publicacion,
-                  onTap: () {
-                    onTap(publicacion);
-                  },
+                  onTap: () => onTap(publicacion),
                 );
               },
             ),
