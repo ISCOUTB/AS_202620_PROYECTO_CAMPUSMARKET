@@ -34,11 +34,31 @@ PUBLICACIONES_PRUEBA = [
 ]
 
 
+IMAGENES_PRUEBA = {
+    1: [],
+    2: [
+        {
+            "id": 21,
+            "publicacion_id": 2,
+            "imagen_url": "/uploads/publicaciones/2/libro.webp",
+            "orden": 1,
+            "es_principal": True,
+        }
+    ],
+    3: [],
+}
+
+
 def _simular_publicaciones(monkeypatch):
     monkeypatch.setattr(
         catalogo_service,
         "listar_publicaciones",
         lambda: PUBLICACIONES_PRUEBA,
+    )
+    monkeypatch.setattr(
+        catalogo_service,
+        "listar_imagenes_publicacion",
+        lambda publicacion_id: IMAGENES_PRUEBA.get(publicacion_id, []),
     )
 
 
@@ -49,6 +69,22 @@ def test_catalogo_lista_publicaciones(monkeypatch):
 
     assert response.status_code == 200
     assert len(response.json()) == 3
+
+
+def test_catalogo_incluye_imagenes_de_publicacion(monkeypatch):
+    _simular_publicaciones(monkeypatch)
+
+    response = client.get("/catalogo/2")
+
+    assert response.status_code == 200
+
+    resultado = response.json()
+
+    assert len(resultado["imagenes"]) == 1
+    assert resultado["imagenes"][0]["imagen_url"] == (
+        "/uploads/publicaciones/2/libro.webp"
+    )
+    assert resultado["imagenes"][0]["es_principal"] is True
 
 
 def test_catalogo_busca_por_texto(monkeypatch):
