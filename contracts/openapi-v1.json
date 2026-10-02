@@ -86,6 +86,177 @@
         }
       }
     },
+    "/catalogo": {
+      "get": {
+        "tags": [
+          "catalogo"
+        ],
+        "summary": "Consultar el catálogo",
+        "operationId": "consultarCatalogo",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "name": "modalidad",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "venta",
+                    "alquiler"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Modalidad"
+            }
+          },
+          {
+            "name": "estado",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "nuevo",
+                    "usado",
+                    "reacondicionado"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Estado"
+            }
+          },
+          {
+            "name": "precio_min",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Precio Min"
+            }
+          },
+          {
+            "name": "precio_max",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Precio Max"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PublicacionCatalogo"
+                  },
+                  "title": "Response Consultarcatalogo"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/catalogo/{publicacion_id}": {
+      "get": {
+        "tags": [
+          "catalogo"
+        ],
+        "summary": "Consultar el detalle de una publicación",
+        "operationId": "consultarDetallePublicacion",
+        "parameters": [
+          {
+            "name": "publicacion_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Publicacion Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicacionCatalogo"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "summary": "Consultar la salud del backend",
@@ -202,6 +373,53 @@
           "id"
         ],
         "title": "Publicacion"
+      },
+      "PublicacionCatalogo": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "titulo": {
+            "type": "string",
+            "title": "Titulo"
+          },
+          "descripcion": {
+            "type": "string",
+            "title": "Descripcion"
+          },
+          "precio": {
+            "type": "number",
+            "title": "Precio"
+          },
+          "modalidad": {
+            "type": "string",
+            "enum": [
+              "venta",
+              "alquiler"
+            ],
+            "title": "Modalidad"
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "nuevo",
+              "usado",
+              "reacondicionado"
+            ],
+            "title": "Estado"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "titulo",
+          "descripcion",
+          "precio",
+          "modalidad",
+          "estado"
+        ],
+        "title": "PublicacionCatalogo"
       },
       "PublicacionCreate": {
         "properties": {

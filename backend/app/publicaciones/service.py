@@ -6,7 +6,7 @@ from .repository import (
 
 
 class PublicationPersistenceUnavailableError(RuntimeError):
-    """No es posible guardar publicaciones temporalmente."""
+    """No es posible guardar o consultar publicaciones temporalmente."""
 
 
 def crear_publicacion(data: dict) -> dict:
@@ -27,4 +27,9 @@ def crear_publicacion(data: dict) -> dict:
 
 
 def listar_publicaciones() -> list[dict]:
-    return list_publications()
+    try:
+        return list_publications()
+    except PersistenceUnavailableError as error:
+        raise PublicationPersistenceUnavailableError(
+            "No es posible consultar las publicaciones temporalmente."
+        ) from error

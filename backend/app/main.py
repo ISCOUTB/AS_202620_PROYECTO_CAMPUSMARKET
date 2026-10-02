@@ -9,6 +9,8 @@ from backend.app.observability import (
 )
 from backend.app.publicaciones.repository import database_is_available
 from backend.app.publicaciones.router import router as publicaciones_router
+from backend.app.catalogo.router import router as catalogo_router
+
 
 
 class HealthResponse(BaseModel):
@@ -46,6 +48,7 @@ app.add_middleware(
 )
 
 app.include_router(publicaciones_router)
+app.include_router(catalogo_router)
 
 
 @app.get(
