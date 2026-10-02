@@ -184,6 +184,22 @@ https://campusmarket-s8-api-nilver.azurewebsites.net
 Health:
 https://campusmarket-s8-api-nilver.azurewebsites.net/health
 
+
+## Evidencia S9
+
+**Fecha:** 01/10/2026
+
+| Herramienta | Uso realizado | Verificación del equipo | Qué se rechazó y por qué |
+|---|---|---|---|
+| ChatGPT | Apoyo para identificar una porción real de CampusMarket que permitiera materializar ASP-01 y EC-01 sin romper el monolito modular. Se propuso implementar Catálogo con búsqueda, filtros y detalle consumiendo una capacidad de lectura de Publicaciones. | El equipo contrastó la propuesta con ADR-0001, la propiedad de datos definida en S6 y el riesgo MOD-01. Se verificó que `publicaciones` permanezca como único propietario de persistencia. | Se rechazó que `catalogo` accediera directamente a MySQL o importara `backend/app/publicaciones/repository.py`, porque eso introduciría un segundo módulo acoplado a la persistencia y erosionaría la frontera definida en S6. |
+| ChatGPT | Apoyo para redactar ADR-0009 y estructurar alternativas: acceso directo a MySQL, servicio independiente y consumo de una capacidad explícita de lectura de Publicaciones. | El equipo mantuvo el monolito modular, descartó nuevos servicios desplegables y dejó ADR-0009 en estado `Propuesto` hasta completar implementación, pruebas y medición. | Se rechazó introducir microservicios para Catálogo porque no existe evidencia de escalado o aislamiento que justifique esa complejidad. |
+| ChatGPT | Apoyo para implementar `backend/app/catalogo/service.py`, `router.py` y registrar el nuevo router en FastAPI. | Se ejecutaron pruebas funcionales del catálogo, pruebas de contrato OpenAPI y pruebas de modularidad. El contrato versionado se regeneró desde `app.openapi()` y volvió a coincidir con el proveedor. | Se rechazó editar manualmente partes aisladas del contrato OpenAPI porque el contrato versionado debe corresponder exactamente con el esquema generado por FastAPI. |
+| ChatGPT | Apoyo para diseñar pruebas funcionales del Catálogo con datos controlados mediante `monkeypatch`. | `backend/tests/test_catalogo.py` verificó listado, búsqueda por texto, filtros por modalidad, estado y precio, detalle y errores controlados. Resultado: `8 passed`. | Se corrigió una primera versión de pruebas que dependía de una instancia MySQL local sin credenciales cargadas. Se evitó confundir una falla de infraestructura con una falla de lógica del Catálogo. |
+| ChatGPT | Apoyo para diseñar `backend/tests/test_erosion_s9.py` como regla ejecutable de arquitectura. | La prueba verificó que Catálogo no importe el repositorio de Publicaciones, no use PyMySQL y no ejecute escrituras SQL directas. Resultado normal: `3 passed`. | Se rechazó dejar la restricción únicamente documentada. Se exigió una prueba automática capaz de detectar una violación real. |
+| ChatGPT | Apoyo para realizar una mutación controlada agregando temporalmente `from backend.app.publicaciones import repository` dentro de Catálogo. | La ejecución produjo `1 failed, 2 passed` y falló específicamente `test_catalogo_no_importa_repository_de_publicaciones`. Tras retirar la mutación, la prueba volvió a `3 passed`. | Se rechazó conservar la importación directa del repositorio o debilitar la prueba para hacerla pasar, porque esa dependencia viola la frontera acordada. |
+| ChatGPT | Apoyo para diseñar la medición controlada de EC-01 con 1.000 publicaciones y 10 búsquedas consecutivas. | `backend/tests/test_ec01_catalogo.py` obtuvo `10/10` ejecuciones bajo 2 segundos, promedio `0.020482 s` y máximo `0.050431 s`. La prueba terminó con `1 passed`. | Se rechazó declarar esta medición como validación productiva completa porque usa publicaciones controladas mediante `monkeypatch` y no incluye latencia real de MySQL ni red. |
+| ChatGPT | Apoyo para corregir el manejo de indisponibilidad de persistencia en la consulta de publicaciones. | `listar_publicaciones()` traduce `PersistenceUnavailableError` a `PublicationPersistenceUnavailableError`, y el router de Catálogo responde con HTTP `503` controlado. | Se rechazó permitir que la excepción de PyMySQL escapara directamente hasta la capa HTTP, porque expondría detalles internos y produciría comportamiento no controlado. |
+
 ## Criterio de uso
 
 La IA se utiliza como apoyo para análisis, documentación, organización, comparación de alternativas y revisión técnica.
