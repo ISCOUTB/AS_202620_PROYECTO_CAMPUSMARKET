@@ -229,3 +229,21 @@ Pendiente antes del cierre definitivo:
 - ejecución completa en CI sobre ese mismo hash;
 - URL del run de GitHub Actions;
 - actualización final de esta evidencia con hash y run.
+
+## 15. Commit y CI verificados
+
+**Commit verificado:**
+
+`199defc5887162bcc703bed6d730f0e1eeca4efb`
+
+**Pull Request:**
+
+`#45 - S9 - Materializar catálogo con trazabilidad y verificación arquitectónica`
+
+**GitHub Actions:**
+
+- workflow: `Pruebas del backend`
+- run: `#105`
+- resultado: `success`
+
+La evidencia S9 queda asociada al mismo estado de código que pasó la verificación automática del backend.

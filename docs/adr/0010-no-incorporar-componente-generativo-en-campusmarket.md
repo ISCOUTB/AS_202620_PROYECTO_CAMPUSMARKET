@@ -1,6 +1,6 @@
 # ADR-0010 - No incorporar un componente generativo en CampusMarket por ahora
 
-**Estado:** Propuesto
+**Estado:** Aceptado
 **Fecha:** 2026-10-01
 **Relacionado con:** Evidencia S9 - Generación verificada y trazable
 

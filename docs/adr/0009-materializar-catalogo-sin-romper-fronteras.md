@@ -1,6 +1,6 @@
 # ADR-0009 - Materializar el catálogo sin romper las fronteras del monolito modular
 
-**Estado:** Propuesto
+**Estado:** Aceptado
 **Fecha:** 2026-10-01
 **Aspecto relacionado:** ASP-01 - Consulta y búsqueda de productos
 **Escenario principal:** EC-01 - Consulta de productos
