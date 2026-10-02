@@ -24,6 +24,7 @@ class CatalogoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final imagenPrincipal = publicacion.imagenPrincipal;
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -39,26 +40,18 @@ class CatalogoCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              height: 150,
+            SizedBox(
+              height: 180,
               width: double.infinity,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    colorScheme.primaryContainer,
-                    colorScheme.surfaceContainerHighest,
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-              child: Center(
-                child: Icon(
-                  Icons.shopping_bag_outlined,
-                  size: 58,
-                  color: colorScheme.primary,
-                ),
-              ),
+              child: imagenPrincipal == null
+                  ? _PlaceholderImagen(colorScheme: colorScheme)
+                  : Image.network(
+                      imagenPrincipal.imagenUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return _PlaceholderImagen(colorScheme: colorScheme);
+                      },
+                    ),
             ),
             Expanded(
               child: Padding(
@@ -122,6 +115,35 @@ class CatalogoCard extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PlaceholderImagen extends StatelessWidget {
+  const _PlaceholderImagen({required this.colorScheme});
+
+  final ColorScheme colorScheme;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            colorScheme.primaryContainer,
+            colorScheme.surfaceContainerHighest,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Center(
+        child: Icon(
+          Icons.shopping_bag_outlined,
+          size: 58,
+          color: colorScheme.primary,
         ),
       ),
     );
