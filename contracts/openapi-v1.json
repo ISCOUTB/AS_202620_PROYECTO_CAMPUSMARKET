@@ -86,6 +86,88 @@
         }
       }
     },
+    "/publicaciones/{publication_id}/imagenes": {
+      "post": {
+        "tags": [
+          "publicaciones"
+        ],
+        "summary": "Subir una imagen de una publicación",
+        "operationId": "subirImagenPublicacion",
+        "parameters": [
+          {
+            "name": "publication_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Publication Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_subirImagenPublicacion"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicacionImagen"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Imagen inválida o máximo alcanzado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Publicación no encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Persistencia temporalmente no disponible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/catalogo": {
       "get": {
         "tags": [
@@ -278,6 +360,20 @@
   },
   "components": {
     "schemas": {
+      "Body_subirImagenPublicacion": {
+        "properties": {
+          "archivo": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "Archivo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "archivo"
+        ],
+        "title": "Body_subirImagenPublicacion"
+      },
       "ErrorResponse": {
         "properties": {
           "detail": {
@@ -467,6 +563,39 @@
           "estado"
         ],
         "title": "PublicacionCreate"
+      },
+      "PublicacionImagen": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "publicacion_id": {
+            "type": "integer",
+            "title": "Publicacion Id"
+          },
+          "imagen_url": {
+            "type": "string",
+            "title": "Imagen Url"
+          },
+          "orden": {
+            "type": "integer",
+            "title": "Orden"
+          },
+          "es_principal": {
+            "type": "boolean",
+            "title": "Es Principal"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "publicacion_id",
+          "imagen_url",
+          "orden",
+          "es_principal"
+        ],
+        "title": "PublicacionImagen"
       },
       "ValidationError": {
         "properties": {

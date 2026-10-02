@@ -1,6 +1,7 @@
 from .repository import (
     PersistenceUnavailableError,
     create_publication,
+    list_publication_images,
     list_publications,
 )
 
@@ -20,6 +21,7 @@ def crear_publicacion(data: dict) -> dict:
 
     try:
         return create_publication(normalized)
+
     except PersistenceUnavailableError as error:
         raise PublicationPersistenceUnavailableError(
             "No es posible guardar la publicación temporalmente."
@@ -29,7 +31,24 @@ def crear_publicacion(data: dict) -> dict:
 def listar_publicaciones() -> list[dict]:
     try:
         return list_publications()
+
     except PersistenceUnavailableError as error:
         raise PublicationPersistenceUnavailableError(
             "No es posible consultar las publicaciones temporalmente."
         ) from error
+
+
+def listar_imagenes_publicacion(
+    publicacion_id: int,
+) -> list[dict]:
+    try:
+        return list_publication_images(
+            publicacion_id
+        )
+
+    except PersistenceUnavailableError as error:
+        raise PublicationPersistenceUnavailableError(
+            "No es posible consultar las imágenes "
+            "de la publicación temporalmente."
+        ) from error
+    

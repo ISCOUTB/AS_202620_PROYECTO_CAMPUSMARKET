@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 
@@ -9,6 +10,13 @@ class PublicacionTemporalmenteNoDisponible implements Exception {
 
   @override
   String toString() => mensaje;
+}
+
+class ImagenPublicacion {
+  const ImagenPublicacion({required this.nombre, required this.bytes});
+
+  final String nombre;
+  final Uint8List bytes;
 }
 
 class PublicacionesApi {
@@ -59,6 +67,67 @@ class PublicacionesApi {
     }
 
     return jsonDecode(response.body) as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> subirImagen({
+    required int publicacionId,
+    required ImagenPublicacion imagen,
+  }) async {
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse('$baseUrl/publicaciones/$publicacionId/imagenes'),
+    );
+
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        'archivo',
+        imagen.bytes,
+        filename: imagen.nombre,
+      ),
+    );
+
+    final streamedResponse = await request.send();
+
+    final response = await http.Response.fromStream(streamedResponse);
+
+    if (response.statusCode == 400) {
+      final body = jsonDecode(response.body);
+
+      throw Exception(
+        body is Map<String, dynamic>
+            ? body['detail']?.toString() ?? 'La imagen no es válida.'
+            : 'La imagen no es válida.',
+      );
+    }
+
+    if (response.statusCode == 404) {
+      throw Exception('La publicación no existe.');
+    }
+
+    if (response.statusCode == 503) {
+      throw const PublicacionTemporalmenteNoDisponible(
+        'La persistencia está temporalmente no disponible.',
+      );
+    }
+
+    if (response.statusCode != 201) {
+      throw Exception('No fue posible subir la imagen.');
+    }
+
+    return jsonDecode(response.body) as Map<String, dynamic>;
+  }
+
+  Future<void> subirImagenes({
+    required int publicacionId,
+    required List<ImagenPublicacion> imagenes,
+  }) async {
+    if (imagenes.length > 3) {
+      throw ArgumentError('Solo se permiten hasta 3 imágenes.');
+    }
+
+    for (final imagen in imagenes) {
+      await subirImagen(publicacionId: publicacionId, imagen: imagen);
+    }
   }
 
   Future<List<dynamic>> listarPublicaciones() async {

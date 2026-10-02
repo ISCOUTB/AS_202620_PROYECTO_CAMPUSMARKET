@@ -65,6 +65,27 @@ def initialize_database() -> None:
                 """
             )
 
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS publicacion_imagenes (
+                    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+                    publicacion_id BIGINT UNSIGNED NOT NULL,
+                    imagen_url VARCHAR(500) NOT NULL,
+                    orden TINYINT UNSIGNED NOT NULL,
+                    es_principal BOOLEAN NOT NULL DEFAULT FALSE,
+                    PRIMARY KEY (id),
+                    CONSTRAINT fk_publicacion_imagenes_publicacion
+                        FOREIGN KEY (publicacion_id)
+                        REFERENCES publicaciones(id)
+                        ON DELETE CASCADE,
+                    CONSTRAINT uq_publicacion_imagenes_orden
+                        UNIQUE (publicacion_id, orden),
+                    CONSTRAINT chk_publicacion_imagenes_orden
+                        CHECK (orden BETWEEN 1 AND 3)
+                )
+                """
+            )
+
         connection.commit()
 
     except pymysql.MySQLError as error:
@@ -182,6 +203,197 @@ def list_publications() -> list[dict]:
             connection.close()
 
 
+def publication_exists(publication_id: int) -> bool:
+    initialize_database()
+
+    connection = None
+
+    try:
+        connection = _connect()
+
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT 1
+                FROM publicaciones
+                WHERE id = %s
+                """,
+                (publication_id,),
+            )
+
+            return cursor.fetchone() is not None
+
+    except pymysql.MySQLError as error:
+        raise PersistenceUnavailableError(
+            "La persistencia está temporalmente no disponible."
+        ) from error
+
+    finally:
+        if connection:
+            connection.close()
+
+
+def list_publication_images(publication_id: int) -> list[dict]:
+    initialize_database()
+
+    connection = None
+
+    try:
+        connection = _connect()
+
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT
+                    id,
+                    publicacion_id,
+                    imagen_url,
+                    orden,
+                    es_principal
+                FROM publicacion_imagenes
+                WHERE publicacion_id = %s
+                ORDER BY orden ASC
+                """,
+                (publication_id,),
+            )
+
+            rows = cursor.fetchall()
+
+        return rows
+
+    except pymysql.MySQLError as error:
+        raise PersistenceUnavailableError(
+            "La persistencia está temporalmente no disponible."
+        ) from error
+
+    finally:
+        if connection:
+            connection.close()
+
+
+def count_publication_images(publication_id: int) -> int:
+    initialize_database()
+
+    connection = None
+
+    try:
+        connection = _connect()
+
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT COUNT(*) AS total
+                FROM publicacion_imagenes
+                WHERE publicacion_id = %s
+                """,
+                (publication_id,),
+            )
+
+            row = cursor.fetchone()
+
+        return int(row["total"])
+
+    except pymysql.MySQLError as error:
+        raise PersistenceUnavailableError(
+            "La persistencia está temporalmente no disponible."
+        ) from error
+
+    finally:
+        if connection:
+            connection.close()
+
+
+def create_publication_image(
+    publication_id: int,
+    imagen_url: str,
+) -> dict:
+    initialize_database()
+
+    connection = None
+
+    try:
+        connection = _connect()
+
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT COUNT(*) AS total
+                FROM publicacion_imagenes
+                WHERE publicacion_id = %s
+                """,
+                (publication_id,),
+            )
+
+            row = cursor.fetchone()
+            total = int(row["total"])
+
+            if total >= 3:
+                raise ValueError(
+                    "La publicación ya tiene el máximo de 3 imágenes."
+                )
+
+            orden = total + 1
+            es_principal = total == 0
+
+            cursor.execute(
+                """
+                INSERT INTO publicacion_imagenes (
+                    publicacion_id,
+                    imagen_url,
+                    orden,
+                    es_principal
+                )
+                VALUES (%s, %s, %s, %s)
+                """,
+                (
+                    publication_id,
+                    imagen_url,
+                    orden,
+                    es_principal,
+                ),
+            )
+
+            image_id = cursor.lastrowid
+
+            cursor.execute(
+                """
+                SELECT
+                    id,
+                    publicacion_id,
+                    imagen_url,
+                    orden,
+                    es_principal
+                FROM publicacion_imagenes
+                WHERE id = %s
+                """,
+                (image_id,),
+            )
+
+            image = cursor.fetchone()
+
+        connection.commit()
+
+        return image
+
+    except ValueError:
+        if connection:
+            connection.rollback()
+
+        raise
+
+    except pymysql.MySQLError as error:
+        if connection:
+            connection.rollback()
+
+        raise PersistenceUnavailableError(
+            "La persistencia está temporalmente no disponible."
+        ) from error
+
+    finally:
+        if connection:
+            connection.close()
+
+
 def database_is_available() -> bool:
     connection = None
 
@@ -198,3 +410,5 @@ def database_is_available() -> bool:
     finally:
         if connection:
             connection.close()
+
+            
