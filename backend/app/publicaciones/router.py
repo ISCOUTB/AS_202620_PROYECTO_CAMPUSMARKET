@@ -77,6 +77,10 @@ class PublicacionImagen(BaseModel):
     es_principal: bool
 
 
+class PublicacionGestion(Publicacion):
+    imagenes: list[PublicacionImagen] = Field(default_factory=list)
+
+
 class ErrorResponse(BaseModel):
     detail: str
 
@@ -126,7 +130,7 @@ def listar():
 
 @router.get(
     "/mias",
-    response_model=list[Publicacion],
+    response_model=list[PublicacionGestion],
     operation_id="listarMisPublicaciones",
     summary="Listar publicaciones de un propietario",
 )
