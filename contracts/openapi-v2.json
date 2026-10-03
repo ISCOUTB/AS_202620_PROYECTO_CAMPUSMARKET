@@ -1297,8 +1297,7 @@
                 "type": "null"
               }
             ],
-            "title": "Propietario Id",
-            "default": null
+            "title": "Propietario Id"
           },
           "estado_publicacion": {
             "type": "string",
