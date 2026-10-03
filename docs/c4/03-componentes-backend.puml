@@ -1,7 +1,7 @@
 @startuml
 
 title CampusMarket - C4 Nivel 3 · Componentes del Backend API
-caption Semana 7 · API-first, modularidad y persistencia MySQL · Equipo CampusMarket
+caption Estado vigente · monolito modular · Catálogo + Publicaciones
 
 left to right direction
 
@@ -9,124 +9,104 @@ skinparam shadowing false
 skinparam defaultTextAlignment center
 skinparam packageStyle rectangle
 
-rectangle "Frontend\n\nFlutter / Dart" as frontend
+rectangle "Frontend\n\nFlutter Web / Android" as frontend
 
 package "Backend API\nFastAPI / Python" {
 
-    rectangle "Entrada de aplicación\n\nmain.py\n\nConfigura FastAPI,\nCORS y registra\nlos routers disponibles" as main
+    rectangle "Entrada de aplicación\n\nmain.py\n\nConfigura FastAPI, CORS,\n/uploads y registra routers" as main
 
-    package "Contexto: Gestión de Publicaciones" {
-
-        rectangle "API de Publicaciones\n\nrouter.py\n\nExpone endpoints HTTP,\nvalida contratos de entrada\ny traduce errores a HTTP" as router
-
-        rectangle "Servicio de Publicaciones\n\nservice.py\n\nNormaliza datos,\ncoordina casos de uso\ny desacopla API de persistencia" as service
-
-        rectangle "Repositorio de Publicaciones\n\nrepository.py\n\nÚnico componente productivo\nque accede directamente\na la persistencia" as repository
+    package "Contexto: Catálogo" {
+        rectangle "API de Catálogo\n\nrouter.py\n\nBúsqueda, filtros y detalle" as catalog_router
+        rectangle "Servicio de Catálogo\n\nservice.py\n\nCompone resultados y consume\ncapacidades de lectura de Publicaciones" as catalog_service
     }
 
-    rectangle "Gestión de Usuarios\n\nLímite definido\nNo materializado actualmente" as usuarios
+    package "Contexto: Gestión de Publicaciones" {
+        rectangle "API de Publicaciones\n\nrouter.py\n\nCrear, listar propias, editar,\nestado, eliminar y subir imágenes" as pub_router
 
-    rectangle "Catálogo\n\nLímite definido\nNo materializado actualmente" as catalogo
+        rectangle "Servicio de Publicaciones\n\nservice.py\n\nCasos de uso y traducción\nde errores de persistencia" as pub_service
 
-    rectangle "Administración\n\nLímite definido\nNo materializado actualmente" as administracion
+        rectangle "Repositorio de Publicaciones\n\nrepository.py\n\nÚnico acceso productivo\na MySQL del contexto" as repository
+
+        rectangle "Almacenamiento de imágenes\n\nimage_storage.py\n\nValida, guarda y elimina archivos\nen desarrollo local" as image_storage
+    }
+
+    rectangle "Gestión de Usuarios\n\nLímite definido\nAutenticación real pendiente" as usuarios
+    rectangle "Administración\n\nLímite definido\nNo materializado completamente" as administracion
 }
 
-database "Persistencia\n\nMySQL\n\nBase: campusmarket\nTabla: publicaciones" as mysql
+database "MySQL\n\npublicaciones\npublicacion_imagenes" as mysql
+folder "backend/uploads/\n\narchivos de imágenes\nsolo desarrollo local" as uploads
 
-frontend --> router : GET /publicaciones\nPOST /publicaciones\n[HTTP / JSON síncrono]
+frontend --> catalog_router : GET /catalogo\nGET /catalogo/{id}\n[HTTP/JSON]
+frontend --> pub_router : Publicaciones + imágenes\n[HTTP/JSON + multipart]
 
-main --> router : Registra router
+main --> catalog_router : registra router
+main --> pub_router : registra router
 
-router --> service : crear_publicacion()\nlistar_publicaciones()
+catalog_router --> catalog_service : buscar / obtener detalle
+catalog_service --> pub_service : capacidades de lectura
 
-service --> repository : create_publication()\nlist_publications()
+pub_router --> pub_service : casos de uso de publicaciones
+pub_service --> repository : persistencia del dominio
+repository --> mysql : SQL\n[PyMySQL]
 
-repository --> mysql : CREATE TABLE / INSERT / SELECT\n[PyMySQL / SQL]
+pub_router --> image_storage : validar/guardar archivo
+image_storage --> uploads : filesystem local
+pub_service --> repository : registrar metadatos de imagen
 
-usuarios -[hidden]-> router
-catalogo -[hidden]-> service
+usuarios -[hidden]-> pub_router
 administracion -[hidden]-> repository
 
-note right of router
-**CONTRATO DE API**
+note right of catalog_service
+**FRONTERA S9**
 
-Los endpoints HTTP/JSON
-constituyen el contrato entre
-Frontend y Backend.
+Catálogo NO importa repository.py,
+NO usa PyMySQL y NO escribe
+publicaciones directamente.
 
-El contrato está documentado
-mediante OpenAPI.
-end note
-
-note right of usuarios
-**Estado actual**
-
-El contexto está delimitado,
-pero su funcionalidad todavía
-no está materializada.
-end note
-
-note right of catalogo
-**Regla de propiedad**
-
-Catálogo podrá consultar
-información de Publicaciones
-mediante contratos definidos,
-pero no escribir directamente
-la tabla publicaciones.
-end note
-
-note right of administracion
-**Regla de comunicación**
-
-Administración deberá solicitar
-operaciones mediante interfaces
-del contexto Publicaciones,
-sin acceder directamente
-a su persistencia.
+La regla se verifica mediante
+pruebas de modularidad y erosión.
 end note
 
 note bottom of repository
 **PROPIEDAD DE DATOS**
 
-Gestión de Publicaciones es el
-único dueño de escritura de:
+Gestión de Publicaciones mantiene
+la escritura de:
 
-- publicaciones.id
-- publicaciones.titulo
-- publicaciones.descripcion
-- publicaciones.precio
-- publicaciones.modalidad
-- publicaciones.estado
+- publicaciones
+- publicacion_imagenes
 
-La persistencia productiva está
-encapsulada en repository.py.
-
-El acceso a MySQL se realiza
-mediante PyMySQL.
+El acceso relacional productivo
+queda encapsulado aquí.
 end note
 
-note bottom of mysql
-**PERSISTENCIA ACTUAL**
+note right of image_storage
+**ADR-0011**
 
-MySQL reemplaza a SQLite
-como tecnología de persistencia
-vigente del sistema.
+El filesystem local es una solución
+de desarrollo/verificación.
+No se considera almacenamiento
+durable de producción en Azure.
+end note
 
-SQLite queda únicamente como
-evidencia histórica del Corte 1.
+note right of usuarios
+**LIMITACIÓN VIGENTE**
+
+propietario_id = 1 es un mecanismo
+temporal del prototipo.
+No equivale a autenticación real.
 end note
 
 legend bottom
 |= Elemento |= Significado |
-| Backend API | Contenedor ampliado en este C4 Nivel 3 |
-| Gestión de Publicaciones | Contexto actualmente materializado |
-| API / Servicio / Repositorio | Componentes internos verificables en código |
-| Usuarios / Catálogo / Administración | Límites definidos aún no materializados |
-| MySQL | Persistencia vigente de CampusMarket |
-| HTTP / JSON | Integración síncrona Frontend → Backend |
-| OpenAPI | Contrato documentado de la API |
-| Flecha | Dependencia o comunicación observable |
+| Backend API | Contenedor ampliado |
+| Catálogo | Contexto materializado de lectura |
+| Publicaciones | Contexto dueño de escritura |
+| Repository | Acceso productivo a MySQL |
+| image_storage | Gestión física local de imágenes |
+| MySQL | Persistencia relacional vigente |
+| Usuarios / Administración | Límites no materializados completamente |
 endlegend
 
 @enduml
