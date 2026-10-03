@@ -1,23 +1,21 @@
-from typing import Literal
+from typing import Annotated, Literal
 
 from fastapi import (
     APIRouter,
     File,
     HTTPException,
     Response,
-    UploadFile,
     status,
+    UploadFile,
 )
 from pydantic import BaseModel, Field
 
 from .image_storage import (
-    InvalidImageError,
     delete_publication_image,
+    InvalidImageError,
     save_publication_image,
 )
 from .service import (
-    PublicationNotFoundError,
-    PublicationPersistenceUnavailableError,
     cambiar_estado_publicacion,
     crear_publicacion,
     editar_publicacion,
@@ -26,9 +24,10 @@ from .service import (
     listar_imagenes_publicacion,
     listar_publicaciones,
     listar_publicaciones_propietario,
+    PublicationNotFoundError,
+    PublicationPersistenceUnavailableError,
     registrar_imagen_publicacion,
 )
-
 
 router = APIRouter(
     prefix="/publicaciones",
@@ -265,7 +264,7 @@ def eliminar(publication_id: int, propietario_id: int = 1):
 )
 async def subir_imagen(
     publication_id: int,
-    archivo: UploadFile = File(...),
+    archivo: Annotated[UploadFile, File()],
 ):
     imagen_url: str | None = None
 
