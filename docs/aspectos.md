@@ -1,4 +1,4 @@
-﻿# Aspectos del proyecto - CampusMarket
+# Aspectos del proyecto - CampusMarket
 
 Este documento mantiene la trazabilidad de los aspectos de CampusMarket desde
 los requisitos y decisiones arquitectónicas hasta su implementación y evidencia
@@ -27,31 +27,43 @@ La evolución de persistencia se registra mediante:
 | ID | Aspecto | Requisito | C4 | ADR | Código | Pruebas | Evidencia |
 |---|---|---|---|---|---|---|---|
 | ASP-01 | Consulta y búsqueda de productos | [EC-01 - Consulta de productos](./arc42/10-escenarios-de-calidad.md#ec-01---consulta-de-productos) | [C4 Nivel 2](./c4/02-contenedores.md) / [C4 Nivel 3](./c4/03-componentes-backend.md) | [ADR-0009 - Materializar catálogo sin romper fronteras](./adr/0009-materializar-catalogo-sin-romper-fronteras.md) | [`backend/app/catalogo/`](../backend/app/catalogo/) | [`test_catalogo.py`](../backend/tests/test_catalogo.py) / [`test_ec01_catalogo.py`](../backend/tests/test_ec01_catalogo.py) / [`test_erosion_s9.py`](../backend/tests/test_erosion_s9.py) | [Evidencia EC-01 S9](./evidencias/evidencia-ec01-catalogo-s9-2026-10-01.md) / [Evidencia S9](./evidencias/evidencia-s9-2026-10-01.md) |
-| ASP-02 | Gestión segura de publicaciones | [EC-02 - Protección de publicaciones](./arc42/10-escenarios-de-calidad.md#ec-02---protección-de-publicaciones) | [C4 Nivel 1](./c4/01-contexto.md) | Sin ADR específico: escenario aún no materializado | No materializado completamente | Sin prueba específica de EC-02 | Relacionado con Usuarios, Publicaciones y Administración |
+| ASP-02 | Gestión segura de publicaciones | [EC-02 - Protección de publicaciones](./arc42/10-escenarios-de-calidad.md#ec-02---protección-de-publicaciones) | [C4 Nivel 1](./c4/01-contexto.md) / [C4 Nivel 3](./c4/03-componentes-backend.md) | Sin ADR específico: la protección por propietario está parcialmente materializada | [`backend/app/publicaciones/`](../backend/app/publicaciones/) | [`test_gestion_publicaciones.py`](../backend/tests/test_gestion_publicaciones.py) | Protección por `propietario_id` en backend; autenticación real aún pendiente |
 | ASP-03 | Evolución de la gestión de productos | [EC-03 - Modificación del sistema](./arc42/10-escenarios-de-calidad.md#ec-03---modificación-del-sistema) | [C4 Nivel 2](./c4/02-contenedores.md) / [C4 Nivel 3](./c4/03-componentes-backend.md) | [ADR-0001 - Monolito modular](./adr/0001-usar-monolito-modular.md) | [`backend/app/publicaciones/`](../backend/app/publicaciones/) | [`test_publicaciones_vertical.py`](../backend/tests/test_publicaciones_vertical.py) | Evidencia S3/S4 y profundización modular S6 |
 | ASP-04 | Recuperación del prototipo | [EC-04 - Recuperación del prototipo](./arc42/10-escenarios-de-calidad.md#ec-04---recuperación-del-prototipo) | [C4 Nivel 1](./c4/01-contexto.md) | [ADR-0001](./adr/0001-usar-monolito-modular.md) | [`scripts/run_s4.ps1`](../scripts/run_s4.ps1) | [`test_health.py`](../backend/tests/test_health.py) | [Evidencia de arranque](./evidencias/arranque-un-comando-2026-09-04.md) |
-| ASP-05 | Creación de publicaciones | [Alcance funcional](./arc42/ARC42.md#32-alcance-funcional) | [C4 Nivel 2](./c4/02-contenedores.md) / [C4 Nivel 3](./c4/03-componentes-backend.md) | [ADR-0001](./adr/0001-usar-monolito-modular.md) / [ADR-0004](./adr/0004-migrar-persistencia-a-mysql.md) | [`router.py`](../backend/app/publicaciones/router.py), [`service.py`](../backend/app/publicaciones/service.py), [`repository.py`](../backend/app/publicaciones/repository.py) | [`test_publicaciones_vertical.py`](../backend/tests/test_publicaciones_vertical.py) | Corte vertical vigente con MySQL |
+| ASP-05 | Creación y gestión de publicaciones | [Alcance funcional](./arc42/ARC42.md#32-alcance-funcional) | [C4 Nivel 2](./c4/02-contenedores.md) / [C4 Nivel 3](./c4/03-componentes-backend.md) | [ADR-0001](./adr/0001-usar-monolito-modular.md) / [ADR-0004](./adr/0004-migrar-persistencia-a-mysql.md) | [`router.py`](../backend/app/publicaciones/router.py), [`service.py`](../backend/app/publicaciones/service.py), [`repository.py`](../backend/app/publicaciones/repository.py) | [`test_publicaciones_vertical.py`](../backend/tests/test_publicaciones_vertical.py) / [`test_gestion_publicaciones.py`](../backend/tests/test_gestion_publicaciones.py) | Corte vertical vigente con MySQL; listar, editar, estado y eliminar publicaciones propias |
 | ASP-06 | Degradación controlada de persistencia | [EC-05](./arc42/10-escenarios-de-calidad.md#ec-05---degradación-ante-bloqueo-temporal-de-persistencia) | [C4 Nivel 2](./c4/02-contenedores.md) / [Vista de ejecución](./arc42/06-vista-ejecucion.md) | [ADR-0002](./adr/0002-manejo-bloqueo-sqlite.md) histórico / [ADR-0004](./adr/0004-migrar-persistencia-a-mysql.md) vigente | [`repository.py`](../backend/app/publicaciones/repository.py), [`service.py`](../backend/app/publicaciones/service.py), [`router.py`](../backend/app/publicaciones/router.py) | [`test_publicaciones_vertical.py`](../backend/tests/test_publicaciones_vertical.py) | Evidencia histórica SQLite + verificación vigente MySQL |
 | ASP-07 | Contrato ejecutable de API | [EC-06 - Compatibilidad del contrato](./arc42/10-escenarios-de-calidad.md#ec-06---compatibilidad-del-contrato-de-api) | [C4 Nivel 2](./c4/02-contenedores.md) / [Vista de ejecución](./arc42/06-vista-ejecucion.md) | [ADR-0003](./adr/0003-usar-integracion-sincrona-http-json.md) | [`openapi-v1.json`](../contracts/openapi-v1.json), [`main.py`](../backend/app/main.py), [`router.py`](../backend/app/publicaciones/router.py) | [`test_contrato_openapi.py`](../backend/tests/test_contrato_openapi.py) / [`backend-tests.yml`](../.github/workflows/backend-tests.yml) | [Evidencia S7](./evidencias/evidencia-s7-2026-09-15.md) / [Fallo incompatible](./evidencias/fallo-contrato-s7-2026-09-15.md) / [Run #93 verde](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/35115585642) / [Run rojo](https://github.com/Nnigarp/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/34934077733) |
 | ASP-08 | Migración de persistencia a MySQL | Observación docente sobre persistencia vigente | [C4 Nivel 2](./c4/02-contenedores.md) / [C4 Nivel 3](./c4/03-componentes-backend.md) | [ADR-0004 - Migrar persistencia a MySQL](./adr/0004-migrar-persistencia-a-mysql.md) | [`repository.py`](../backend/app/publicaciones/repository.py), [`requirements.txt`](../backend/requirements.txt), [`.gitignore`](../.gitignore) | [`test_publicaciones_vertical.py`](../backend/tests/test_publicaciones_vertical.py), [`test_modularidad_s6.py`](../backend/tests/test_modularidad_s6.py) | Implementación vigente MySQL/PyMySQL |
+| ASP-09 | Imágenes de publicaciones | Experiencia visual del marketplace y gestión de recursos de una publicación | [C4 Nivel 2](./c4/02-contenedores.md) / [C4 Nivel 3](./c4/03-componentes-backend.md) | [ADR-0011 - Gestionar imágenes de publicaciones](./adr/0011-gestionar-imagenes-de-publicaciones.md) | [`image_storage.py`](../backend/app/publicaciones/image_storage.py), [`router.py`](../backend/app/publicaciones/router.py), [`service.py`](../backend/app/publicaciones/service.py), [`repository.py`](../backend/app/publicaciones/repository.py) | [`test_gestion_publicaciones.py`](../backend/tests/test_gestion_publicaciones.py) / [`test_catalogo.py`](../backend/tests/test_catalogo.py) / [`test_contrato_openapi.py`](../backend/tests/test_contrato_openapi.py) | Verificación funcional local y Android; contrato y suite backend en verde |
 
 ---
 
 ## Alcance de materialización
 
-Los aspectos **ASP-01** y **ASP-02** continúan definidos arquitectónicamente,
-pero todavía no cuentan con una materialización funcional completa.
+El aspecto **ASP-01 - Consulta y búsqueda de productos** se encuentra
+materializado y verificado desde S9 mediante el contexto `catalogo`, ADR-0009,
+pruebas funcionales, reglas automáticas de erosión arquitectónica y la medición
+de EC-01.
 
-No se asocian pruebas artificialmente a escenarios que aún no están
-implementados.
+El aspecto **ASP-02 - Gestión segura de publicaciones** se encuentra
+**parcialmente materializado**. El backend ya restringe edición, cambio de estado
+y eliminación mediante `propietario_id`, pero CampusMarket todavía no dispone de
+autenticación real de usuarios. Por esa razón no se declara EC-02 como
+completamente satisfecho.
+
+No se asocian pruebas artificialmente a capacidades que aún no están
+implementadas.
 
 La materialización vigente se concentra principalmente en:
 
 - Gestión de Publicaciones;
+- creación, edición, cambio de estado y eliminación de publicaciones;
+- hasta tres imágenes por publicación;
+- Catálogo con búsqueda, filtros y detalle;
 - integración Flutter → FastAPI;
 - persistencia MySQL;
 - contrato OpenAPI;
-- modularidad;
+- modularidad y propiedad única de datos;
 - degradación controlada ante indisponibilidad.
 
 ---
@@ -192,7 +204,7 @@ Los contextos definidos son:
 | ------------------------ | ------------------------------ | ----------------------------------------------- |
 | Gestión de Usuarios      | Identidad y autenticación      | Límite definido, no materializado completamente |
 | Gestión de Publicaciones | Ciclo de vida de publicaciones | Materializado                                   |
-| Catálogo                 | Consulta, búsqueda y filtrado  | Límite definido                                 |
+| Catálogo                 | Consulta, búsqueda y filtrado  | Materializado                                   |
 | Administración           | Moderación y supervisión       | Límite definido                                 |
 
 ---
@@ -203,7 +215,7 @@ CampusMarket adopta la regla:
 
 > Cada dato de dominio tiene un único módulo responsable de escribirlo.
 
-La entidad materializada es:
+La entidad materializada principal es:
 
 `publicaciones`
 
@@ -220,15 +232,21 @@ La correspondencia vigente es:
 | Dato / entidad  | Contexto propietario     | Componente escritor                       | Otros contextos con escritura |
 | --------------- | ------------------------ | ----------------------------------------- | ----------------------------- |
 | `publicaciones` | Gestión de Publicaciones | `backend/app/publicaciones/repository.py` | Ninguno                       |
+| `publicacion_imagenes` | Gestión de Publicaciones | `backend/app/publicaciones/repository.py` | Ninguno                  |
 
-Los campos persistidos son:
+Los campos principales de `publicaciones` incluyen actualmente:
 
 * `id`;
 * `titulo`;
 * `descripcion`;
 * `precio`;
 * `modalidad`;
-* `estado`.
+* `estado`;
+* `propietario_id`;
+* `estado_publicacion`.
+
+Las imágenes se modelan por separado mediante `publicacion_imagenes`, de acuerdo
+con ADR-0011.
 
 ---
 
@@ -252,7 +270,8 @@ El resultado fue:
 
 **No se detectaron escrituras compartidas entre módulos de dominio.**
 
-La evolución posterior hacia MySQL mantiene la misma regla arquitectónica.
+La evolución posterior hacia MySQL, Catálogo e imágenes mantiene la misma regla
+arquitectónica.
 
 ---
 
@@ -262,7 +281,7 @@ La evolución posterior hacia MySQL mantiene la misma regla arquitectónica.
 | ------ | --------------------------------------------------------------- | -------------------------------------------------------- |
 | MOD-01 | Catálogo podría acceder directamente a la tabla `publicaciones` | Consumir capacidades de Publicaciones mediante contratos |
 | MOD-02 | Administración podría modificar directamente `publicaciones`    | Solicitar operaciones mediante Gestión de Publicaciones  |
-| MOD-03 | Propietario de publicación aún no materializado                 | Mantener Usuarios como dueño de identidad                |
+| MOD-03 | Identidad autenticada del propietario aún no materializada      | Mantener Usuarios como dueño de identidad; no presentar `propietario_id=1` como autenticación |
 | MOD-04 | Tests o scripts podrían acoplarse al motor de persistencia      | Mantener esos accesos fuera del código productivo        |
 
 ---
@@ -272,15 +291,18 @@ La evolución posterior hacia MySQL mantiene la misma regla arquitectónica.
 La materialización actual sigue:
 
 ```text
-Frontend Web
-     ↓
-API de Publicaciones
-     ↓
-Servicio de Publicaciones
-     ↓
-Repositorio de Publicaciones
-     ↓
-MySQL
+Flutter
+     ↓ HTTP/JSON
+FastAPI
+     ├── Catálogo
+     │      ↓ capacidad de lectura
+     └── Publicaciones
+              ↓
+          Servicio de Publicaciones
+              ↓
+          Repositorio de Publicaciones
+              ↓
+             MySQL
 ```
 
 Correspondencia:
@@ -288,6 +310,8 @@ Correspondencia:
 | Elemento C4 Nivel 3          | Código                                    |
 | ---------------------------- | ----------------------------------------- |
 | Entrada de aplicación        | `backend/app/main.py`                     |
+| API de Catálogo              | `backend/app/catalogo/router.py`          |
+| Servicio de Catálogo         | `backend/app/catalogo/service.py`         |
 | API de Publicaciones         | `backend/app/publicaciones/router.py`     |
 | Servicio de Publicaciones    | `backend/app/publicaciones/service.py`    |
 | Repositorio de Publicaciones | `backend/app/publicaciones/repository.py` |
@@ -304,14 +328,16 @@ La prueba:
 verifica actualmente que:
 
 * `repository.py` sea el único escritor productivo de `publicaciones`;
-* otros contextos no utilicen directamente PyMySQL para escribir
-  `publicaciones`;
+* otros contextos no utilicen directamente PyMySQL;
 * otros contextos no importen el repositorio de Publicaciones;
 * la dirección se mantenga:
 
 ```text
 router → service → repository → MySQL
 ```
+
+S9 añade además reglas explícitas de erosión para impedir que `catalogo`
+atraviese directamente la frontera de persistencia.
 
 ---
 
@@ -340,13 +366,18 @@ OpenAPI 3.1.0
 API 1.0.0
 ```
 
-Los endpoints actualmente materializados son:
+Durante S7, la superficie materializada utilizada para formalizar el contrato
+incluía:
 
 ```text
 POST /publicaciones
 GET  /publicaciones
 GET  /health
 ```
+
+La superficie vigente ha evolucionado posteriormente e incluye también Catálogo,
+gestión de publicaciones propias e imágenes; `contracts/openapi-v1.json` se
+mantiene sincronizado con FastAPI mediante `test_contrato_openapi.py`.
 
 La decisión arquitectónica asociada se registra mediante:
 
@@ -713,27 +744,32 @@ test_publicaciones_vertical.py
 El recorrido actual del sistema es:
 
 ```text
-Flutter Web
+Flutter
     ↓ HTTP/JSON síncrono
     ↓ OpenAPI
 FastAPI
-    ↓
-router.py
-    ↓
-service.py
-    ↓
-repository.py
-    ↓ PyMySQL / SQL
-MySQL
+    ├── Catálogo
+    │      ↓ capacidad explícita de lectura
+    └── Publicaciones
+              ↓
+           service.py
+              ↓
+           repository.py
+              ↓ PyMySQL / SQL
+             MySQL
 ```
 
-Las principales decisiones vigentes son:
+Las principales decisiones vigentes incluyen:
 
 * ADR-0001: monolito modular;
 * ADR-0003: integración síncrona HTTP/JSON;
-* ADR-0004: persistencia MySQL.
+* ADR-0004: persistencia MySQL;
+* ADR-0009: materializar Catálogo sin romper fronteras;
+* ADR-0011: gestionar imágenes de publicaciones.
 
 ADR-0002 permanece como evidencia histórica del primer corte.
+ADR-0010 conserva la decisión S9 de no incorporar un componente generativo al
+producto.
 
 ---
 
@@ -759,23 +795,28 @@ Pruebas
 Evidencia
 ```
 
-Para Gestión de Publicaciones:
+Para Gestión de Publicaciones y Catálogo:
 
 ```text
-ASP-03 / ASP-05 / ASP-06 / ASP-07 / ASP-08
+ASP-01 / ASP-02 / ASP-03 / ASP-05 / ASP-06 / ASP-07 / ASP-08 / ASP-09
         ↓
-Gestión de Publicaciones
+Catálogo + Gestión de Publicaciones
         ↓
-Dueño de publicaciones
+Publicaciones como dueño de escritura
         ↓
 C4 Nivel 3
+        ↓
+Catálogo → servicio de Publicaciones
         ↓
 router.py → service.py → repository.py
         ↓
 OpenAPI + MySQL
         ↓
+test_catalogo.py
+test_erosion_s9.py
 test_modularidad_s6.py
 test_publicaciones_vertical.py
+test_gestion_publicaciones.py
 test_contrato_openapi.py
 ```
 
