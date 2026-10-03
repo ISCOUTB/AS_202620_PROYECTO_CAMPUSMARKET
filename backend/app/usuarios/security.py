@@ -3,12 +3,12 @@
 import hashlib
 import hmac
 import secrets
+
 from backend.app.resource_limits import HEAVY_WORK_SLOT
 
 SCRYPT_N = 2**17
 SCRYPT_R = 8
 SCRYPT_P = 1
-
 
 
 def _derive(password: str, salt: bytes) -> bytes:

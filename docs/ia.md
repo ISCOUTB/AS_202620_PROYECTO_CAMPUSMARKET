@@ -406,3 +406,7 @@ por tabla y de imports. No se alteraron ADR aceptados.
   secuencia DDL/DML sin coordinación entre inicializadores.
 - **Verificación pendiente:** pruebas con MySQL, OpenAPI y cuatro mutaciones
   nuevas; medición posterior del Compose bajo los límites reales.
+
+- **Corregido:** Ruff detectó una separación faltante entre imports estándar y
+  del proyecto en security.py al compartir la guardia. Se aplica su corrección;
+  se conservan las reglas y la ejecución de todas las pruebas.
