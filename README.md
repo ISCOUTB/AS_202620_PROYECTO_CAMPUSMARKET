@@ -10,6 +10,43 @@ Marketplace universitario para publicar, consultar, vender y alquilar productos 
 
 ---
 
+# Evolución y evidencias del proyecto
+
+El README funciona como **puerta de entrada al estado vigente**. La evolución semanal no se repite completa aquí: se conserva mediante enlaces navegables a las decisiones, modelos, código, pruebas y evidencias que se fueron acumulando.
+
+| Semana | Evolución principal | Evidencia / punto de entrada |
+|---|---|---|
+| **S1** | Problema, interesados, objetivos y trazabilidad inicial | [`docs/aspectos.md`](docs/aspectos.md), [`docs/ia.md`](docs/ia.md) |
+| **S2** | Restricciones, escenarios de calidad, árbol de utilidad y C4 nivel 1 | [`docs/arc42/02-restricciones.md`](docs/arc42/02-restricciones.md), [`docs/arc42/10-escenarios-de-calidad.md`](docs/arc42/10-escenarios-de-calidad.md), [`docs/arc42/10-arbol-de-utilidad.md`](docs/arc42/10-arbol-de-utilidad.md), [`docs/c4/01-contexto.md`](docs/c4/01-contexto.md) |
+| **S3** | Decisión del monolito modular y estrategia de solución | [`docs/adr/0001-usar-monolito-modular.md`](docs/adr/0001-usar-monolito-modular.md), [`docs/arc42/04-estrategia-de-solucion.md`](docs/arc42/04-estrategia-de-solucion.md) |
+| **S4** | Corte vertical ejecutable Flutter → FastAPI → persistencia y CI | [`frontend/campusmarket/`](frontend/campusmarket/), [`backend/`](backend/), [`.github/workflows/backend-tests.yml`](.github/workflows/backend-tests.yml) |
+| **S5** | Primera evaluación arquitectónica y evolución de persistencia hacia MySQL | [`docs/adr/0004-migrar-persistencia-a-mysql.md`](docs/adr/0004-migrar-persistencia-a-mysql.md), [`docs/arc42/09-decisiones.md`](docs/arc42/09-decisiones.md) |
+| **S6** | Modularidad explícita, propiedad de datos y C4 nivel 3 | [`docs/evidencias/auditoria-modularidad-s6-2026-09-12.md`](docs/evidencias/auditoria-modularidad-s6-2026-09-12.md), [`docs/c4/03-componentes-backend.md`](docs/c4/03-componentes-backend.md), [`backend/tests/test_modularidad_s6.py`](backend/tests/test_modularidad_s6.py) |
+| **S7** | Interfaces y contratos OpenAPI ejecutables | [`docs/evidencias/evidencia-s7-2026-09-15.md`](docs/evidencias/evidencia-s7-2026-09-15.md), [`contracts/openapi-v1.json`](contracts/openapi-v1.json), [`backend/tests/test_contrato_openapi.py`](backend/tests/test_contrato_openapi.py) |
+| **S8** | Despliegue, operación, health check e infraestructura como código | [`docs/evidencias/evidencia-s8-2026-09-27.md`](docs/evidencias/evidencia-s8-2026-09-27.md), [`docs/arc42/07-vista-despliegue.md`](docs/arc42/07-vista-despliegue.md), [`infra/main.bicep`](infra/main.bicep) |
+| **S9** | Catálogo materializado, verificación con IA, medición EC-01 y auditoría de erosión/dependencias | [`docs/evidencias/evidencia-s9-2026-10-01.md`](docs/evidencias/evidencia-s9-2026-10-01.md), [`docs/evidencias/evidencia-ec01-catalogo-s9-2026-10-01.md`](docs/evidencias/evidencia-ec01-catalogo-s9-2026-10-01.md), [`docs/evidencias/auditoria-s9-dependencias-secretos-2026-10-01.md`](docs/evidencias/auditoria-s9-dependencias-secretos-2026-10-01.md) |
+| **Evolución posterior a S9** | Marketplace responsive, gestión de publicaciones propias e imágenes | [`docs/adr/0011-gestionar-imagenes-de-publicaciones.md`](docs/adr/0011-gestionar-imagenes-de-publicaciones.md), [`docs/aspectos.md`](docs/aspectos.md), [`backend/tests/test_gestion_publicaciones.py`](backend/tests/test_gestion_publicaciones.py) |
+
+Para una revisión automática o manual, la ruta recomendada es:
+
+```text
+README
+  ↓
+docs/aspectos.md
+  ↓
+escenario de calidad / C4 / ADR
+  ↓
+código
+  ↓
+prueba ejecutable
+  ↓
+medición o evidencia
+```
+
+Así se conserva la historia del proyecto sin duplicar en el README el contenido completo de cada evidencia semanal.
+
+---
+
 # Estado arquitectónico vigente
 
 CampusMarket utiliza un **monolito modular** en el backend.
@@ -176,9 +213,9 @@ GET    /catalogo/{publication_id}
 
 ---
 
-# Verificación local vigente
+# Verificación vigente al cierre del PR #47
 
-El 3 de octubre de 2026 se verificó sobre la rama `producto-marketplace-ui`:
+La verificación local previa a integración del 3 de octubre de 2026 terminó con:
 
 ```text
 python -m pytest backend/tests -q
@@ -194,7 +231,9 @@ git diff --check
 sin errores
 ```
 
-Los dos warnings corresponden a deprecaciones de dependencias y no a fallos funcionales de la suite.
+El PR #47 (`Producto Marketplace UI - catálogo, gestión e imágenes`) fue integrado a `master` después de que GitHub Actions y SonarQube Cloud finalizaran en verde. El merge quedó registrado en el commit `cd7e029ded6ad33bfff0ff33557bf8efbd34f50f`.
+
+Los dos warnings locales corresponden a deprecaciones de dependencias y no a fallos funcionales de la suite.
 
 ---
 
@@ -324,7 +363,7 @@ Infraestructura como código:
 
 La plantilla declara App Service, Azure Database for MySQL Flexible Server y configuración dependiente del entorno. Las credenciales sensibles se suministran mediante configuración externa y parámetros seguros.
 
-> Las URLs anteriores corresponden al despliegue verificado en S8. Las capacidades añadidas posteriormente en `producto-marketplace-ui` no deben considerarse desplegadas públicamente hasta realizar un nuevo despliegue y verificar el mismo hash.
+> Las URLs anteriores corresponden al despliegue verificado en S8. Las capacidades añadidas posteriormente y ya integradas en `master` no deben considerarse desplegadas públicamente hasta realizar un nuevo despliegue y verificar el mismo hash.
 
 ---
 
@@ -348,64 +387,3 @@ Puntos de entrada principales:
 - [C4 Nivel 3](docs/c4/03-componentes-backend.md)
 - [Aspectos y trazabilidad](docs/aspectos.md)
 - [Uso de IA](docs/ia.md)
-- [ADRs](docs/adr/)
-- [Evidencias](docs/evidencias/)
-
-Decisiones relevantes del estado actual:
-
-- ADR-0001 — monolito modular;
-- ADR-0003 — integración síncrona HTTP/JSON;
-- ADR-0004 — migración a MySQL;
-- ADR-0009 — materialización de Catálogo;
-- ADR-0010 — no incorporar un componente generativo al producto;
-- ADR-0011 — gestión de imágenes de publicaciones.
-
-Los ADR históricos se conservan como registro de decisiones tomadas en su momento y no se reescriben para hacerlos coincidir artificialmente con estados posteriores.
-
----
-
-# Uso responsable de IA
-
-El proyecto registra el apoyo de IA en:
-
-- [`docs/ia.md`](docs/ia.md)
-
-La regla aplicada es:
-
-```text
-Generar ≠ verificar
-```
-
-Los cambios asistidos por IA deben entenderse, revisarse y verificarse mediante código ejecutable, pruebas, mediciones o evidencia reproducible antes de incorporarse.
-
-Durante S9 se documentaron además:
-
-- propuestas aceptadas;
-- propuestas corregidas;
-- propuestas rechazadas con motivo técnico;
-- prueba que falla ante una mutación controlada;
-- auditoría de erosión arquitectónica;
-- auditoría de dependencias;
-- auditoría de secretos;
-- decisión explícita de no incorporar un componente generativo dentro de CampusMarket.
-
----
-
-# Estado antes del cierre final de la rama
-
-Estado verificado localmente:
-
-```text
-Backend       36 passed
-OpenAPI        3 passed
-Flutter        No issues found
-Diff check     limpio
-```
-
-Antes de integrar la rama todavía corresponde:
-
-1. completar auditoría documental final;
-2. verificar secretos y referencias rotas;
-3. desplegar el mismo hash si se exige evidencia pública de estas capacidades;
-4. ejecutar CI sobre el hash definitivo;
-5. asociar el run final al PR de integración.
