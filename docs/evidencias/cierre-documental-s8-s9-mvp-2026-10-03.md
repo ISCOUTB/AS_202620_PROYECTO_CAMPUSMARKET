@@ -1,8 +1,8 @@
 # Cierre documental S8, S9 y MVP — CampusMarket
 
-**Fecha:** 2026-10-03  
-**Base auditada:** `master` oficial  
-**Commit oficial de referencia:** `acf757bf56812bee07fa0215fb828e0fa0055d6b`  
+**Fecha:** 2026-10-03
+**Base auditada:** `master` oficial
+**Commit oficial de referencia:** `acf757bf56812bee07fa0215fb828e0fa0055d6b`
 **PR de integración del MVP:** `#49 - Mvp autenticacion producto`
 
 ---
