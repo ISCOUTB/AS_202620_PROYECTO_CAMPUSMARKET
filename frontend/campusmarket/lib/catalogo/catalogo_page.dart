@@ -654,17 +654,17 @@ class _ResultadosCatalogo extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         var columnas = 1;
-        var proporcion = 0.88;
+        var proporcion = 0.66;
 
         if (constraints.maxWidth >= 1050) {
           columnas = 4;
           proporcion = 0.72;
         } else if (constraints.maxWidth >= 930) {
           columnas = 3;
-          proporcion = 0.78;
+          proporcion = 0.74;
         } else if (constraints.maxWidth >= 560) {
           columnas = 2;
-          proporcion = 0.88;
+          proporcion = 0.72;
         }
 
         return Column(
