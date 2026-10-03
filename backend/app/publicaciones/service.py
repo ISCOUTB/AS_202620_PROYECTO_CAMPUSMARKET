@@ -63,7 +63,14 @@ def listar_publicaciones_propietario(
     propietario_id: int,
 ) -> list[dict]:
     try:
-        return list_publications_by_owner(propietario_id)
+        publicaciones = list_publications_by_owner(propietario_id)
+        return [
+            {
+                **publicacion,
+                "imagenes": list_publication_images(publicacion["id"]),
+            }
+            for publicacion in publicaciones
+        ]
     except PersistenceUnavailableError as error:
         raise PublicationPersistenceUnavailableError(
             "No es posible consultar las publicaciones temporalmente."
