@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../catalogo/catalogo_page.dart';
+import '../publicaciones/mis_publicaciones_page.dart';
 import '../publicaciones/publicacion_form_page.dart';
 import 'inicio_page.dart';
 
@@ -16,7 +17,8 @@ class _MarketplaceShellState extends State<MarketplaceShell> {
 
   void _irInicio() => setState(() => _indice = 0);
   void _irCatalogo() => setState(() => _indice = 1);
-  void _irPublicar() => setState(() => _indice = 2);
+  void _irMisPublicaciones() => setState(() => _indice = 2);
+  void _irPublicar() => setState(() => _indice = 3);
 
   void _seleccionar(int indice) {
     if (indice == _indice) return;
@@ -28,6 +30,7 @@ class _MarketplaceShellState extends State<MarketplaceShell> {
     final paginas = [
       InicioPage(onIrCatalogo: _irCatalogo, onIrPublicar: _irPublicar),
       const CatalogoPage(),
+      const MisPublicacionesPage(),
       const PublicacionFormPage(),
     ];
 
@@ -66,9 +69,16 @@ class _MarketplaceShellState extends State<MarketplaceShell> {
                 ),
                 const SizedBox(width: 6),
                 _DesktopNavButton(
+                  icon: Icons.inventory_2_outlined,
+                  label: 'Mis publicaciones',
+                  selected: _indice == 2,
+                  onPressed: _irMisPublicaciones,
+                ),
+                const SizedBox(width: 6),
+                _DesktopNavButton(
                   icon: Icons.add_circle_outline,
                   label: 'Publicar',
-                  selected: _indice == 2,
+                  selected: _indice == 3,
                   onPressed: _irPublicar,
                 ),
                 const SizedBox(width: 24),
@@ -113,6 +123,11 @@ class _MarketplaceShellState extends State<MarketplaceShell> {
                       icon: Icon(Icons.storefront_outlined),
                       selectedIcon: Icon(Icons.storefront),
                       label: Text('Catálogo'),
+                    ),
+                    NavigationRailDestination(
+                      icon: Icon(Icons.inventory_2_outlined),
+                      selectedIcon: Icon(Icons.inventory_2),
+                      label: Text('Mis publicaciones'),
                     ),
                     NavigationRailDestination(
                       icon: Icon(Icons.add_circle_outline),
@@ -161,6 +176,11 @@ class _MarketplaceShellState extends State<MarketplaceShell> {
                 icon: Icon(Icons.storefront_outlined),
                 selectedIcon: Icon(Icons.storefront),
                 label: 'Catálogo',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.inventory_2_outlined),
+                selectedIcon: Icon(Icons.inventory_2),
+                label: 'Mis publicaciones',
               ),
               NavigationDestination(
                 icon: Icon(Icons.add_circle_outline),
