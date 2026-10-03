@@ -2,6 +2,7 @@
 import hashlib
 import re
 import subprocess
+import time
 from pathlib import Path
 
 fixture = Path(__file__).resolve().parents[1] / "artifacts/e2e/campusmarket-e2e.png"
@@ -9,19 +10,33 @@ collection = "content://media/external_primary/downloads"
 
 
 def adb(*arguments, data=None):
-    return subprocess.run(
+    result = subprocess.run(
         ["adb", *arguments], input=data, check=True, capture_output=True, timeout=15,
-    ).stdout
+    )
+    if result.stderr:
+        print(result.stderr.decode(errors="replace"), flush=True)
+    return result.stdout
 
 
-adb(
+for attempt in range(60):
+    ready = adb("shell", "getprop", "sys.user.0.ce_available").decode().strip()
+    if ready == "true":
+        break
+    time.sleep(0.5)
+else:
+    raise SystemExit("El almacenamiento del usuario del emulador no está listo.")
+
+created = adb(
     "shell", "content", "insert", "--uri", collection,
     "--bind", "_display_name:s:campusmarket-e2e.png",
     "--bind", "mime_type:s:image/png", "--bind", "relative_path:s:Download/",
-)
+).decode(errors="replace")
+if created.strip():
+    print("MediaStore insert: " + created, flush=True)
 rows = adb("shell", "content", "query", "--uri", collection, "--projection", "_id:_display_name").decode()
 matching = [line for line in rows.splitlines() if "campusmarket-e2e.png" in line]
 if len(matching) != 1:
+    print("MediaStore query: " + rows, flush=True)
     raise SystemExit("El MediaStore no contiene una única imagen de prueba.")
 identifier = re.search(r"_id=(\d+)", matching[0])
 if identifier is None:

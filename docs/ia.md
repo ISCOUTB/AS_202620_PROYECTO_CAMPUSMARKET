@@ -355,3 +355,8 @@ por tabla y de imports. No se alteraron ADR aceptados.
   relajar las aserciones de persistencia por una carrera de sincronización.
 - **Verificación pendiente:** repetir los tres flujos; los fallos anteriores y su
   hash permanecen disponibles en Actions 37134391642.
+
+- **Corregido:** el flujo de 390 px detectó 8,5 px de desbordamiento en
+  "Información del producto"; se permite envolver el título dentro de su fila.
+- **Corregido:** el arnés Android espera almacenamiento desbloqueado y conserva
+  los errores públicos de MediaStore del emulador para diagnosticar la preparación.

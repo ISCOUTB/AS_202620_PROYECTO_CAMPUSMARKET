@@ -292,10 +292,12 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
                   child: Icon(Icons.description_outlined, color: colors.primary),
                 ),
                 const SizedBox(width: 12),
-                Text(
-                  'Información del producto',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
+                Expanded(
+                  child: Text(
+                    'Información del producto',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
               ],
