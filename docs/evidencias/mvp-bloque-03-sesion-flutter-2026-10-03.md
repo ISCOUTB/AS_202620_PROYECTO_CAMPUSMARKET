@@ -1,7 +1,9 @@
 # Bloque 03 — integración de sesión en Flutter
 
 Base: ecab64bd5bea13a9c074229789e73b29f3eac821.
-Estado: implementación preparada; validación Flutter pendiente de CI.
+Estado: analyze, 6 pruebas del cliente y builds Web/Android aprobados en CI.
+Hash validado: 1aefd4526ee5221e92f520969d34c86cb2c64a24.
+Ejecución: https://github.com/Nnigarp/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/37129999368.
 
 | Requisito | Implementación | Prueba | Evidencia requerida |
 | --- | --- | --- | --- |
@@ -25,3 +27,14 @@ reportes desde detalle, cola de moderación, responsive completo y flujo real co
 dos usuarios en ambas plataformas. Una respuesta de red perdida tras un POST
 puede dejar un resultado incierto; el reintento de imágenes conserva el id conocido
 y no pretende proporcionar idempotencia global del protocolo.
+
+## Ejecución comprobada
+
+flutter analyze: sin observaciones. flutter test: 6 pruebas aprobadas.
+flutter build web y flutter build apk --debug: aprobados. Los artefactos incluyen
+verificacion-hash.txt y están asociados a la ejecución del hash anterior.
+
+La primera ejecución a373699 falló por dos lints; se corrigieron con un commit
+separado, sin desactivar reglas. Se conserva el lockfile resuelto por el SDK 3.47.3
+y la configuración de análisis actualizada por esa misma herramienta.
+Esta evidencia de compilación no reemplaza el flujo real pendiente.

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../administracion/moderacion_page.dart';
 import '../shared/api_error.dart';
 import 'session_controller.dart';
 
@@ -141,6 +142,13 @@ class _PerfilPageState extends State<PerfilPage> {
                     )),
                   ],
                   const SizedBox(height: 24),
+                  if (user.esAdmin) ...[
+                    OutlinedButton.icon(
+                      onPressed: _busy ? null : () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ModeracionPage())),
+                      icon: const Icon(Icons.flag_outlined), label: const Text('Revisar reportes'),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                   OutlinedButton.icon(
                     key: const Key('logout'),
                     onPressed: _busy ? null : _salir,

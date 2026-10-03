@@ -306,3 +306,22 @@ por tabla y de imports. No se alteraron ADR aceptados.
   verificada y fijada a 1a449444c387b1966244ae4d4f8c696479add0b2, SDK oficial
   3.47.3. actions/setup-java y upload-artifact pertenecen a GitHub. Estas
   herramientas preparan/verifican el entorno; no incorporan paquetes al producto.
+
+### Correcciones y extensión de producto del cliente
+
+- **Corregido:** CI detectó prefer_interpolation_to_compose_strings y
+  use_super_parameters. Se corrigió el código sin desactivar reglas. Analyze,
+  seis pruebas y builds Web/Android quedaron aprobados en 1aefd452.
+- **Aceptado:** lockfile y analysis_options emitidos por Flutter 3.47.3. El SDK
+  ajustó cuatro dependencias ya existentes de sus pruebas; no se amplía pubspec.
+- **Aceptado:** galería propia editable (subir, eliminar, elegir principal);
+  disponibilidad visible y detalle que consulta datos actuales.
+- **Aceptado:** reporte real desde detalle y cola real de pendientes para la
+  capacidad configurada por IDs del ADR-0014. Sin panel ni estadísticas ficticias.
+- **Rechazado:** botón de contacto deshabilitado y mensajes sobre contratos backend
+  en el detalle. Se sustituyen por información útil y un reporte que sí funciona.
+- **Aceptado:** portada con fotografía de una publicación real cuando existe.
+  No se insertan productos ni fotografías ficticias en datos de producción.
+- **Verificación:** dos mutaciones del cliente verifican que las pruebas detectan
+  propietario fijo y contaminación de sesión entre respuestas de cuentas distintas.
+  Su ejecución quedará registrada en la CI del bloque siguiente.

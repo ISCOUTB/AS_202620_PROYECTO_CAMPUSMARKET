@@ -1,17 +1,62 @@
 import 'package:flutter/material.dart';
 
+import '../shared/formatters.dart';
+
+import '../administracion/reportar_publicacion.dart';
+import '../shared/api_error.dart';
+import 'catalogo_api.dart';
 import 'publicacion_catalogo.dart';
 
-class CatalogoDetallePage extends StatelessWidget {
-  const CatalogoDetallePage({required this.publicacion, super.key});
+class CatalogoDetallePage extends StatefulWidget {
+  const CatalogoDetallePage({super.key, required this.publicacion});
+  final PublicacionCatalogo publicacion;
+  @override
+  State<CatalogoDetallePage> createState() => _CatalogoDetallePageState();
+}
+
+class _CatalogoDetallePageState extends State<CatalogoDetallePage> {
+  late Future<PublicacionCatalogo> _detalle;
+  @override
+  void initState() {
+    super.initState();
+    _detalle = const CatalogoApi().obtenerDetalle(widget.publicacion.id);
+  }
+
+  @override
+  Widget build(BuildContext context) => FutureBuilder<PublicacionCatalogo>(
+    future: _detalle,
+    builder: (context, snapshot) {
+      if (snapshot.hasData) return _DetalleContenido(publicacion: snapshot.data!);
+      return Scaffold(
+        appBar: AppBar(title: const Text('Detalle de publicación')),
+        body: Center(
+          child: snapshot.hasError
+            ? Padding(
+                padding: const EdgeInsets.all(28),
+                child: Column(mainAxisSize: MainAxisSize.min, children: [
+                  const Icon(Icons.inventory_2_outlined, size: 60),
+                  const SizedBox(height: 20),
+                  Text(readableError(snapshot.error!), textAlign: TextAlign.center),
+                  const SizedBox(height: 20),
+                  OutlinedButton(
+                    onPressed: () => setState(() => _detalle = const CatalogoApi().obtenerDetalle(widget.publicacion.id)),
+                    child: const Text('Reintentar'),
+                  ),
+                ]),
+              )
+            : const CircularProgressIndicator(),
+        ),
+      );
+    },
+  );
+}
+
+class _DetalleContenido extends StatelessWidget {
+  const _DetalleContenido({required this.publicacion});
 
   final PublicacionCatalogo publicacion;
 
-  String _precio(double value) {
-    return value.truncateToDouble() == value
-        ? '\$${value.toStringAsFixed(0)}'
-        : '\$${value.toStringAsFixed(2)}';
-  }
+  String _precio(double value) => formatoPrecio(value);
 
   String _capitalizar(String value) {
     if (value.isEmpty) return value;
@@ -58,6 +103,10 @@ class CatalogoDetallePage extends StatelessWidget {
                               spacing: 8,
                               runSpacing: 8,
                               children: [
+                                _EtiquetaDetalle(
+                                  icono: Icons.circle_outlined,
+                                  texto: _capitalizar(publicacion.estadoPublicacion),
+                                ),
                                 _EtiquetaDetalle(
                                   icono: Icons.verified_outlined,
                                   texto: _capitalizar(publicacion.estado),
@@ -129,7 +178,7 @@ class CatalogoDetallePage extends StatelessWidget {
                                   const SizedBox(width: 10),
                                   Expanded(
                                     child: Text(
-                                      'El contacto entre usuarios se habilitará cuando exista un contrato backend verificable para esa capacidad.',
+                                      'Revisa la condición y las fotografías del producto. Si encuentras contenido engañoso o inapropiado, avisa a la comunidad con un reporte.',
                                       style: theme.textTheme.bodyMedium?.copyWith(
                                         color: colors.onSurfaceVariant,
                                         height: 1.45,
@@ -140,16 +189,9 @@ class CatalogoDetallePage extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(height: 18),
-                            SizedBox(
-                              width: double.infinity,
-                              child: FilledButton.icon(
-                                onPressed: null,
-                                icon: const Icon(Icons.chat_bubble_outline),
-                                label: const Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 15),
-                                  child: Text('Contacto no disponible todavía'),
-                                ),
-                              ),
+                            ReportarPublicacionButton(
+                              publicacionId: publicacion.id,
+                              propietarioId: publicacion.propietarioId,
                             ),
                           ],
                         ),

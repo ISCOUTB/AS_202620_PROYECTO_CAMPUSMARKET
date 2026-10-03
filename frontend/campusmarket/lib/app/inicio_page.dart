@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../shared/formatters.dart';
 import '../catalogo/catalogo_api.dart';
 import '../catalogo/catalogo_detalle_page.dart';
 import '../catalogo/publicacion_catalogo.dart';
@@ -65,6 +66,13 @@ class _InicioPageState extends State<InicioPage> {
     }
   }
 
+  PublicacionCatalogo? get _destacada {
+    for (final publicacion in _publicaciones) {
+      if (publicacion.imagenPrincipal != null) return publicacion;
+    }
+    return null;
+  }
+
   void _abrirDetalle(PublicacionCatalogo publicacion) {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -90,6 +98,8 @@ class _InicioPageState extends State<InicioPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _HeroInicio(
+                    destacada: _destacada,
+                    onAbrirDestacada: _destacada == null ? null : () => _abrirDetalle(_destacada!),
                     onIrCatalogo: widget.onIrCatalogo,
                     onIrPublicar: widget.onIrPublicar,
                   ),
@@ -229,10 +239,14 @@ class _HeroInicio extends StatelessWidget {
   const _HeroInicio({
     required this.onIrCatalogo,
     required this.onIrPublicar,
+    this.destacada,
+    this.onAbrirDestacada,
   });
 
   final VoidCallback onIrCatalogo;
   final VoidCallback onIrPublicar;
+  final PublicacionCatalogo? destacada;
+  final VoidCallback? onAbrirDestacada;
 
   @override
   Widget build(BuildContext context) {
@@ -285,7 +299,7 @@ class _HeroInicio extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  'Compra, vende y conecta\nen tu universidad',
+                  'Tu próximo hallazgo\nestá en el campus',
                   style: theme.textTheme.displaySmall?.copyWith(
                     fontWeight: FontWeight.w900,
                     height: 1.04,
@@ -295,9 +309,8 @@ class _HeroInicio extends StatelessWidget {
                 ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 650),
                   child: Text(
-                    'Publica productos, explora el catálogo y encuentra '
-                    'artículos de la comunidad universitaria desde una '
-                    'experiencia simple y trazable.',
+                    'Libros, tecnología y mucho más, de estudiante a estudiante. '
+                    'Encuentra lo que necesitas y dale una segunda vida a lo que ya no usas.',
                     style: theme.textTheme.bodyLarge?.copyWith(
                       color: colors.onSurfaceVariant,
                       height: 1.5,
@@ -345,7 +358,9 @@ class _HeroInicio extends StatelessWidget {
                   ),
                 ],
               ),
-              child: Stack(
+              child: destacada?.imagenPrincipal != null
+                  ? _HallazgoDestacado(publicacion: destacada!, onTap: onAbrirDestacada)
+                  : Stack(
                 children: [
                   Positioned(
                     right: -40,
@@ -544,4 +559,37 @@ class _BeneficioCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _HallazgoDestacado extends StatelessWidget {
+  const _HallazgoDestacado({required this.publicacion, this.onTap});
+  final PublicacionCatalogo publicacion;
+  final VoidCallback? onTap;
+  @override
+  Widget build(BuildContext context) => ClipRRect(
+    borderRadius: BorderRadius.circular(26),
+    child: InkWell(
+      onTap: onTap,
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        AspectRatio(
+          aspectRatio: 16 / 10,
+          child: Image.network(
+            publicacion.imagenPrincipal!.imagenUrl, fit: BoxFit.cover,
+            semanticLabel: publicacion.titulo,
+            errorBuilder: (_, _, _) => const Center(child: Icon(Icons.inventory_2_outlined, size: 68)),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(22),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('UN HALLAZGO DE LA COMUNIDAD', style: TextStyle(fontSize: 11, letterSpacing: 1.4, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.primary)),
+            const SizedBox(height: 10),
+            Text(publicacion.titulo, maxLines: 2, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 8),
+            Text(formatoPrecio(publicacion.precio), style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).colorScheme.primary)),
+          ]),
+        ),
+      ]),
+    ),
+  );
 }

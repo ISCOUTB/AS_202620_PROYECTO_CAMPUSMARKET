@@ -45,6 +45,7 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
 
   @override
   void dispose() {
+    _api.dispose();
     _tituloController.dispose();
     _descripcionController.dispose();
     _precioController.dispose();
@@ -572,7 +573,7 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
     final colors = Theme.of(context).colorScheme;
 
     return InkWell(
-      onTap: _guardando || _seleccionandoImagenes ? null : _seleccionarImagenes,
+      onTap: _guardando || _seleccionandoImagenes || _publicacionPendiente != null ? null : _seleccionarImagenes,
       borderRadius: BorderRadius.circular(16),
       child: Container(
         width: double.infinity,
@@ -677,7 +678,7 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
 
   Widget _buildAgregarImagen() {
     return InkWell(
-      onTap: _guardando || _seleccionandoImagenes ? null : _seleccionarImagenes,
+      onTap: _guardando || _seleccionandoImagenes || _publicacionPendiente != null ? null : _seleccionarImagenes,
       borderRadius: BorderRadius.circular(16),
       child: Container(
         width: 190,

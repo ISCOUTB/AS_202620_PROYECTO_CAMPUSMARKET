@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../shared/formatters.dart';
+
 import '../publicacion_catalogo.dart';
 
 class CatalogoCard extends StatelessWidget {
@@ -12,12 +14,7 @@ class CatalogoCard extends StatelessWidget {
   final PublicacionCatalogo publicacion;
   final VoidCallback onTap;
 
-  String _formatearPrecio(double value) {
-    final entero = value.truncateToDouble() == value;
-    return entero
-        ? '\$${value.toStringAsFixed(0)}'
-        : '\$${value.toStringAsFixed(2)}';
-  }
+  String _formatearPrecio(double value) => formatoPrecio(value);
 
   @override
   Widget build(BuildContext context) {
@@ -77,6 +74,14 @@ class CatalogoCard extends StatelessWidget {
                           ),
                         ),
                       ),
+                      if (publicacion.estadoPublicacion != 'disponible')
+                        Positioned(
+                          left: 10, bottom: 10,
+                          child: _Etiqueta(
+                            texto: publicacion.estadoPublicacion == 'reservado' ? 'Reservado' : 'Vendido',
+                            icono: Icons.circle_outlined,
+                          ),
+                        ),
                       if (publicacion.imagenes.length > 1)
                         Positioned(
                           right: 10,

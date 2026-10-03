@@ -29,6 +29,8 @@ class PublicacionesApi {
   final http.Client _client;
   final SessionController _session;
 
+  void dispose() => _client.close();
+
   Future<http.Response> _request(String method, String path, int expected, {Object? body}) async {
     final headers = _session.authorizedHeaders;
     final request = http.Request(method, Uri.parse('$baseUrl$path'));
