@@ -22,7 +22,7 @@ Future<void> main() async {
               ?.map((item) => item['screenshotName']).toList(),
         };
         await File('${directory.path}/resultado.json').writeAsString(jsonEncode(evidence));
-        print('CAMPUSMARKET_E2E_RESULT=${jsonEncode(evidence)}');
+        stdout.writeln('CAMPUSMARKET_E2E_RESULT=${jsonEncode(evidence)}');
       },
       writeResponseOnFailure: true,
     ),

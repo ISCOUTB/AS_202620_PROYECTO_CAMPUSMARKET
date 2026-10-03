@@ -374,3 +374,5 @@ por tabla y de imports. No se alteraron ADR aceptados.
   observado, con plazo de 60 s, sin reintentar errores de la aplicación.
 - **Aceptado:** resultado sanitizado en el log y artefacto JSON con hash,
   viewport, comprobaciones y nombres de capturas; sin contraseñas ni tokens.
+
+- **Corregido:** analyze señaló avoid_print en el driver de evidencia. Se usa stdout del proceso del driver; no se desactiva la regla del cliente.
