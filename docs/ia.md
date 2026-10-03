@@ -366,3 +366,11 @@ por tabla y de imports. No se alteraron ADR aceptados.
   un frame, comprueba hitTestable y confirma entrada de texto con booleanos
   (sin imprimir valores que podrían ser contraseñas). Se mantiene la validación
   real del rango y se registra captura ante fallo.
+
+- **Aceptado:** los dos flujos Web pasaron en 78dd5edf; diez denegaciones de
+  modificaciones ajenas y estado intacto después de cada intento por plataforma.
+- **Corregido:** boot_completed y ce_available no garantizan que MediaStore
+  haya registrado external_primary. Se espera ese volumen ante el error
+  observado, con plazo de 60 s, sin reintentar errores de la aplicación.
+- **Aceptado:** resultado sanitizado en el log y artefacto JSON con hash,
+  viewport, comprobaciones y nombres de capturas; sin contraseñas ni tokens.

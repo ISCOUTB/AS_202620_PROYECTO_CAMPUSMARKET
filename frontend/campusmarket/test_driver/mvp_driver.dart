@@ -13,14 +13,16 @@ Future<void> main() async {
         return bytes.isNotEmpty;
       },
       responseDataCallback: (data) async {
-        await File('${directory.path}/resultado.json').writeAsString(jsonEncode({
+        final evidence = {
           'hash': Platform.environment['GITHUB_SHA'],
           'checks': data?['checks'],
           'platform': data?['platform'],
           'viewport': data?['viewport'],
           'screenshots': (data?['screenshots'] as List?)
               ?.map((item) => item['screenshotName']).toList(),
-        }));
+        };
+        await File('${directory.path}/resultado.json').writeAsString(jsonEncode(evidence));
+        print('CAMPUSMARKET_E2E_RESULT=${jsonEncode(evidence)}');
       },
       writeResponseOnFailure: true,
     ),
