@@ -1,7 +1,10 @@
 # Bloque 04 — producto, fotografías y reportes
 
 Base: 1aefd4526ee5221e92f520969d34c86cb2c64a24.
-Estado: implementación pendiente de ejecutar en CI y flujo real.
+Estado: validaciones de código y builds aprobadas; flujo real en bloque 05.
+Hash: d94cc62c783184c492cbfd70e058ff58c7d6a7e2.
+Backend: https://github.com/Nnigarp/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/37131600619
+Flutter: https://github.com/Nnigarp/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/37131600565
 
 | Requisito | Implementación | Prueba prevista | Evidencia |
 | --- | --- | --- | --- |
@@ -15,3 +18,12 @@ Estado: implementación pendiente de ejecutar en CI y flujo real.
 Se aplican ADR-0012, 0013, 0014 y 0015, sin cambiarlos. Extender DTO y vistas para
 capacidades ya decididas no introduce un mecanismo arquitectónico nuevo.
 Sin dependencias de producto nuevas en este bloque.
+
+## Resultado comprobado
+
+68 pruebas backend aprobadas (64 funcionales/arquitectónicas y 4 de contrato).
+Cinco mutaciones backend detectadas. Flutter analyze sin observaciones, seis
+pruebas aprobadas, dos mutaciones detectadas y builds Web/Android aprobados.
+git diff --check aprobado. FastAPI excluye default null en el esquema publicado;
+se corrigió el snapshot conservando el tipo nullable, sin cambiar la API.
+La revisión visual completa continúa con las capturas del flujo real.

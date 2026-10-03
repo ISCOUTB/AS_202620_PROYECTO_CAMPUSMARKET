@@ -143,11 +143,13 @@ class _ImagenesPageState extends State<ImagenesPage> {
                             const Row(children: [Icon(Icons.star, size: 18), SizedBox(width: 6), Text('Fotografía principal')])
                           else
                             TextButton.icon(
+                              key: Key("imagen-principal-${imagen['id']}"),
                               onPressed: _busy ? null : () => _accion(() => _api.elegirPrincipal(widget.publicacionId, imagen['id'] as int)),
                               icon: const Icon(Icons.star_outline), label: const Text('Elegir principal'),
                             ),
                           const SizedBox(height: 8),
                           TextButton.icon(
+                            key: Key("imagen-eliminar-${imagen['id']}"),
                             onPressed: _busy ? null : () => _eliminar(imagen),
                             icon: const Icon(Icons.delete_outline), label: const Text('Eliminar fotografía'),
                           ),
@@ -164,6 +166,7 @@ class _ImagenesPageState extends State<ImagenesPage> {
               ),
             const SizedBox(height: 24),
             FilledButton.icon(
+              key: const Key('galeria-agregar'),
               onPressed: _busy || _imagenes.length >= 3 ? null : _subir,
               icon: const Icon(Icons.add_photo_alternate_outlined),
               label: Text(_imagenes.length >= 3 ? 'Tienes las 3 fotografías' : 'Agregar fotografías'),

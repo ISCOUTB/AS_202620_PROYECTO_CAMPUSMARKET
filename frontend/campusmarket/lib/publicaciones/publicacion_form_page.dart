@@ -573,6 +573,7 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
     final colors = Theme.of(context).colorScheme;
 
     return InkWell(
+      key: const Key('publicacion-fotografias'),
       onTap: _guardando || _seleccionandoImagenes || _publicacionPendiente != null ? null : _seleccionarImagenes,
       borderRadius: BorderRadius.circular(16),
       child: Container(
@@ -663,7 +664,7 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
               shape: const CircleBorder(),
               child: InkWell(
                 customBorder: const CircleBorder(),
-                onTap: _guardando ? null : () => _eliminarImagen(index),
+                onTap: _guardando || _publicacionPendiente != null ? null : () => _eliminarImagen(index),
                 child: const Padding(
                   padding: EdgeInsets.all(7),
                   child: Icon(Icons.close, color: Colors.white, size: 18),
@@ -678,6 +679,7 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
 
   Widget _buildAgregarImagen() {
     return InkWell(
+      key: const Key('publicacion-fotografias'),
       onTap: _guardando || _seleccionandoImagenes || _publicacionPendiente != null ? null : _seleccionarImagenes,
       borderRadius: BorderRadius.circular(16),
       child: Container(

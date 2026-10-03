@@ -743,6 +743,7 @@ class _EditarPublicacionDialogState extends State<_EditarPublicacionDialog> {
             mainAxisSize: MainAxisSize.min,
             children: [
               TextFormField(
+                key: const Key('editar-titulo'),
                 controller: _titulo,
                 decoration: const InputDecoration(labelText: 'Título'),
                 validator: (value) => value == null || (value.trim().length < 3 || value.trim().length > 100)
@@ -751,6 +752,7 @@ class _EditarPublicacionDialogState extends State<_EditarPublicacionDialog> {
               ),
               const SizedBox(height: 12),
               TextFormField(
+                key: const Key('editar-descripcion'),
                 controller: _descripcion,
                 minLines: 3,
                 maxLines: 5,
@@ -761,6 +763,7 @@ class _EditarPublicacionDialogState extends State<_EditarPublicacionDialog> {
               ),
               const SizedBox(height: 12),
               TextFormField(
+                key: const Key('editar-precio'),
                 controller: _precio,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 decoration: const InputDecoration(labelText: 'Precio'),

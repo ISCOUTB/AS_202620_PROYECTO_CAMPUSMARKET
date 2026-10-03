@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../shared/api_error.dart';
 import 'catalogo_api.dart';
 import 'catalogo_detalle_page.dart';
 import 'publicacion_catalogo.dart';
@@ -24,6 +25,7 @@ class _CatalogoPageState extends State<CatalogoPage> {
   String? _modalidad;
   String? _estado;
   bool _cargando = true;
+  int _requestRevision = 0;
   String? _error;
 
   @override
@@ -41,6 +43,21 @@ class _CatalogoPageState extends State<CatalogoPage> {
   }
 
   Future<void> _cargar() async {
+    final revision = ++_requestRevision;
+    final minimumText = _precioMinController.text.trim().replaceAll(',', '.');
+    final maximumText = _precioMaxController.text.trim().replaceAll(',', '.');
+    final minimum = double.tryParse(minimumText);
+    final maximum = double.tryParse(maximumText);
+    final invalid = (minimumText.isNotEmpty && (minimum == null || !minimum.isFinite || minimum < 0))
+        || (maximumText.isNotEmpty && (maximum == null || !maximum.isFinite || maximum < 0));
+    if (invalid || (minimum != null && maximum != null && minimum > maximum)) {
+      setState(() {
+        _cargando = false;
+        _error = invalid ? 'Ingresa precios válidos, mayores o iguales a cero.'
+          : 'El precio mínimo no puede superar al máximo.';
+      });
+      return;
+    }
     setState(() {
       _cargando = true;
       _error = null;
@@ -51,23 +68,23 @@ class _CatalogoPageState extends State<CatalogoPage> {
         texto: _busquedaController.text,
         modalidad: _modalidad,
         estado: _estado,
-        precioMin: double.tryParse(_precioMinController.text),
-        precioMax: double.tryParse(_precioMaxController.text),
+        precioMin: minimum,
+        precioMax: maximum,
       );
 
-      if (!mounted) return;
+      if (!mounted || revision != _requestRevision) return;
 
       setState(() {
         _publicaciones = resultado;
       });
     } catch (error) {
-      if (!mounted) return;
+      if (!mounted || revision != _requestRevision) return;
 
       setState(() {
-        _error = error.toString();
+        _error = readableError(error);
       });
     } finally {
-      if (mounted) {
+      if (mounted && revision == _requestRevision) {
         setState(() {
           _cargando = false;
         });
@@ -328,6 +345,7 @@ class _HeroCatalogo extends StatelessWidget {
                     ),
                     const SizedBox(height: 18),
                     TextField(
+                      key: const Key('catalogo-busqueda'),
                       controller: busquedaController,
                       textInputAction: TextInputAction.search,
                       onSubmitted: (_) => onBuscar(),
@@ -521,6 +539,7 @@ class _PanelFiltros extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             TextField(
+              key: const Key('catalogo-precio-min'),
               controller: precioMinController,
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
@@ -533,6 +552,7 @@ class _PanelFiltros extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             TextField(
+              key: const Key('catalogo-precio-max'),
               controller: precioMaxController,
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,

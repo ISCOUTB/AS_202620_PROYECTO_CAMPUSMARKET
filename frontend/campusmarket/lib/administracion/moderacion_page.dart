@@ -123,6 +123,7 @@ class _DecisionDialogState extends State<_DecisionDialog> {
     content: SizedBox(
       width: 480,
       child: Form(key: _formKey, child: TextFormField(
+        key: const Key('resolucion-nota'),
         controller: _nota, minLines: 2, maxLines: 4, maxLength: 500,
         decoration: const InputDecoration(labelText: 'Motivo de tu decisión'),
         validator: (value) => (value ?? '').trim().length < 5 ? 'Ingresa una nota de al menos 5 caracteres.' : null,

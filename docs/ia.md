@@ -325,3 +325,17 @@ por tabla y de imports. No se alteraron ADR aceptados.
 - **Verificación:** dos mutaciones del cliente verifican que las pruebas detectan
   propietario fijo y contaminación de sesión entre respuestas de cuentas distintas.
   Su ejecución quedará registrada en la CI del bloque siguiente.
+
+### Flujo real y sincronización de contrato
+
+- **Corregido:** contrato generado fuera del intérprete contenía default null que
+  FastAPI omite. La igualdad de OpenAPI detectó la discrepancia; se corrigió y
+  todas las verificaciones quedaron verdes en d94cc62, sin relajar la prueba.
+- **Aceptado:** integration_test del SDK para pruebas con backend/MySQL en Chrome
+  y Android; necesidad, mantenimiento y compatibilidad documentados.
+- **Aceptado:** archivos sintéticos controlados y puente del selector real, sin
+  modificar cuentas, almacenamiento ni datos de producción.
+- **Rechazado:** declarar Android funcional únicamente por compilar o sustituir
+  file_picker por un mock que evitaría demostrar lectura/subida de archivos.
+- **Verificación pendiente:** los resultados y capturas del flujo se registrarán
+  después de ejecutar el workflow, sin anticipar que está aprobado.

@@ -127,10 +127,10 @@ class _MarketplaceShellState extends State<MarketplaceShell> {
           ),
           actions: [
             if (desktop) ...[
-              _DesktopNavButton(icon: Icons.home_outlined, label: 'Inicio', selected: _indice == 0, onPressed: _irInicio),
-              _DesktopNavButton(icon: Icons.storefront_outlined, label: 'Catálogo', selected: _indice == 1, onPressed: _irCatalogo),
-              _DesktopNavButton(icon: Icons.inventory_2_outlined, label: 'Mis publicaciones', selected: _indice == 2, onPressed: _irMisPublicaciones),
-              _DesktopNavButton(icon: Icons.add_circle_outline, label: 'Publicar', selected: _indice == 3, onPressed: _irPublicar),
+              _DesktopNavButton(key: const Key('nav-inicio'), icon: Icons.home_outlined, label: 'Inicio', selected: _indice == 0, onPressed: _irInicio),
+              _DesktopNavButton(key: const Key('nav-catalogo'), icon: Icons.storefront_outlined, label: 'Catálogo', selected: _indice == 1, onPressed: _irCatalogo),
+              _DesktopNavButton(key: const Key('nav-mias'), icon: Icons.inventory_2_outlined, label: 'Mis publicaciones', selected: _indice == 2, onPressed: _irMisPublicaciones),
+              _DesktopNavButton(key: const Key('nav-publicar'), icon: Icons.add_circle_outline, label: 'Publicar', selected: _indice == 3, onPressed: _irPublicar),
               const SizedBox(width: 12),
             ],
             _accountButton(compact: !desktop),
@@ -144,10 +144,10 @@ class _MarketplaceShellState extends State<MarketplaceShell> {
                 onDestinationSelected: _seleccionar,
                 labelType: NavigationRailLabelType.all,
                 destinations: const [
-                  NavigationRailDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: Text('Inicio')),
-                  NavigationRailDestination(icon: Icon(Icons.storefront_outlined), selectedIcon: Icon(Icons.storefront), label: Text('Catálogo')),
-                  NavigationRailDestination(icon: Icon(Icons.inventory_2_outlined), selectedIcon: Icon(Icons.inventory_2), label: Text('Mis publicaciones')),
-                  NavigationRailDestination(icon: Icon(Icons.add_circle_outline), selectedIcon: Icon(Icons.add_circle), label: Text('Publicar')),
+                  NavigationRailDestination(icon: Icon(Icons.home_outlined, key: Key('nav-inicio')), selectedIcon: Icon(Icons.home), label: Text('Inicio')),
+                  NavigationRailDestination(icon: Icon(Icons.storefront_outlined, key: Key('nav-catalogo')), selectedIcon: Icon(Icons.storefront), label: Text('Catálogo')),
+                  NavigationRailDestination(icon: Icon(Icons.inventory_2_outlined, key: Key('nav-mias')), selectedIcon: Icon(Icons.inventory_2), label: Text('Mis publicaciones')),
+                  NavigationRailDestination(icon: Icon(Icons.add_circle_outline, key: Key('nav-publicar')), selectedIcon: Icon(Icons.add_circle), label: Text('Publicar')),
                 ],
               ),
               const VerticalDivider(width: 1),
@@ -157,10 +157,10 @@ class _MarketplaceShellState extends State<MarketplaceShell> {
         bottomNavigationBar: desktop || tablet ? null : NavigationBar(
           selectedIndex: _indice, onDestinationSelected: _seleccionar,
           destinations: const [
-            NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Inicio'),
-            NavigationDestination(icon: Icon(Icons.storefront_outlined), selectedIcon: Icon(Icons.storefront), label: 'Catálogo'),
-            NavigationDestination(icon: Icon(Icons.inventory_2_outlined), selectedIcon: Icon(Icons.inventory_2), label: 'Mis publicaciones'),
-            NavigationDestination(icon: Icon(Icons.add_circle_outline), selectedIcon: Icon(Icons.add_circle), label: 'Publicar'),
+            NavigationDestination(key: Key('nav-inicio'), icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Inicio'),
+            NavigationDestination(key: Key('nav-catalogo'), icon: Icon(Icons.storefront_outlined), selectedIcon: Icon(Icons.storefront), label: 'Catálogo'),
+            NavigationDestination(key: Key('nav-mias'), icon: Icon(Icons.inventory_2_outlined), selectedIcon: Icon(Icons.inventory_2), label: 'Mis publicaciones'),
+            NavigationDestination(key: Key('nav-publicar'), icon: Icon(Icons.add_circle_outline), selectedIcon: Icon(Icons.add_circle), label: 'Publicar'),
           ],
         ),
       );
@@ -221,6 +221,7 @@ class _CampusMarketBrand extends StatelessWidget {
 
 class _DesktopNavButton extends StatelessWidget {
   const _DesktopNavButton({
+    super.key,
     required this.icon,
     required this.label,
     required this.selected,
