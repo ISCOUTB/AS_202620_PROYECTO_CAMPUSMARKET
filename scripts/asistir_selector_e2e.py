@@ -77,25 +77,53 @@ if args.platform == "web":
         time.sleep(0.2)
 else:
     selected = False
+    ui_xml = '/data/local/tmp/campusmarket-window.xml'
+    previous_controls = None
     while time.monotonic() < deadline:
         try:
             subprocess.run(
-                ["adb", "shell", "uiautomator", "dump", "/data/local/tmp/campusmarket-window.xml"],
+                ["adb", "shell", "uiautomator", "dump", ui_xml],
                 check=True, capture_output=True, timeout=8,
             )
-            xml = subprocess.check_output(["adb", "shell", "cat", "/sdcard/campusmarket-window.xml"], timeout=4)
+            xml = subprocess.check_output(["adb", "shell", "cat", ui_xml], timeout=4)
             nodes = list(ET.fromstring(xml).iter("node"))
             picker = any("documentsui" in node.get("package", "") for node in nodes)
             if not picker:
                 selected = False
-            elif not selected:
+            else:
+                controls = [
+                    {"text": node.get("text", ""), "description": node.get("content-desc", ""), "id": node.get("resource-id", "")}
+                    for node in nodes if "documentsui" in node.get("package", "")
+                    and node.get("password") != "true" and (node.get("text") or node.get("content-desc"))
+                ]
+                if controls != previous_controls:
+                    print("Controles públicos del selector: " + json.dumps(controls[-25:]), flush=True)
+                    previous_controls = controls
+                target = None
+                if selected:
+                    target = next(
+                        (node for node in nodes if node.get("enabled") == "true" and
+                         (node.get("text", "").upper() in {"OPEN", "SELECT", "DONE"} or
+                          node.get("content-desc", "").upper() in {"OPEN", "SELECT", "DONE"})),
+                        None,
+                    )
+                if target is not None:
+                    bounds = [int(value) for value in re.findall(r"\d+", target.get("bounds", ""))]
+                    if len(bounds) == 4:
+                        subprocess.run(["adb", "shell", "input", "tap", str((bounds[0] + bounds[2]) // 2), str((bounds[1] + bounds[3]) // 2)], check=True, timeout=4)
+                        print("Selector Android: selección múltiple confirmada.", flush=True)
+                    time.sleep(0.25)
+                    continue
+                if selected:
+                    time.sleep(0.25)
+                    continue
                 target = next(
                     (node for node in nodes if fixture.name in node.get("text", "") or fixture.name in node.get("content-desc", "")),
                     None,
                 )
                 if target is None:
                     target = next(
-                        (node for node in nodes if node.get("text", "") == "Downloads" and node.get("clickable") == "true"),
+                        (node for node in nodes if node.get("text", "") == "Downloads"),
                         None,
                     )
                 if target is None:

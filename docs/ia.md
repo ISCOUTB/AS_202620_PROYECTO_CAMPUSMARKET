@@ -376,3 +376,14 @@ por tabla y de imports. No se alteraron ADR aceptados.
   viewport, comprobaciones y nombres de capturas; sin contraseñas ni tokens.
 
 - **Corregido:** analyze señaló avoid_print en el driver de evidencia. Se usa stdout del proceso del driver; no se desactiva la regla del cliente.
+
+- **Corregido:** fuente oficial AndroidPlatform FilePickerAndroid 2.0.0
+  configura pickFiles con allowMultiple true. El puente ahora confirma
+  OPEN/SELECT/DONE después de elegir el archivo y permite tocar el texto
+  Downloads aunque su TextView delegue el click a su padre.
+- **Aceptado:** plazo externo de 12 minutos y diagnóstico del selector del
+  emulador aislado; los fallos nativos ya no pueden bloquear indefinidamente.
+- **Rechazado:** sustituir el selector Android por bytes inyectados en el plugin.
+  Continúa usando DocumentsUI, URI real, lectura del archivo y subida HTTP.
+
+- **Corregido:** dump escribía /data/local/tmp mientras cat aún leía /sdcard. Se unifica la ruta en una constante; ese error del arnés impedía observar y operar DocumentsUI.
