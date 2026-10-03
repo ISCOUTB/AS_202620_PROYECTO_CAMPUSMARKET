@@ -1,0 +1,71 @@
+name: Compose y persistencia del MVP
+
+on:
+  push:
+    branches: [master, mvp-autenticacion-producto]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CAMPUSMARKET_CI_PROJECT: campusmarket-ci-${{ github.run_id }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: "3.12"
+      - name: Resolver stack existente de verificación
+        run: python -m pip install -r backend/requirements.txt
+      - name: Credenciales efímeras fuera de Git y de artefactos
+        run: |
+          python - <<'PY'
+          import os
+          import secrets
+          from pathlib import Path
+          path = Path(os.environ["RUNNER_TEMP"]) / "campusmarket-compose.env"
+          content = {
+              "MYSQL_ROOT_PASSWORD": secrets.token_hex(24),
+              "MYSQL_PASSWORD": secrets.token_hex(24),
+              "MYSQL_DATABASE": "campusmarket_compose_test",
+              "MYSQL_USER": "campusmarket_app",
+              "CAMPUSMARKET_ADMIN_USER_IDS": "3",
+              "CAMPUSMARKET_REVISION": os.environ["GITHUB_SHA"],
+          }
+          descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+          with os.fdopen(descriptor, "w") as stream:
+              stream.write("\n".join(key + "=" + value for key, value in content.items()) + "\n")
+          PY
+      - name: Construir y arrancar con cuota del laboratorio
+        run: |
+          docker compose --project-name "$CAMPUSMARKET_CI_PROJECT" --env-file "$RUNNER_TEMP/campusmarket-compose.env" -f deploy/compose.lab.yaml -f deploy/compose.local.yaml up -d --build --wait --wait-timeout 180
+      - name: Cuatro contextos, EC-02, EC-01, memoria y recreación con volúmenes
+        run: |
+          python scripts/verificar_compose_mvp.py --project "$CAMPUSMARKET_CI_PROJECT" --env-file "$RUNNER_TEMP/campusmarket-compose.env" --revision "$GITHUB_SHA"
+      - name: Verificar diff y ausencia de cambios en tracked files
+        run: |
+          git diff --check bfe3222c1e29dddc404560cdd9d61095d4bdb3fe HEAD
+          git diff --exit-code
+      - name: Logs de infraestructura sin valores de Environment
+        if: always()
+        run: |
+          mkdir -p artifacts/compose
+          docker compose --project-name "$CAMPUSMARKET_CI_PROJECT" --env-file "$RUNNER_TEMP/campusmarket-compose.env" -f deploy/compose.lab.yaml -f deploy/compose.local.yaml logs --no-color > artifacts/compose/contenedores.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: compose-verificado-${{ github.sha }}
+          path: artifacts/compose/
+      - name: Limpiar únicamente proyecto efímero de CI
+        if: always()
+        run: |
+          docker compose --project-name "$CAMPUSMARKET_CI_PROJECT" --env-file "$RUNNER_TEMP/campusmarket-compose.env" -f deploy/compose.lab.yaml -f deploy/compose.local.yaml down -v
+          rm -f "$RUNNER_TEMP/campusmarket-compose.env"

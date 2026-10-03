@@ -1,6 +1,13 @@
 # Bloque 06 — recursos, fotografías de cámara y migración segura
 
-Estado: preparado para ejecutar; no se anticipa aprobación de CI.
+Estado: pruebas de código aprobadas en 0eba3f423775a5fce716119bf336231441ba2729.
+Ruff y 76 pruebas (72 funcionales/arquitectura + 4 contrato), nueve mutaciones
+detectadas: [backend](https://github.com/Nnigarp/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/37140687982).
+Flutter analyze, seis pruebas, dos mutaciones, build Web y APK:
+[Flutter](https://github.com/Nnigarp/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/37140687986).
+Flujos reales desktop/móvil/Android con concurrencia 6 y 19 capturas cada uno:
+[flujo](https://github.com/Nnigarp/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/37140687994).
+Medición del Compose bajo 512 MiB pendiente del bloque 07.
 
 ## Requisito → implementación → prueba → evidencia
 

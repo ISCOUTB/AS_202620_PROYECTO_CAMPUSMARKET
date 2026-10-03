@@ -1,0 +1,4 @@
+# Solo desarrollo/CI; no usar este override en Dokploy.
+services:
+  api:
+    ports: ["127.0.0.1:8000:8000"]

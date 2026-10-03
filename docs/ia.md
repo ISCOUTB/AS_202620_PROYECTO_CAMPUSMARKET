@@ -410,3 +410,26 @@ por tabla y de imports. No se alteraron ADR aceptados.
 - **Corregido:** Ruff detectó una separación faltante entre imports estándar y
   del proyecto en security.py al compartir la guardia. Se aplica su corrección;
   se conservan las reglas y la ejecución de todas las pruebas.
+
+### Infraestructura reproducible y cuota efectiva
+
+- **Aceptado:** ADR-0018 prepara el backend monolítico y MySQL 8.4 con dos
+  volúmenes nombrados y límites efectivos de 256 MiB/0,5 CPU cada uno.
+  Python 3.12.15-slim-bookworm existe en la imagen oficial mantenida por
+  docker-library. No se incorpora una biblioteca al producto.
+- **Aceptado:** CI genera credenciales efímeras en RUNNER_TEMP con permisos
+  0600, prueba HTTP real, hashes concurrentes, una fotografía de 12 MP,
+  memory.peak, ausencia de OOM y recreación de API/MySQL conservando sesiones,
+  publicaciones y fotos. No imprime inspect/config completos ni secretos.
+- **Aceptado:** REVISION y etiqueta OCI comparadas con el hash de CI;
+  X-CampusMarket-Revision permite verificar /health sin revelar secretos.
+- **Rechazado:** atribuir EC-01 a una prueba con repositorios simulados;
+  la nueva medición usa 1000 filas reales, diez búsquedas HTTP y cuota real.
+- **Rechazado:** declarar desplegado el Compose por construirlo en CI.
+  No se aprovisiona Azure ni se opera Dokploy antes del cierre del MVP.
+- **Verificación pendiente:** ejecución de Compose, mediciones y persistencia.
+
+- **Verificado:** bloque de recursos 0eba3f4: Ruff, 76 pruebas backend/contrato,
+  nueve mutaciones detectadas, Flutter analyze/seis pruebas/dos mutaciones/builds,
+  flujo real en los tres jobs del run 37140687994. La cuota de Docker todavía
+  requiere su propia medición; los runners sin límites no acreditan esa cuota.
