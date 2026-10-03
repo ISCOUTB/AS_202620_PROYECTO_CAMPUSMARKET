@@ -43,7 +43,11 @@ void main() {
 
     Future<void> click(Finder finder) async {
       await until(() => finder.evaluate().isNotEmpty, 'Control visible');
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.pump(const Duration(milliseconds: 150));
       await tester.ensureVisible(finder.first);
+      await tester.pump(const Duration(milliseconds: 200));
+      await until(() => finder.hitTestable().evaluate().isNotEmpty, 'Control alcanzable tras desplazar');
       await tester.tap(finder.first);
       await tester.pump(const Duration(milliseconds: 300));
     }
@@ -51,8 +55,16 @@ void main() {
     Future<void> fill(String key, String text) async {
       final finder = find.byKey(Key(key));
       await tester.ensureVisible(finder);
+      await tester.pump(const Duration(milliseconds: 200));
+      await tester.tap(finder);
+      await tester.pump(const Duration(milliseconds: 200));
       await tester.enterText(finder, text);
-      await tester.pump(const Duration(milliseconds: 150));
+      await tester.pump(const Duration(milliseconds: 200));
+      final editable = tester.widget<EditableText>(
+        find.descendant(of: finder, matching: find.byType(EditableText)),
+      );
+      // Comparar booleanos evita imprimir contraseñas ante un fallo.
+      expect(editable.controller.text == text, isTrue, reason: 'Texto entregado al campo $key');
     }
 
     Future<void> screenshot(String name) async {

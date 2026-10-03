@@ -360,3 +360,9 @@ por tabla y de imports. No se alteraron ADR aceptados.
   "Información del producto"; se permite envolver el título dentro de su fila.
 - **Corregido:** el arnés Android espera almacenamiento desbloqueado y conserva
   los errores públicos de MediaStore del emulador para diagnosticar la preparación.
+
+- **Corregido:** el arnés tocaba inmediatamente después de ensureVisible; el
+  cambio de scroll no había recalculado la posición del control. Ahora espera
+  un frame, comprueba hitTestable y confirma entrada de texto con booleanos
+  (sin imprimir valores que podrían ser contraseñas). Se mantiene la validación
+  real del rango y se registra captura ante fallo.
