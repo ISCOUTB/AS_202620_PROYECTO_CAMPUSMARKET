@@ -163,7 +163,7 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
       if (!mounted) return;
       setState(() => _errorGuardado = _publicacionPendiente == null
         ? readableError(error)
-        : 'Tu publicación ya fue creada. Reintenta para subir las imágenes pendientes. ' + readableError(error));
+        : 'Tu publicación ya fue creada. Reintenta para subir las imágenes pendientes. ${readableError(error)}');
     } finally {
       if (mounted) setState(() => _guardando = false);
     }

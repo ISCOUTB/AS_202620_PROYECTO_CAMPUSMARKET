@@ -8,8 +8,8 @@ import '../shared/api_error.dart';
 import '../usuarios/session_controller.dart';
 
 class PublicacionTemporalmenteNoDisponible extends ApiException {
-  const PublicacionTemporalmenteNoDisponible(String mensaje)
-    : super(mensaje, statusCode: 503);
+  const PublicacionTemporalmenteNoDisponible(super.message)
+    : super(statusCode: 503);
   String get mensaje => message;
 }
 
