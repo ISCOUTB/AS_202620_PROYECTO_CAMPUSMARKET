@@ -27,6 +27,8 @@ class PublicacionesApi {
     defaultValue: 'http://localhost:8000',
   );
 
+  static const int propietarioActual = 1;
+
   final String baseUrl;
 
   Future<Map<String, dynamic>> crearPublicacion({
@@ -45,28 +47,115 @@ class PublicacionesApi {
         'precio': precio,
         'modalidad': modalidad,
         'estado': estado,
+        'propietario_id': propietarioActual,
       }),
     );
 
-    if (response.statusCode == 503) {
-      final body = jsonDecode(response.body);
-
-      final detail = body is Map<String, dynamic>
-          ? body['detail']?.toString()
-          : null;
-
-      throw PublicacionTemporalmenteNoDisponible(
-        detail ??
-            'La persistencia está temporalmente no disponible. '
-                'Intenta nuevamente.',
-      );
-    }
+    _throwIfUnavailable(response);
 
     if (response.statusCode != 201) {
       throw Exception('No fue posible crear la publicación.');
     }
 
     return jsonDecode(response.body) as Map<String, dynamic>;
+  }
+
+  Future<List<Map<String, dynamic>>> listarMisPublicaciones() async {
+    final response = await http.get(
+      Uri.parse(
+        '$baseUrl/publicaciones/mias?propietario_id=$propietarioActual',
+      ),
+    );
+
+    _throwIfUnavailable(response);
+
+    if (response.statusCode != 200) {
+      throw Exception('No fue posible consultar tus publicaciones.');
+    }
+
+    final data = jsonDecode(response.body) as List<dynamic>;
+    return data.cast<Map<String, dynamic>>();
+  }
+
+  Future<Map<String, dynamic>> editarPublicacion({
+    required int publicacionId,
+    required String titulo,
+    required String descripcion,
+    required double precio,
+    required String modalidad,
+    required String estado,
+  }) async {
+    final response = await http.put(
+      Uri.parse(
+        '$baseUrl/publicaciones/$publicacionId'
+        '?propietario_id=$propietarioActual',
+      ),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'titulo': titulo,
+        'descripcion': descripcion,
+        'precio': precio,
+        'modalidad': modalidad,
+        'estado': estado,
+      }),
+    );
+
+    _throwIfUnavailable(response);
+
+    if (response.statusCode == 404) {
+      throw Exception('La publicación no existe o no te pertenece.');
+    }
+
+    if (response.statusCode != 200) {
+      throw Exception('No fue posible editar la publicación.');
+    }
+
+    return jsonDecode(response.body) as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> cambiarEstadoPublicacion({
+    required int publicacionId,
+    required String estadoPublicacion,
+  }) async {
+    final response = await http.patch(
+      Uri.parse(
+        '$baseUrl/publicaciones/$publicacionId/estado'
+        '?propietario_id=$propietarioActual',
+      ),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'estado_publicacion': estadoPublicacion}),
+    );
+
+    _throwIfUnavailable(response);
+
+    if (response.statusCode == 404) {
+      throw Exception('La publicación no existe o no te pertenece.');
+    }
+
+    if (response.statusCode != 200) {
+      throw Exception('No fue posible cambiar el estado.');
+    }
+
+    return jsonDecode(response.body) as Map<String, dynamic>;
+  }
+
+  Future<void> eliminarPublicacion(int publicacionId) async {
+    final response = await http.delete(
+      Uri.parse(
+        '$baseUrl/publicaciones/$publicacionId'
+        '?propietario_id=$propietarioActual',
+      ),
+    );
+
+    _throwIfUnavailable(response);
+
+    if (response.statusCode == 404) {
+      throw Exception('La publicación no existe o no te pertenece.');
+    }
+
+    if (response.statusCode != 204) {
+      throw Exception('No fue posible eliminar la publicación.');
+    }
   }
 
   Future<Map<String, dynamic>> subirImagen({
@@ -87,12 +176,10 @@ class PublicacionesApi {
     );
 
     final streamedResponse = await request.send();
-
     final response = await http.Response.fromStream(streamedResponse);
 
     if (response.statusCode == 400) {
       final body = jsonDecode(response.body);
-
       throw Exception(
         body is Map<String, dynamic>
             ? body['detail']?.toString() ?? 'La imagen no es válida.'
@@ -104,11 +191,7 @@ class PublicacionesApi {
       throw Exception('La publicación no existe.');
     }
 
-    if (response.statusCode == 503) {
-      throw const PublicacionTemporalmenteNoDisponible(
-        'La persistencia está temporalmente no disponible.',
-      );
-    }
+    _throwIfUnavailable(response);
 
     if (response.statusCode != 201) {
       throw Exception('No fue posible subir la imagen.');
@@ -133,10 +216,32 @@ class PublicacionesApi {
   Future<List<dynamic>> listarPublicaciones() async {
     final response = await http.get(Uri.parse('$baseUrl/publicaciones'));
 
+    _throwIfUnavailable(response);
+
     if (response.statusCode != 200) {
       throw Exception('No fue posible consultar las publicaciones.');
     }
 
     return jsonDecode(response.body) as List<dynamic>;
+  }
+
+  void _throwIfUnavailable(http.Response response) {
+    if (response.statusCode != 503) return;
+
+    String? detail;
+    try {
+      final body = jsonDecode(response.body);
+      if (body is Map<String, dynamic>) {
+        detail = body['detail']?.toString();
+      }
+    } catch (_) {
+      detail = null;
+    }
+
+    throw PublicacionTemporalmenteNoDisponible(
+      detail ??
+          'La persistencia está temporalmente no disponible. '
+              'Intenta nuevamente.',
+    );
   }
 }
