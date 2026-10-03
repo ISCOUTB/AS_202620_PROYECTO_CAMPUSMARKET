@@ -210,7 +210,7 @@ class _InicioPageState extends State<InicioPage> {
             crossAxisCount: columnas,
             crossAxisSpacing: 18,
             mainAxisSpacing: 18,
-            childAspectRatio: columnas == 1 ? 1.08 : 0.72,
+            childAspectRatio: columnas == 1 ? 0.62 : 0.72,
           ),
           itemBuilder: (context, index) {
             final publicacion = _publicaciones[index];

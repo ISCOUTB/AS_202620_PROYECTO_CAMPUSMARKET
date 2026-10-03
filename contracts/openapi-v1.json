@@ -113,7 +113,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Publicacion"
+                    "$ref": "#/components/schemas/PublicacionGestion"
                   },
                   "title": "Response Listarmispublicaciones"
                 }
@@ -927,6 +927,81 @@
           "estado"
         ],
         "title": "PublicacionCreate"
+      },
+      "PublicacionGestion": {
+        "properties": {
+          "titulo": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 3,
+            "title": "Titulo"
+          },
+          "descripcion": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 3,
+            "title": "Descripcion"
+          },
+          "precio": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Precio"
+          },
+          "modalidad": {
+            "type": "string",
+            "enum": [
+              "venta",
+              "alquiler"
+            ],
+            "title": "Modalidad"
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "nuevo",
+              "usado",
+              "reacondicionado"
+            ],
+            "title": "Estado"
+          },
+          "propietario_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Propietario Id",
+            "default": 1
+          },
+          "estado_publicacion": {
+            "type": "string",
+            "enum": [
+              "disponible",
+              "reservado",
+              "vendido"
+            ],
+            "title": "Estado Publicacion",
+            "default": "disponible"
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "imagenes": {
+            "items": {
+              "$ref": "#/components/schemas/PublicacionImagen"
+            },
+            "type": "array",
+            "title": "Imagenes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "titulo",
+          "descripcion",
+          "precio",
+          "modalidad",
+          "estado",
+          "id"
+        ],
+        "title": "PublicacionGestion"
       },
       "PublicacionImagen": {
         "properties": {
