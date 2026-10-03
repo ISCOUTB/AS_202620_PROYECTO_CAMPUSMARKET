@@ -62,25 +62,14 @@ Contextos delimitados:
 - `catalogo`;
 - `administracion`.
 
-La persistencia vigente es **MySQL** y el acceso productivo se concentra en el contexto Publicaciones mediante PyMySQL.
+La persistencia vigente es **MySQL**. Usuarios, Publicaciones y Administración
+escriben únicamente sus tablas mediante sus repositories y PyMySQL; Catálogo
+consume lectura del servicio de Publicaciones. `db.py` comparte infraestructura.
 
-La arquitectura lógica vigente es:
-
-```text
-Flutter Web / Android
-        ↓ HTTP/JSON
-        ↓ contrato OpenAPI
-      FastAPI
-        ├── Catálogo
-        │      ↓ capacidad explícita de lectura
-        └── Publicaciones
-                 ↓
-              service.py
-                 ↓
-              repository.py
-                 ↓ PyMySQL
-                MySQL
-```
+La dirección por contexto es `router → service → repository → MySQL`.
+Usuarios materializa identidad/sesiones; Publicaciones, gestión y galería;
+Catálogo, búsqueda/detalle; Administración, reportes y revisión. FastAPI registra
+los cuatro routers en una sola aplicación. Véase [C4 Nivel 3](docs/c4/03-componentes-backend.md).
 
 Reglas de frontera verificadas:
 
@@ -115,22 +104,24 @@ CampusMarket materializa actualmente:
 - cambio de estado operativo `disponible`, `reservado` y `vendido`;
 - eliminación de publicaciones;
 - persistencia MySQL;
-- contrato OpenAPI ejecutable;
+- contrato OpenAPI v2 ejecutable;
+- registro, login, perfil y logout revocable;
+- reportes y moderación con capacidad comprobada;
 - health check y degradación controlada cuando la persistencia no está disponible.
 
 El flujo fue verificado tanto en Flutter Web como en Android.
 
-## Limitación vigente de identidad
+## Identidad y alcance MVP
 
-Las operaciones de publicaciones propias utilizan actualmente `propietario_id = 1` como identidad temporal del prototipo.
+Registro, login, logout, usuario actual y perfil usan sesiones opacas revocables
+(ADR-0012). El propietario procede del token y se restringe en SQL. EC-02 se ejecuta
+con dos usuarios reales: 10/10 mutaciones ajenas rechazadas y datos intactos.
+Reporte/moderación requieren sesión/capacidad; registro/perfil no conceden privilegios.
 
-Esto **no representa autenticación real**.
-
-Por tanto:
-
-- no se declara implementado un login real;
-- no se declara EC-02 completamente satisfecho;
-- Gestión de Usuarios continúa pendiente de materialización completa.
+El token vive en memoria: recargar Web o reiniciar Android requiere login.
+El MVP no verifica correo/afiliación ni incluye recuperación de contraseña,
+chat, pagos o logística. Las limitaciones y comprobaciones se detallan en la
+[auditoría de continuación](docs/evidencias/auditoria-mvp-continuacion-2026-10-03.md).
 
 ---
 
@@ -180,15 +171,19 @@ Reglas principales:
 - `catalogo` obtiene las imágenes mediante Publicaciones;
 - en desarrollo local los archivos se sirven desde `/uploads`.
 
-El almacenamiento local de archivos es una solución de desarrollo. Antes de llevar esta capacidad a un despliegue productivo en infraestructura con filesystem no persistente debe utilizarse almacenamiento de objetos persistente, manteniendo MySQL para metadatos y referencias.
+Pillow verifica contenido real, orienta/normaliza fotos y retira metadatos (ADR-0015).
+Compose conserva fotos en volumen nombrado (ADR-0018), probado tras recreación.
+Azure debe disponer de almacenamiento durable antes de habilitar esta capacidad.
+El MVP todavía no está desplegado públicamente.
 
 ---
 
 # Contrato API
 
-Contrato versionado:
+Contrato vigente: API 2.0.0 / OpenAPI 3.1.0.
 
-- [`contracts/openapi-v1.json`](contracts/openapi-v1.json)
+- [`contracts/openapi-v2.json`](contracts/openapi-v2.json)
+- v1 se conserva como referencia histórica S7.
 
 Prueba contractual:
 
@@ -200,6 +195,14 @@ Operaciones materializadas incluyen, entre otras:
 
 ```text
 GET    /health
+POST   /usuarios/registro
+POST   /usuarios/login
+POST   /usuarios/logout
+GET    /usuarios/me
+PATCH  /usuarios/me
+POST   /administracion/reportes
+GET    /administracion/reportes
+PATCH  /administracion/reportes/{report_id}
 POST   /publicaciones
 GET    /publicaciones
 GET    /publicaciones/mias
@@ -213,7 +216,7 @@ GET    /catalogo/{publication_id}
 
 ---
 
-# Verificación vigente al cierre del PR #47
+# Verificación histórica al cierre del PR #47
 
 La verificación local previa a integración del 3 de octubre de 2026 terminó con:
 
@@ -236,6 +239,18 @@ El PR #47 (`Producto Marketplace UI - catálogo, gestión e imágenes`) fue inte
 Los dos warnings locales corresponden a deprecaciones de dependencias y no a fallos funcionales de la suite.
 
 ---
+
+# Verificación del checkpoint MVP
+
+La continuación parte de `fda38976882fd5abcca8486b4b114efd28ca2b1c`.
+Backend: 77 pruebas y diez mutaciones detectadas; Flutter: analyze, seis pruebas,
+dos mutaciones, build Web y APK debug. Tres flujos completos producen nueve
+comprobaciones y 19 capturas por plataforma. Compose verifica volumen, cuota y
+diez búsquedas de 1000 filas. Estas cifras corresponden a ese SHA y sus artefactos.
+
+El resultado del HEAD de continuación, incluidos CI y SonarCloud, se registra en
+[auditoría MVP](docs/evidencias/auditoria-mvp-continuacion-2026-10-03.md).
+No se considera un gate de otro hash como validación de este trabajo.
 
 # Tecnologías vigentes
 
@@ -277,6 +292,8 @@ Instalación:
 
 ```bash
 pip install -r backend/requirements.txt
+# Para pytest y TestClient:
+pip install -r backend/requirements-dev.txt
 ```
 
 Ejemplo de configuración PowerShell:
@@ -315,7 +332,7 @@ http://localhost:8000/health
 ```bash
 cd frontend/campusmarket
 flutter analyze
-flutter run -d chrome
+flutter run -d chrome --web-port=3000
 ```
 
 ## Android Emulator
@@ -372,6 +389,9 @@ La plantilla declara App Service, Azure Database for MySQL Flexible Server y con
 Workflow:
 
 - [`.github/workflows/backend-tests.yml`](.github/workflows/backend-tests.yml)
+- [`.github/workflows/flutter-mvp.yml`](.github/workflows/flutter-mvp.yml)
+- [`.github/workflows/mvp-flujo-real.yml`](.github/workflows/mvp-flujo-real.yml)
+- [`.github/workflows/compose-mvp.yml`](.github/workflows/compose-mvp.yml)
 
 El pipeline configura Python y MySQL, instala dependencias, verifica la base de datos, ejecuta análisis estático, pruebas funcionales/arquitectónicas y la prueba contractual OpenAPI.
 

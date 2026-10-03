@@ -24,8 +24,8 @@ def _limpiar_publicaciones():
         connection.close()
 
 
-def test_corte_vertical_crea_y_recupera_publicacion():
-    _limpiar_publicaciones()
+def test_corte_vertical_crea_y_recupera_publicacion(cuentas):
+    client = cuentas[0]["client"]
 
     payload = {
         "titulo": "Calculadora científica",
@@ -59,8 +59,8 @@ def test_corte_vertical_crea_y_recupera_publicacion():
     assert publicaciones[0]["estado"] == "reacondicionado"
 
 
-def test_mysql_persiste_y_recupera_publicacion():
-    _limpiar_publicaciones()
+def test_mysql_persiste_y_recupera_publicacion(cuentas):
+    client = cuentas[0]["client"]
 
     payload = {
         "titulo": "Libro arquitectura",
@@ -110,8 +110,9 @@ def test_mysql_persiste_y_recupera_publicacion():
 
 
 def test_mysql_indisponible_degrada_controladamente(
-    monkeypatch,
+    monkeypatch, cuentas,
 ):
+    client = cuentas[0]["client"]
     monkeypatch.setenv(
         "CAMPUSMARKET_DB_PORT",
         "3399",

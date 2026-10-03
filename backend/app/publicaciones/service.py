@@ -1,14 +1,18 @@
-from .image_storage import delete_publication_image
+from .image_storage import delete_publication_image, save_publication_image
 from .repository import (
     PersistenceUnavailableError,
     create_publication,
     create_publication_image,
     delete_publication,
     get_publication,
+    hide_publication,
     list_publication_images,
+    list_publication_images_batch,
     list_publications,
     list_publications_by_owner,
     publication_exists,
+    remove_publication_image,
+    set_primary_image,
     update_publication,
     update_publication_status,
 )
@@ -32,10 +36,10 @@ def _normalizar_publicacion(data: dict) -> dict:
     }
 
 
-def crear_publicacion(data: dict) -> dict:
+def crear_publicacion(data: dict, propietario_id: int) -> dict:
     normalized = {
         **_normalizar_publicacion(data),
-        "propietario_id": int(data.get("propietario_id", 1)),
+        "propietario_id": propietario_id,
         "estado_publicacion": data.get(
             "estado_publicacion",
             "disponible",
@@ -173,11 +177,67 @@ def existe_publicacion(publicacion_id: int) -> bool:
 
 def registrar_imagen_publicacion(
     publicacion_id: int,
+    propietario_id: int,
     imagen_url: str,
 ) -> dict:
     try:
-        return create_publication_image(publicacion_id, imagen_url)
+        return create_publication_image(publicacion_id, propietario_id, imagen_url)
+    except LookupError as error:
+        raise PublicationNotFoundError(str(error)) from error
     except PersistenceUnavailableError as error:
         raise PublicationPersistenceUnavailableError(
             "No es posible registrar la imagen temporalmente."
+        ) from error
+
+
+def verificar_propietario(publicacion_id: int, propietario_id: int) -> None:
+    publicacion = obtener_publicacion(publicacion_id)
+    if publicacion is None or publicacion["propietario_id"] != propietario_id:
+        raise PublicationNotFoundError("La publicación no existe o no te pertenece.")
+
+
+def subir_imagen_publicacion(publicacion_id: int, propietario_id: int, nombre: str, contenido: bytes) -> dict:
+    verificar_propietario(publicacion_id, propietario_id)
+    imagen_url = save_publication_image(publicacion_id, nombre, contenido)
+    try:
+        return registrar_imagen_publicacion(publicacion_id, propietario_id, imagen_url)
+    except Exception:
+        delete_publication_image(imagen_url)
+        raise
+
+
+def eliminar_imagen_publicacion(publicacion_id: int, propietario_id: int, imagen_id: int) -> None:
+    try:
+        url = remove_publication_image(publicacion_id, propietario_id, imagen_id)
+        if url is None:
+            raise PublicationNotFoundError("La imagen no existe o no te pertenece.")
+        delete_publication_image(url)
+    except PersistenceUnavailableError as error:
+        raise PublicationPersistenceUnavailableError("Persistencia temporalmente no disponible.") from error
+
+
+def elegir_imagen_principal(publicacion_id: int, propietario_id: int, imagen_id: int) -> list[dict]:
+    try:
+        if not set_primary_image(publicacion_id, propietario_id, imagen_id):
+            raise PublicationNotFoundError("La imagen no existe o no te pertenece.")
+        return list_publication_images(publicacion_id)
+    except PersistenceUnavailableError as error:
+        raise PublicationPersistenceUnavailableError("Persistencia temporalmente no disponible.") from error
+
+
+def ocultar_publicacion(publicacion_id: int) -> bool:
+    """Interfaz interna para administración; no cambia propiedad ni borra datos."""
+    try:
+        return hide_publication(publicacion_id)
+    except PersistenceUnavailableError as error:
+        raise PublicationPersistenceUnavailableError("Persistencia temporalmente no disponible.") from error
+
+
+def listar_imagenes_publicaciones(publicacion_ids: list[int]) -> dict[int, list[dict]]:
+    """Interfaz interna de lectura en lote para Catálogo, sin acceso a repository."""
+    try:
+        return list_publication_images_batch(publicacion_ids)
+    except PersistenceUnavailableError as error:
+        raise PublicationPersistenceUnavailableError(
+            "No es posible consultar las imágenes temporalmente."
         ) from error

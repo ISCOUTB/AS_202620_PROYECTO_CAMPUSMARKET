@@ -1,5 +1,13 @@
 # 4. Estrategia de solución
 
+La comparación y elección inicial siguientes conservan su contexto histórico.
+En el MVP actual ADR-0001 sigue vigente: un backend modular, cuatro contextos
+materializados, Flutter Web/Android y MySQL. La autenticación y las sesiones,
+fotografías, moderación y límites se concretan en ADR-0012–0017; ADR-0018 prepara
+Compose y ADR-0019 optimiza lecturas sin cambiar fronteras. El estado ejecutable
+se detalla en [bloques](05-bloques-de-construccion.md),
+[ejecución](06-vista-ejecucion.md) y [decisiones](09-decisiones.md).
+
 ## 4.1 Contexto de la decisión
 
 CampusMarket necesita una estrategia arquitectónica que permita construir un prototipo funcional durante el semestre y, al mismo tiempo, mantener una estructura que facilite su evolución sin introducir una complejidad innecesaria.

@@ -27,12 +27,12 @@ La evolución de persistencia se registra mediante:
 | ID | Aspecto | Requisito | C4 | ADR | Código | Pruebas | Evidencia |
 |---|---|---|---|---|---|---|---|
 | ASP-01 | Consulta y búsqueda de productos | [EC-01 - Consulta de productos](./arc42/10-escenarios-de-calidad.md#ec-01---consulta-de-productos) | [C4 Nivel 2](./c4/02-contenedores.md) / [C4 Nivel 3](./c4/03-componentes-backend.md) | [ADR-0009 - Materializar catálogo sin romper fronteras](./adr/0009-materializar-catalogo-sin-romper-fronteras.md) | [`backend/app/catalogo/`](../backend/app/catalogo/) | [`test_catalogo.py`](../backend/tests/test_catalogo.py) / [`test_ec01_catalogo.py`](../backend/tests/test_ec01_catalogo.py) / [`test_erosion_s9.py`](../backend/tests/test_erosion_s9.py) | [Evidencia EC-01 S9](./evidencias/evidencia-ec01-catalogo-s9-2026-10-01.md) / [Evidencia S9](./evidencias/evidencia-s9-2026-10-01.md) |
-| ASP-02 | Gestión segura de publicaciones | [EC-02 - Protección de publicaciones](./arc42/10-escenarios-de-calidad.md#ec-02---protección-de-publicaciones) | [C4 Nivel 1](./c4/01-contexto.md) / [C4 Nivel 3](./c4/03-componentes-backend.md) | Sin ADR específico: la protección por propietario está parcialmente materializada | [`backend/app/publicaciones/`](../backend/app/publicaciones/) | [`test_gestion_publicaciones.py`](../backend/tests/test_gestion_publicaciones.py) | Protección por `propietario_id` en backend; autenticación real aún pendiente |
+| ASP-02 | Gestión segura de publicaciones | [EC-02 - Protección de publicaciones](./arc42/10-escenarios-de-calidad.md#ec-02---protección-de-publicaciones) | [C4 Nivel 1](./c4/01-contexto.md) / [C4 Nivel 3](./c4/03-componentes-backend.md) | [ADR-0012](./adr/0012-autenticar-con-sesiones-opacas-revocables.md) | [`backend/app/publicaciones/`](../backend/app/publicaciones/) | [`test_gestion_publicaciones.py`](../backend/tests/test_gestion_publicaciones.py) | [EC-02, sesiones y evidencia por hash](./evidencias/auditoria-mvp-continuacion-2026-10-03.md) |
 | ASP-03 | Evolución de la gestión de productos | [EC-03 - Modificación del sistema](./arc42/10-escenarios-de-calidad.md#ec-03---modificación-del-sistema) | [C4 Nivel 2](./c4/02-contenedores.md) / [C4 Nivel 3](./c4/03-componentes-backend.md) | [ADR-0001 - Monolito modular](./adr/0001-usar-monolito-modular.md) | [`backend/app/publicaciones/`](../backend/app/publicaciones/) | [`test_publicaciones_vertical.py`](../backend/tests/test_publicaciones_vertical.py) | Evidencia S3/S4 y profundización modular S6 |
 | ASP-04 | Recuperación del prototipo | [EC-04 - Recuperación del prototipo](./arc42/10-escenarios-de-calidad.md#ec-04---recuperación-del-prototipo) | [C4 Nivel 1](./c4/01-contexto.md) | [ADR-0001](./adr/0001-usar-monolito-modular.md) | [`scripts/run_s4.ps1`](../scripts/run_s4.ps1) | [`test_health.py`](../backend/tests/test_health.py) | [Evidencia de arranque](./evidencias/arranque-un-comando-2026-09-04.md) |
 | ASP-05 | Creación y gestión de publicaciones | [Alcance funcional](./arc42/ARC42.md#32-alcance-funcional) | [C4 Nivel 2](./c4/02-contenedores.md) / [C4 Nivel 3](./c4/03-componentes-backend.md) | [ADR-0001](./adr/0001-usar-monolito-modular.md) / [ADR-0004](./adr/0004-migrar-persistencia-a-mysql.md) | [`router.py`](../backend/app/publicaciones/router.py), [`service.py`](../backend/app/publicaciones/service.py), [`repository.py`](../backend/app/publicaciones/repository.py) | [`test_publicaciones_vertical.py`](../backend/tests/test_publicaciones_vertical.py) / [`test_gestion_publicaciones.py`](../backend/tests/test_gestion_publicaciones.py) | Corte vertical vigente con MySQL; listar, editar, estado y eliminar publicaciones propias |
 | ASP-06 | Degradación controlada de persistencia | [EC-05](./arc42/10-escenarios-de-calidad.md#ec-05---degradación-ante-bloqueo-temporal-de-persistencia) | [C4 Nivel 2](./c4/02-contenedores.md) / [Vista de ejecución](./arc42/06-vista-ejecucion.md) | [ADR-0002](./adr/0002-manejo-bloqueo-sqlite.md) histórico / [ADR-0004](./adr/0004-migrar-persistencia-a-mysql.md) vigente | [`repository.py`](../backend/app/publicaciones/repository.py), [`service.py`](../backend/app/publicaciones/service.py), [`router.py`](../backend/app/publicaciones/router.py) | [`test_publicaciones_vertical.py`](../backend/tests/test_publicaciones_vertical.py) | Evidencia histórica SQLite + verificación vigente MySQL |
-| ASP-07 | Contrato ejecutable de API | [EC-06 - Compatibilidad del contrato](./arc42/10-escenarios-de-calidad.md#ec-06---compatibilidad-del-contrato-de-api) | [C4 Nivel 2](./c4/02-contenedores.md) / [Vista de ejecución](./arc42/06-vista-ejecucion.md) | [ADR-0003](./adr/0003-usar-integracion-sincrona-http-json.md) | [`openapi-v1.json`](../contracts/openapi-v1.json), [`main.py`](../backend/app/main.py), [`router.py`](../backend/app/publicaciones/router.py) | [`test_contrato_openapi.py`](../backend/tests/test_contrato_openapi.py) / [`backend-tests.yml`](../.github/workflows/backend-tests.yml) | [Evidencia S7](./evidencias/evidencia-s7-2026-09-15.md) / [Fallo incompatible](./evidencias/fallo-contrato-s7-2026-09-15.md) / [Run #93 verde](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/35115585642) / [Run rojo](https://github.com/Nnigarp/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/34934077733) |
+| ASP-07 | Contrato ejecutable de API | [EC-06 - Compatibilidad del contrato](./arc42/10-escenarios-de-calidad.md#ec-06---compatibilidad-del-contrato-de-api) | [C4 Nivel 2](./c4/02-contenedores.md) / [Vista de ejecución](./arc42/06-vista-ejecucion.md) | [ADR-0003](./adr/0003-usar-integracion-sincrona-http-json.md) | [`openapi-v2.json`](../contracts/openapi-v2.json), [`main.py`](../backend/app/main.py), [`router.py`](../backend/app/publicaciones/router.py) | [`test_contrato_openapi.py`](../backend/tests/test_contrato_openapi.py) / [`backend-tests.yml`](../.github/workflows/backend-tests.yml) | [Evidencia S7](./evidencias/evidencia-s7-2026-09-15.md) / [Fallo incompatible](./evidencias/fallo-contrato-s7-2026-09-15.md) / [Run #93 verde](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/35115585642) / [Run rojo](https://github.com/Nnigarp/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/34934077733) |
 | ASP-08 | Migración de persistencia a MySQL | Observación docente sobre persistencia vigente | [C4 Nivel 2](./c4/02-contenedores.md) / [C4 Nivel 3](./c4/03-componentes-backend.md) | [ADR-0004 - Migrar persistencia a MySQL](./adr/0004-migrar-persistencia-a-mysql.md) | [`repository.py`](../backend/app/publicaciones/repository.py), [`requirements.txt`](../backend/requirements.txt), [`.gitignore`](../.gitignore) | [`test_publicaciones_vertical.py`](../backend/tests/test_publicaciones_vertical.py), [`test_modularidad_s6.py`](../backend/tests/test_modularidad_s6.py) | Implementación vigente MySQL/PyMySQL |
 | ASP-09 | Imágenes de publicaciones | Experiencia visual del marketplace y gestión de recursos de una publicación | [C4 Nivel 2](./c4/02-contenedores.md) / [C4 Nivel 3](./c4/03-componentes-backend.md) | [ADR-0011 - Gestionar imágenes de publicaciones](./adr/0011-gestionar-imagenes-de-publicaciones.md) | [`image_storage.py`](../backend/app/publicaciones/image_storage.py), [`router.py`](../backend/app/publicaciones/router.py), [`service.py`](../backend/app/publicaciones/service.py), [`repository.py`](../backend/app/publicaciones/repository.py) | [`test_gestion_publicaciones.py`](../backend/tests/test_gestion_publicaciones.py) / [`test_catalogo.py`](../backend/tests/test_catalogo.py) / [`test_contrato_openapi.py`](../backend/tests/test_contrato_openapi.py) | Verificación funcional local y Android; contrato y suite backend en verde |
 
@@ -46,16 +46,18 @@ pruebas funcionales, reglas automáticas de erosión arquitectónica y la medici
 de EC-01.
 
 El aspecto **ASP-02 - Gestión segura de publicaciones** se encuentra
-**parcialmente materializado**. El backend ya restringe edición, cambio de estado
-y eliminación mediante `propietario_id`, pero CampusMarket todavía no dispone de
-autenticación real de usuarios. Por esa razón no se declara EC-02 como
-completamente satisfecho.
+**materializado al nivel MVP**: identidad de sesión resuelta en Usuarios y
+propiedad server-side en Publicaciones. EC-02 verifica dos cuentas reales, diez
+ataques rechazados y datos intactos tras cada intento, en backend y Web/Android.
+Véase la [auditoría](./evidencias/auditoria-mvp-continuacion-2026-10-03.md).
 
 No se asocian pruebas artificialmente a capacidades que aún no están
 implementadas.
 
 La materialización vigente se concentra principalmente en:
 
+- Usuarios: registro/login/perfil/logout con sesión;
+- Administración: reportes y moderación;
 - Gestión de Publicaciones;
 - creación, edición, cambio de estado y eliminación de publicaciones;
 - hasta tres imágenes por publicación;
@@ -202,10 +204,10 @@ Los contextos definidos son:
 
 | Contexto delimitado      | Responsabilidad                | Estado actual                                   |
 | ------------------------ | ------------------------------ | ----------------------------------------------- |
-| Gestión de Usuarios      | Identidad y autenticación      | Límite definido, no materializado completamente |
+| Gestión de Usuarios      | Identidad y autenticación      | MVP: registro, login, perfil, sesiones y logout |
 | Gestión de Publicaciones | Ciclo de vida de publicaciones | Materializado                                   |
 | Catálogo                 | Consulta, búsqueda y filtrado  | Materializado                                   |
-| Administración           | Moderación y supervisión       | Límite definido                                 |
+| Administración           | Moderación y supervisión       | MVP: reportes y revisión con nota |
 
 ---
 
@@ -281,7 +283,7 @@ arquitectónica.
 | ------ | --------------------------------------------------------------- | -------------------------------------------------------- |
 | MOD-01 | Catálogo podría acceder directamente a la tabla `publicaciones` | Consumir capacidades de Publicaciones mediante contratos |
 | MOD-02 | Administración podría modificar directamente `publicaciones`    | Solicitar operaciones mediante Gestión de Publicaciones  |
-| MOD-03 | Identidad autenticada del propietario aún no materializada      | Mantener Usuarios como dueño de identidad; no presentar `propietario_id=1` como autenticación |
+| MOD-03 | Suplantación de propietario o privilegios | Sesión real, predicados SQL y capacidad por ID; tests EC-02 y moderación |
 | MOD-04 | Tests o scripts podrían acoplarse al motor de persistencia      | Mantener esos accesos fuera del código productivo        |
 
 ---
@@ -328,7 +330,7 @@ La prueba:
 verifica actualmente que:
 
 * `repository.py` sea el único escritor productivo de `publicaciones`;
-* otros contextos no utilicen directamente PyMySQL;
+* routers/services no usen SQL y cada repository escriba solo sus tablas;
 * otros contextos no importen el repositorio de Publicaciones;
 * la dirección se mantenga:
 
@@ -341,287 +343,24 @@ atraviese directamente la frontera de persistencia.
 
 ---
 
-# Trazabilidad S7 — API-first
+# Trazabilidad S7 — API-first y evolución MVP
 
-Durante S7 se formalizó la interfaz entre:
-
-**Frontend Flutter → Backend FastAPI**
-
-La comunicación vigente utiliza:
-
-- HTTP;
-- JSON;
-- estilo REST;
-- comportamiento síncrono;
-- contrato OpenAPI ejecutable y versionado.
-
-El contrato fuente se encuentra en:
-
-[`contracts/openapi-v1.json`](../contracts/openapi-v1.json)
-
-La especificación declara:
-
-```text
-OpenAPI 3.1.0
-API 1.0.0
-```
-
-Durante S7, la superficie materializada utilizada para formalizar el contrato
-incluía:
-
-```text
-POST /publicaciones
-GET  /publicaciones
-GET  /health
-```
-
-La superficie vigente ha evolucionado posteriormente e incluye también Catálogo,
-gestión de publicaciones propias e imágenes; `contracts/openapi-v1.json` se
-mantiene sincronizado con FastAPI mediante `test_contrato_openapi.py`.
-
-La decisión arquitectónica asociada se registra mediante:
-
-[ADR-0003 - Integración síncrona HTTP/JSON](./adr/0003-usar-integracion-sincrona-http-json.md)
-
-El escenario de calidad asociado es:
-
-[EC-06 - Compatibilidad del contrato de API](./arc42/10-escenarios-de-calidad.md#ec-06---compatibilidad-del-contrato-de-api)
-
-La representación arquitectónica relacionada se encuentra en:
-
-- [C4 Nivel 2](./c4/02-contenedores.md);
-- [Vista de ejecución arc42](./arc42/06-vista-ejecucion.md).
-
----
-
-## ASP-07 — cadena de trazabilidad navegable
-
-La cadena completa del aspecto es:
-
-```text
-ASP-07
-   ↓
-EC-06
-   ↓
-C4 Nivel 2 / Vista de ejecución
-   ↓
-ADR-0003
-   ↓
-contracts/openapi-v1.json
-   ↓
-FastAPI
-   ↓
-main.py / router.py
-   ↓
-test_contrato_openapi.py
-   ↓
-GitHub Actions
-   ↓
-evidencia de fallo incompatible
-   ↓
-run final en verde
-```
-
-Correspondencia directa:
-
-| Eslabón | Evidencia |
-|---|---|
-| Aspecto | `ASP-07 - Contrato ejecutable de API` |
-| Escenario | [EC-06](./arc42/10-escenarios-de-calidad.md#ec-06---compatibilidad-del-contrato-de-api) |
-| C4 | [C4 Nivel 2](./c4/02-contenedores.md) |
-| Ejecución | [arc42 sección 6](./arc42/06-vista-ejecucion.md) |
-| Decisión | [ADR-0003](./adr/0003-usar-integracion-sincrona-http-json.md) |
-| Contrato | [`contracts/openapi-v1.json`](../contracts/openapi-v1.json) |
-| Entrada FastAPI | [`backend/app/main.py`](../backend/app/main.py) |
-| API de Publicaciones | [`backend/app/publicaciones/router.py`](../backend/app/publicaciones/router.py) |
-| Prueba contractual | [`backend/tests/test_contrato_openapi.py`](../backend/tests/test_contrato_openapi.py) |
-| Pipeline | [`.github/workflows/backend-tests.yml`](../.github/workflows/backend-tests.yml) |
-| Evidencia completa | [`evidencia-s7-2026-09-15.md`](./evidencias/evidencia-s7-2026-09-15.md) |
-| Evidencia de incompatibilidad | [`fallo-contrato-s7-2026-09-15.md`](./evidencias/fallo-contrato-s7-2026-09-15.md) |
-
----
+Durante S7 se formalizó HTTP/JSON síncrono con ADR-0003 y OpenAPI v1.
+La [evidencia S7](./evidencias/evidencia-s7-2026-09-15.md) y el
+[fallo incompatible](./evidencias/fallo-contrato-s7-2026-09-15.md) conservan esos
+resultados históricos. La evolución de identidad del ADR-0012 requiere API 2.0.0.
 
 ## Correspondencia contrato ↔ implementación
 
-La ficha S7 requiere cotejo bidireccional entre contrato y código.
+Contrato vigente: [openapi-v2.json](../contracts/openapi-v2.json).
+Proveedor: FastAPI `main.py` y los routers de los cuatro contextos.
+Prueba: [test_contrato_openapi.py](../backend/tests/test_contrato_openapi.py), que
+compara el proveedor exacto, el consumidor Flutter y Bearer/ausencia de propietario
+de entrada. CI separa prueba contractual de suite funcional/arquitectónica.
+El archivo v1 es historia y ya no es el snapshot exigido por la prueba actual.
 
-### Contrato → código: creación de publicaciones
-
-```text
-Contrato:
-POST /publicaciones
-operationId: crearPublicacion
-```
-
-se implementa en:
-
-[`backend/app/publicaciones/router.py`](../backend/app/publicaciones/router.py)
-
-mediante:
-
-```text
-POST /publicaciones
-operation_id = crearPublicacion
-```
-
-### Contrato → código: consulta de publicaciones
-
-```text
-Contrato:
-GET /publicaciones
-operationId: listarPublicaciones
-```
-
-se implementa en:
-
-[`backend/app/publicaciones/router.py`](../backend/app/publicaciones/router.py)
-
-mediante:
-
-```text
-GET /publicaciones
-operation_id = listarPublicaciones
-```
-
-### Código → contrato: salud del backend
-
-La implementación:
-
-[`backend/app/main.py`](../backend/app/main.py)
-
-expone:
-
-```text
-GET /health
-operation_id = consultarSalud
-```
-
-y la misma operación se encuentra declarada en:
-
-[`contracts/openapi-v1.json`](../contracts/openapi-v1.json)
-
-como:
-
-```text
-GET /health
-operationId: consultarSalud
-```
-
----
-
-## Verificación automática del contrato
-
-La prueba:
-
-[`backend/tests/test_contrato_openapi.py`](../backend/tests/test_contrato_openapi.py)
-
-compara:
-
-```text
-contracts/openapi-v1.json
-        ↕
-OpenAPI generado por FastAPI
-```
-
-La prueba permite detectar incompatibilidades en:
-
-- rutas;
-- métodos HTTP;
-- `operationId`;
-- esquemas;
-- campos requeridos;
-- respuestas acordadas.
-
-El workflow:
-
-[`.github/workflows/backend-tests.yml`](../.github/workflows/backend-tests.yml)
-
-ejecuta explícitamente:
-
-```yaml
-- name: Ejecutar prueba de contrato OpenAPI
-  run: python -m pytest backend/tests/test_contrato_openapi.py -q
-```
-
----
-
-## Evidencia de ejecución en CI
-
-La ejecución oficial correspondiente al estado revisado por la pasada temprana
-del agente es:
-
-```text
-Run #93
-Commit: baeca7ea3cebe33818a68c1edc38e9aaf045424c
-Conclusión: success
-```
-
-Evidencia:
-
-[GitHub Actions Run #93](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/35115585642)
-
----
-
-## Evidencia de incompatibilidad real
-
-Para comprobar que la prueba contractual puede fallar, se realizó temporalmente:
-
-```diff
-- operation_id="crearPublicacion",
-+ operation_id="registrarPublicacion",
-```
-
-La prueba detectó la incompatibilidad y GitHub Actions terminó en rojo.
-
-Evidencia:
-
-[GitHub Actions - Run rojo](https://github.com/Nnigarp/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/34934077733)
-
-Resultado:
-
-```text
-FAILED test_proveedor_fastapi_cumple_el_contrato_versionado
-1 failed, 10 passed, 2 warnings
-Process completed with exit code 1.
-```
-
-La mutación fue restaurada posteriormente y no forma parte del código vigente.
-
-La documentación detallada se encuentra en:
-
-[`fallo-contrato-s7-2026-09-15.md`](./evidencias/fallo-contrato-s7-2026-09-15.md)
-
----
-
-## Historial del contrato
-
-El contrato fue incorporado al repositorio mediante:
-
-```text
-485249a4ac8be1f12e5bfc4c0b54af744e51e5d6
-Implementar contrato OpenAPI y prueba de contrato S7
-```
-
-Su historial puede reproducirse mediante:
-
-```bash
-git log --format='%h %cI %s' -- contracts/openapi-v1.json
-```
-
-De esta forma, ASP-07 mantiene trazabilidad navegable entre:
-
-```text
-requisito
-→ arquitectura
-→ decisión
-→ contrato
-→ código
-→ prueba
-→ CI
-→ evidencia
-```
-
-sin depender únicamente de descripciones textuales.
+Cadena: ASP-07 → EC-06 → C4/arc42 ejecución → ADR-0003/0012 → OpenAPI v2 →
+proveedor → prueba → CI por hash → [auditoría MVP](./evidencias/auditoria-mvp-continuacion-2026-10-03.md).
 
 # Trazabilidad de migración MySQL — ADR-0004
 
@@ -650,9 +389,9 @@ El mecanismo de acceso es:
 
 **PyMySQL**
 
-El acceso productivo permanece encapsulado en:
-
-`backend/app/publicaciones/repository.py`
+Cada contexto persiste solo sus tablas en su repository. Publicaciones conserva
+su único escritor; Usuarios y Administración incorporan los suyos. `db.py`
+comparte conexión/transacción sin entidades de dominio.
 
 La dirección vigente es:
 
@@ -739,87 +478,28 @@ test_publicaciones_vertical.py
 
 ---
 
-# Estado arquitectónico vigente
+# Estado arquitectónico vigente del MVP
 
-El recorrido actual del sistema es:
+Los cuatro contextos están materializados y conservan router → service → repository
+→ MySQL. Catálogo consume lecturas del service de Publicaciones; Administración
+solicita ocultamiento por el mismo service. Usuarios posee sesiones e identidad.
 
-```text
-Flutter
-    ↓ HTTP/JSON síncrono
-    ↓ OpenAPI
-FastAPI
-    ├── Catálogo
-    │      ↓ capacidad explícita de lectura
-    └── Publicaciones
-              ↓
-           service.py
-              ↓
-           repository.py
-              ↓ PyMySQL / SQL
-             MySQL
-```
+| Aspecto MVP | Decisiones | Pruebas / evidencia |
+|---|---|---|
+| ASP-01 catálogo | ADR-0009/0019 | `test_catalogo.py`, `test_erosion_s9.py`, EC-01 Compose |
+| ASP-02 propiedad | ADR-0012/0017 | `test_ec02_autorizacion.py`, mutación SQL, flujo Web/Android |
+| ASP-07 contrato | ADR-0003/0012 | `openapi-v2.json`, `test_contrato_openapi.py` |
+| ASP-09 fotos | ADR-0011/0015/0016/0018 | `test_imagenes_seguras.py`, selector real y persistencia Compose |
+| ASP-10 identidad | ADR-0012/0014 | `test_usuarios.py`, tests de sesión Flutter y logout revocado |
+| ASP-11 moderación | ADR-0013/0014 | `test_administracion.py`, flujo reporte/revisión |
 
-Las principales decisiones vigentes incluyen:
+Propiedad de datos: Usuarios (`usuarios`, `sesiones_usuario`, `intentos_autenticacion`),
+Publicaciones (`publicaciones`, `publicacion_imagenes`), Administración
+(`reportes_publicacion`); Catálogo sin SQL/tablas. Prueba global:
+`test_propiedad_datos.py`. [C4 Nivel 3](./c4/03-componentes-backend.md) y
+[conceptos transversales](./arc42/08-conceptos-transversales.md) detallan componentes.
 
-* ADR-0001: monolito modular;
-* ADR-0003: integración síncrona HTTP/JSON;
-* ADR-0004: persistencia MySQL;
-* ADR-0009: materializar Catálogo sin romper fronteras;
-* ADR-0011: gestionar imágenes de publicaciones.
-
-ADR-0002 permanece como evidencia histórica del primer corte.
-ADR-0010 conserva la decisión S9 de no incorporar un componente generativo al
-producto.
-
----
-
-## Cadena de trazabilidad actual
-
-```text
-Aspecto
-   ↓
-Requisito / observación
-   ↓
-ADR
-   ↓
-C4
-   ↓
-Contrato
-   ↓
-Código
-   ↓
-Persistencia
-   ↓
-Pruebas
-   ↓
-Evidencia
-```
-
-Para Gestión de Publicaciones y Catálogo:
-
-```text
-ASP-01 / ASP-02 / ASP-03 / ASP-05 / ASP-06 / ASP-07 / ASP-08 / ASP-09
-        ↓
-Catálogo + Gestión de Publicaciones
-        ↓
-Publicaciones como dueño de escritura
-        ↓
-C4 Nivel 3
-        ↓
-Catálogo → servicio de Publicaciones
-        ↓
-router.py → service.py → repository.py
-        ↓
-OpenAPI + MySQL
-        ↓
-test_catalogo.py
-test_erosion_s9.py
-test_modularidad_s6.py
-test_publicaciones_vertical.py
-test_gestion_publicaciones.py
-test_contrato_openapi.py
-```
-
-De esta forma, CampusMarket mantiene trazabilidad entre la evolución histórica
-del proyecto y la arquitectura vigente, sin reescribir decisiones anteriores ni
-presentar tecnologías históricas como si continuaran activas.
+[Auditoría de continuación](./evidencias/auditoria-mvp-continuacion-2026-10-03.md)
+vincula requisito → implementación → ejecución → prueba → evidencia por hash.
+La documentación histórica permanece fechada; no valida automáticamente el HEAD
+MVP. Los ADR aceptados no se reescriben. Despliegue público pendiente de otro bloque.

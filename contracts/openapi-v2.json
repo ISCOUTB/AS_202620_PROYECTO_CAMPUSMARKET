@@ -1,0 +1,2180 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "CampusMarket API",
+    "description": "API HTTP/JSON de CampusMarket para crear y consultar publicaciones. El contrato versionado es contracts/openapi-v2.json.",
+    "version": "2.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8000",
+      "description": "Entorno local"
+    }
+  ],
+  "paths": {
+    "/publicaciones": {
+      "get": {
+        "tags": [
+          "publicaciones"
+        ],
+        "summary": "Listar publicaciones",
+        "operationId": "listarPublicaciones",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Publicacion"
+                  },
+                  "type": "array",
+                  "title": "Response Listarpublicaciones"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "La solicitud supera el límite permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "publicaciones"
+        ],
+        "summary": "Crear una publicación",
+        "operationId": "crearPublicacion",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublicacionCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Publicacion"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "La solicitud supera el límite permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Persistencia temporalmente no disponible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/publicaciones/mias": {
+      "get": {
+        "tags": [
+          "publicaciones"
+        ],
+        "summary": "Listar publicaciones de un propietario",
+        "operationId": "listarMisPublicaciones",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PublicacionGestion"
+                  },
+                  "type": "array",
+                  "title": "Response Listarmispublicaciones"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "La solicitud supera el límite permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/publicaciones/{publication_id}": {
+      "put": {
+        "tags": [
+          "publicaciones"
+        ],
+        "summary": "Editar una publicación propia",
+        "operationId": "editarPublicacion",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "publication_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Publication Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublicacionUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Publicacion"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Publicación no encontrada para el propietario",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "La solicitud supera el límite permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Persistencia temporalmente no disponible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "publicaciones"
+        ],
+        "summary": "Eliminar una publicación propia",
+        "operationId": "eliminarPublicacion",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "publication_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Publication Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Publicación no encontrada para el propietario",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "La solicitud supera el límite permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Persistencia temporalmente no disponible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/publicaciones/{publication_id}/estado": {
+      "patch": {
+        "tags": [
+          "publicaciones"
+        ],
+        "summary": "Cambiar disponibilidad de una publicación propia",
+        "operationId": "cambiarEstadoPublicacion",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "publication_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Publication Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EstadoPublicacionUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Publicacion"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Publicación no encontrada para el propietario",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "La solicitud supera el límite permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Persistencia temporalmente no disponible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/publicaciones/{publication_id}/imagenes": {
+      "post": {
+        "tags": [
+          "publicaciones"
+        ],
+        "summary": "Subir una imagen de una publicación",
+        "operationId": "subirImagenPublicacion",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "publication_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Publication Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_subirImagenPublicacion"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicacionImagen"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Imagen inválida o máximo alcanzado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Publicación no encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "La solicitud supera el límite permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Persistencia temporalmente no disponible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/publicaciones/{publication_id}/imagenes/{image_id}": {
+      "delete": {
+        "tags": [
+          "publicaciones"
+        ],
+        "summary": "Eliminar Imagen",
+        "operationId": "eliminarImagenPublicacion",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "publication_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Publication Id"
+            }
+          },
+          {
+            "name": "image_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Image Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "413": {
+            "description": "La solicitud supera el límite permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/publicaciones/{publication_id}/imagenes/{image_id}/principal": {
+      "put": {
+        "tags": [
+          "publicaciones"
+        ],
+        "summary": "Principal",
+        "operationId": "elegirImagenPrincipal",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "publication_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Publication Id"
+            }
+          },
+          {
+            "name": "image_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Image Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PublicacionImagen"
+                  },
+                  "title": "Response Elegirimagenprincipal"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "La solicitud supera el límite permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/catalogo": {
+      "get": {
+        "tags": [
+          "catalogo"
+        ],
+        "summary": "Consultar el catálogo",
+        "operationId": "consultarCatalogo",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "name": "modalidad",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "venta",
+                    "alquiler"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Modalidad"
+            }
+          },
+          {
+            "name": "estado",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "nuevo",
+                    "usado",
+                    "reacondicionado"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Estado"
+            }
+          },
+          {
+            "name": "precio_min",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Precio Min"
+            }
+          },
+          {
+            "name": "precio_max",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Precio Max"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PublicacionCatalogo"
+                  },
+                  "title": "Response Consultarcatalogo"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "La solicitud supera el límite permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/catalogo/{publicacion_id}": {
+      "get": {
+        "tags": [
+          "catalogo"
+        ],
+        "summary": "Consultar el detalle de una publicación",
+        "operationId": "consultarDetallePublicacion",
+        "parameters": [
+          {
+            "name": "publicacion_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Publicacion Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicacionCatalogo"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "La solicitud supera el límite permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/usuarios/registro": {
+      "post": {
+        "tags": [
+          "usuarios"
+        ],
+        "summary": "Registro",
+        "operationId": "registrarUsuario",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Registro"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Usuario"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "La solicitud supera el límite permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/usuarios/login": {
+      "post": {
+        "tags": [
+          "usuarios"
+        ],
+        "summary": "Iniciar Sesion",
+        "operationId": "iniciarSesion",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Credenciales"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sesion"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "La solicitud supera el límite permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/usuarios/me": {
+      "get": {
+        "tags": [
+          "usuarios"
+        ],
+        "summary": "Me",
+        "operationId": "consultarUsuarioActual",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Usuario"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "La solicitud supera el límite permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "patch": {
+        "tags": [
+          "usuarios"
+        ],
+        "summary": "Perfil",
+        "operationId": "editarPerfil",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PerfilUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Usuario"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "La solicitud supera el límite permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/usuarios/logout": {
+      "post": {
+        "tags": [
+          "usuarios"
+        ],
+        "summary": "Cerrar Sesion",
+        "operationId": "cerrarSesion",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "413": {
+            "description": "La solicitud supera el límite permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/administracion/reportes": {
+      "get": {
+        "tags": [
+          "administracion"
+        ],
+        "summary": "Reportes",
+        "operationId": "listarReportesPendientes",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Reporte"
+                  },
+                  "type": "array",
+                  "title": "Response Listarreportespendientes"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "La solicitud supera el límite permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "administracion"
+        ],
+        "summary": "Nuevo Reporte",
+        "operationId": "reportarPublicacion",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReporteCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reporte"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "La solicitud supera el límite permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/administracion/reportes/{report_id}": {
+      "patch": {
+        "tags": [
+          "administracion"
+        ],
+        "summary": "Resolve",
+        "operationId": "resolverReporte",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Report Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReporteResolve"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reporte"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "La solicitud supera el límite permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Consultar la salud del backend",
+        "operationId": "consultarSalud",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "La solicitud supera el límite permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Body_subirImagenPublicacion": {
+        "properties": {
+          "archivo": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "Archivo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "archivo"
+        ],
+        "title": "Body_subirImagenPublicacion"
+      },
+      "Credenciales": {
+        "properties": {
+          "correo": {
+            "type": "string",
+            "maxLength": 254,
+            "minLength": 5,
+            "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+            "title": "Correo"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 12,
+            "title": "Password"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "correo",
+          "password"
+        ],
+        "title": "Credenciales"
+      },
+      "ErrorResponse": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail"
+        ],
+        "title": "ErrorResponse"
+      },
+      "EstadoPublicacionUpdate": {
+        "properties": {
+          "estado_publicacion": {
+            "type": "string",
+            "enum": [
+              "disponible",
+              "reservado",
+              "vendido"
+            ],
+            "title": "Estado Publicacion"
+          }
+        },
+        "type": "object",
+        "required": [
+          "estado_publicacion"
+        ],
+        "title": "EstadoPublicacionUpdate"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "service": {
+            "type": "string",
+            "title": "Service"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "service"
+        ],
+        "title": "HealthResponse"
+      },
+      "ImagenCatalogo": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "publicacion_id": {
+            "type": "integer",
+            "title": "Publicacion Id"
+          },
+          "imagen_url": {
+            "type": "string",
+            "title": "Imagen Url"
+          },
+          "orden": {
+            "type": "integer",
+            "title": "Orden"
+          },
+          "es_principal": {
+            "type": "boolean",
+            "title": "Es Principal"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "publicacion_id",
+          "imagen_url",
+          "orden",
+          "es_principal"
+        ],
+        "title": "ImagenCatalogo"
+      },
+      "PerfilUpdate": {
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 2,
+            "title": "Nombre"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "nombre"
+        ],
+        "title": "PerfilUpdate"
+      },
+      "Publicacion": {
+        "properties": {
+          "titulo": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 3,
+            "title": "Titulo"
+          },
+          "descripcion": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 3,
+            "title": "Descripcion"
+          },
+          "precio": {
+            "type": "number",
+            "maximum": 9999999999.99,
+            "exclusiveMinimum": 0,
+            "title": "Precio"
+          },
+          "modalidad": {
+            "type": "string",
+            "enum": [
+              "venta",
+              "alquiler"
+            ],
+            "title": "Modalidad"
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "nuevo",
+              "usado",
+              "reacondicionado"
+            ],
+            "title": "Estado"
+          },
+          "estado_publicacion": {
+            "type": "string",
+            "enum": [
+              "disponible",
+              "reservado",
+              "vendido"
+            ],
+            "title": "Estado Publicacion",
+            "default": "disponible"
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "propietario_id": {
+            "type": "integer",
+            "title": "Propietario Id"
+          },
+          "visible": {
+            "type": "boolean",
+            "title": "Visible",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "titulo",
+          "descripcion",
+          "precio",
+          "modalidad",
+          "estado",
+          "id",
+          "propietario_id"
+        ],
+        "title": "Publicacion"
+      },
+      "PublicacionCatalogo": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "titulo": {
+            "type": "string",
+            "title": "Titulo"
+          },
+          "descripcion": {
+            "type": "string",
+            "title": "Descripcion"
+          },
+          "precio": {
+            "type": "number",
+            "title": "Precio"
+          },
+          "modalidad": {
+            "type": "string",
+            "enum": [
+              "venta",
+              "alquiler"
+            ],
+            "title": "Modalidad"
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "nuevo",
+              "usado",
+              "reacondicionado"
+            ],
+            "title": "Estado"
+          },
+          "imagenes": {
+            "items": {
+              "$ref": "#/components/schemas/ImagenCatalogo"
+            },
+            "type": "array",
+            "title": "Imagenes"
+          },
+          "propietario_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Propietario Id"
+          },
+          "estado_publicacion": {
+            "type": "string",
+            "enum": [
+              "disponible",
+              "reservado",
+              "vendido"
+            ],
+            "title": "Estado Publicacion",
+            "default": "disponible"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "titulo",
+          "descripcion",
+          "precio",
+          "modalidad",
+          "estado"
+        ],
+        "title": "PublicacionCatalogo"
+      },
+      "PublicacionCreate": {
+        "properties": {
+          "titulo": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 3,
+            "title": "Titulo"
+          },
+          "descripcion": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 3,
+            "title": "Descripcion"
+          },
+          "precio": {
+            "type": "number",
+            "maximum": 9999999999.99,
+            "exclusiveMinimum": 0,
+            "title": "Precio"
+          },
+          "modalidad": {
+            "type": "string",
+            "enum": [
+              "venta",
+              "alquiler"
+            ],
+            "title": "Modalidad"
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "nuevo",
+              "usado",
+              "reacondicionado"
+            ],
+            "title": "Estado"
+          },
+          "estado_publicacion": {
+            "type": "string",
+            "enum": [
+              "disponible",
+              "reservado",
+              "vendido"
+            ],
+            "title": "Estado Publicacion",
+            "default": "disponible"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "titulo",
+          "descripcion",
+          "precio",
+          "modalidad",
+          "estado"
+        ],
+        "title": "PublicacionCreate"
+      },
+      "PublicacionGestion": {
+        "properties": {
+          "titulo": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 3,
+            "title": "Titulo"
+          },
+          "descripcion": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 3,
+            "title": "Descripcion"
+          },
+          "precio": {
+            "type": "number",
+            "maximum": 9999999999.99,
+            "exclusiveMinimum": 0,
+            "title": "Precio"
+          },
+          "modalidad": {
+            "type": "string",
+            "enum": [
+              "venta",
+              "alquiler"
+            ],
+            "title": "Modalidad"
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "nuevo",
+              "usado",
+              "reacondicionado"
+            ],
+            "title": "Estado"
+          },
+          "estado_publicacion": {
+            "type": "string",
+            "enum": [
+              "disponible",
+              "reservado",
+              "vendido"
+            ],
+            "title": "Estado Publicacion",
+            "default": "disponible"
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "propietario_id": {
+            "type": "integer",
+            "title": "Propietario Id"
+          },
+          "visible": {
+            "type": "boolean",
+            "title": "Visible",
+            "default": true
+          },
+          "imagenes": {
+            "items": {
+              "$ref": "#/components/schemas/PublicacionImagen"
+            },
+            "type": "array",
+            "title": "Imagenes"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "titulo",
+          "descripcion",
+          "precio",
+          "modalidad",
+          "estado",
+          "id",
+          "propietario_id"
+        ],
+        "title": "PublicacionGestion"
+      },
+      "PublicacionImagen": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "publicacion_id": {
+            "type": "integer",
+            "title": "Publicacion Id"
+          },
+          "imagen_url": {
+            "type": "string",
+            "title": "Imagen Url"
+          },
+          "orden": {
+            "type": "integer",
+            "title": "Orden"
+          },
+          "es_principal": {
+            "type": "boolean",
+            "title": "Es Principal"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "publicacion_id",
+          "imagen_url",
+          "orden",
+          "es_principal"
+        ],
+        "title": "PublicacionImagen"
+      },
+      "PublicacionUpdate": {
+        "properties": {
+          "titulo": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 3,
+            "title": "Titulo"
+          },
+          "descripcion": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 3,
+            "title": "Descripcion"
+          },
+          "precio": {
+            "type": "number",
+            "maximum": 9999999999.99,
+            "exclusiveMinimum": 0,
+            "title": "Precio"
+          },
+          "modalidad": {
+            "type": "string",
+            "enum": [
+              "venta",
+              "alquiler"
+            ],
+            "title": "Modalidad"
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "nuevo",
+              "usado",
+              "reacondicionado"
+            ],
+            "title": "Estado"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "titulo",
+          "descripcion",
+          "precio",
+          "modalidad",
+          "estado"
+        ],
+        "title": "PublicacionUpdate"
+      },
+      "Registro": {
+        "properties": {
+          "correo": {
+            "type": "string",
+            "maxLength": 254,
+            "minLength": 5,
+            "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+            "title": "Correo"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 12,
+            "title": "Password"
+          },
+          "nombre": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 2,
+            "title": "Nombre"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "correo",
+          "password",
+          "nombre"
+        ],
+        "title": "Registro"
+      },
+      "Reporte": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "publicacion_id": {
+            "type": "integer",
+            "title": "Publicacion Id"
+          },
+          "reportado_por": {
+            "type": "integer",
+            "title": "Reportado Por"
+          },
+          "motivo": {
+            "type": "string",
+            "title": "Motivo"
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "pendiente",
+              "ocultado",
+              "descartado"
+            ],
+            "title": "Estado"
+          },
+          "resuelto_por": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resuelto Por"
+          },
+          "nota": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nota"
+          },
+          "creado_en": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Creado En"
+          },
+          "resuelto_en": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resuelto En"
+          },
+          "titulo_publicacion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Titulo Publicacion"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "publicacion_id",
+          "reportado_por",
+          "motivo",
+          "estado",
+          "resuelto_por",
+          "nota",
+          "creado_en",
+          "resuelto_en"
+        ],
+        "title": "Reporte"
+      },
+      "ReporteCreate": {
+        "properties": {
+          "publicacion_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "title": "Publicacion Id"
+          },
+          "motivo": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 10,
+            "title": "Motivo"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "publicacion_id",
+          "motivo"
+        ],
+        "title": "ReporteCreate"
+      },
+      "ReporteResolve": {
+        "properties": {
+          "decision": {
+            "type": "string",
+            "enum": [
+              "ocultado",
+              "descartado"
+            ],
+            "title": "Decision"
+          },
+          "nota": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 5,
+            "title": "Nota"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "decision",
+          "nota"
+        ],
+        "title": "ReporteResolve"
+      },
+      "Sesion": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type"
+          },
+          "expira_en": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expira En"
+          },
+          "usuario": {
+            "$ref": "#/components/schemas/Usuario"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token",
+          "token_type",
+          "expira_en",
+          "usuario"
+        ],
+        "title": "Sesion"
+      },
+      "Usuario": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "correo": {
+            "type": "string",
+            "title": "Correo"
+          },
+          "es_admin": {
+            "type": "boolean",
+            "title": "Es Admin"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "nombre",
+          "correo",
+          "es_admin"
+        ],
+        "title": "Usuario"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}

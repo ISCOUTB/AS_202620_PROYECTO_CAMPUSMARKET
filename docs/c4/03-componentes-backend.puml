@@ -1,112 +1,71 @@
 @startuml
-
 title CampusMarket - C4 Nivel 3 · Componentes del Backend API
-caption Estado vigente · monolito modular · Catálogo + Publicaciones
-
-left to right direction
-
+caption MVP previo al despliegue · cuatro contextos materializados
+top to bottom direction
 skinparam shadowing false
-skinparam defaultTextAlignment center
 skinparam packageStyle rectangle
-
-rectangle "Frontend\n\nFlutter Web / Android" as frontend
-
-package "Backend API\nFastAPI / Python" {
-
-    rectangle "Entrada de aplicación\n\nmain.py\n\nConfigura FastAPI, CORS,\n/uploads y registra routers" as main
-
-    package "Contexto: Catálogo" {
-        rectangle "API de Catálogo\n\nrouter.py\n\nBúsqueda, filtros y detalle" as catalog_router
-        rectangle "Servicio de Catálogo\n\nservice.py\n\nCompone resultados y consume\ncapacidades de lectura de Publicaciones" as catalog_service
-    }
-
-    package "Contexto: Gestión de Publicaciones" {
-        rectangle "API de Publicaciones\n\nrouter.py\n\nCrear, listar propias, editar,\nestado, eliminar y subir imágenes" as pub_router
-
-        rectangle "Servicio de Publicaciones\n\nservice.py\n\nCasos de uso y traducción\nde errores de persistencia" as pub_service
-
-        rectangle "Repositorio de Publicaciones\n\nrepository.py\n\nÚnico acceso productivo\na MySQL del contexto" as repository
-
-        rectangle "Almacenamiento de imágenes\n\nimage_storage.py\n\nValida, guarda y elimina archivos\nen desarrollo local" as image_storage
-    }
-
-    rectangle "Gestión de Usuarios\n\nLímite definido\nAutenticación real pendiente" as usuarios
-    rectangle "Administración\n\nLímite definido\nNo materializado completamente" as administracion
+rectangle "Flutter Web / Android" as frontend
+package "Backend API · FastAPI · monolito modular" {
+  rectangle "Entrada de aplicación\nmain.py\nRouters, CORS, health, límites HTTP" as main
+  package "Usuarios" {
+    rectangle "API y dependencias\nrouter.py / dependencies.py" as ur
+    rectangle "Servicio y criptografía\nservice.py / security.py\nIdentidad, sesiones y capacidad" as us
+    rectangle "Repositorio\nrepository.py\nUsuarios, sesiones, intentos" as ud
+    ur --> us
+    us --> ud
+  }
+  package "Publicaciones" {
+    rectangle "API\nrouter.py\nCRUD y galería con identidad" as pr
+    rectangle "Servicio\nservice.py\nPropiedad y capacidades de lectura" as ps
+    rectangle "Repositorio\nrepository.py\nPublicaciones y metadatos de fotos" as pd
+    rectangle "Almacenamiento de imágenes\nimage_storage.py\nPillow y archivos" as storage
+    pr --> ps
+    ps --> pd
+    ps --> storage
+  }
+  package "Catálogo" {
+    rectangle "API\nrouter.py" as cr
+    rectangle "Servicio\nservice.py\nBúsqueda, filtros y detalle" as cs
+    cr --> cs
+  }
+  package "Administración" {
+    rectangle "API\nrouter.py\nReporte y revisión con capacidad" as ar
+    rectangle "Servicio\nservice.py\nCoordina moderación" as ads
+    rectangle "Repositorio\nrepository.py\nReportes y bloqueo de revisión" as ad
+    ar --> ads
+    ads --> ad
+  }
 }
-
-database "MySQL\n\npublicaciones\npublicacion_imagenes" as mysql
-folder "backend/uploads/\n\narchivos de imágenes\nsolo desarrollo local" as uploads
-
-frontend --> catalog_router : GET /catalogo\nGET /catalogo/{id}\n[HTTP/JSON]
-frontend --> pub_router : Publicaciones + imágenes\n[HTTP/JSON + multipart]
-
-main --> catalog_router : registra router
-main --> pub_router : registra router
-
-catalog_router --> catalog_service : buscar / obtener detalle
-catalog_service --> pub_service : capacidades de lectura
-
-pub_router --> pub_service : casos de uso de publicaciones
-pub_service --> repository : persistencia del dominio
-repository --> mysql : SQL\n[PyMySQL]
-
-pub_router --> image_storage : validar/guardar archivo
-image_storage --> uploads : filesystem local
-pub_service --> repository : registrar metadatos de imagen
-
-usuarios -[hidden]-> pub_router
-administracion -[hidden]-> repository
-
-note right of catalog_service
-**FRONTERA S9**
-
-Catálogo NO importa repository.py,
-NO usa PyMySQL y NO escribe
-publicaciones directamente.
-
-La regla se verifica mediante
-pruebas de modularidad y erosión.
+database "MySQL 8.4\nTablas con único escritor por contexto" as db
+folder "Imágenes\nCAMPUSMARKET_UPLOAD_DIR\nVolumen nombrado en Compose" as files
+frontend --> main : HTTP/JSON, Bearer y multipart
+main --> ur : registra
+main --> pr : registra
+main --> cr : registra
+main --> ar : registra
+pr --> ur : resuelve identidad
+ar --> ur : resuelve identidad/capacidad
+cs --> ps : lectura pública y fotos en lote
+ads --> ps : consultar / ocultar
+ud --> db : db.py / PyMySQL
+pd --> db : db.py / PyMySQL
+ad --> db : db.py / PyMySQL
+storage --> files : escribir / eliminar
+main --> files : lectura pública por StaticFiles
+note bottom of cs
+Catálogo no importa repository ajeno,
+no ejecuta SQL y no escribe publicaciones.
+ADR-0009 y ADR-0019; prueba de erosión.
 end note
-
-note bottom of repository
-**PROPIEDAD DE DATOS**
-
-Gestión de Publicaciones mantiene
-la escritura de:
-
-- publicaciones
-- publicacion_imagenes
-
-El acceso relacional productivo
-queda encapsulado aquí.
+note bottom of db
+Usuarios: usuarios, sesiones_usuario, intentos_autenticacion.
+Publicaciones: publicaciones, publicacion_imagenes.
+Administración: reportes_publicacion.
+db.py comparte infraestructura, sin entidades de dominio.
 end note
-
-note right of image_storage
-**ADR-0011**
-
-El filesystem local es una solución
-de desarrollo/verificación.
-No se considera almacenamiento
-durable de producción en Azure.
+note bottom of files
+Máximo 3 imágenes de 5 MiB y 20 MP.
+Orientación y reducción a 2048 px; sin EXIF.
+Compose verifica persistencia. Despliegue público pendiente.
 end note
-
-note right of usuarios
-**LIMITACIÓN VIGENTE**
-
-propietario_id = 1 es un mecanismo
-temporal del prototipo.
-No equivale a autenticación real.
-end note
-
-legend bottom
-|= Elemento |= Significado |
-| Backend API | Contenedor ampliado |
-| Catálogo | Contexto materializado de lectura |
-| Publicaciones | Contexto dueño de escritura |
-| Repository | Acceso productivo a MySQL |
-| image_storage | Gestión física local de imágenes |
-| MySQL | Persistencia relacional vigente |
-| Usuarios / Administración | Límites no materializados completamente |
-endlegend
-
 @enduml

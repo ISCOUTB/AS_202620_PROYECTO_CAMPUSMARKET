@@ -1,13 +1,20 @@
 import json
 import logging
+import re
 import sys
 import time
 from collections import deque
 from datetime import datetime, timezone
+from pathlib import Path
 from threading import Lock
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from fastapi import Request
+
+revision_file = Path(__file__).resolve().parents[2] / "REVISION"
+BUILD_REVISION = revision_file.read_text(encoding="utf-8").strip() if revision_file.exists() else "development"
+if BUILD_REVISION != "development" and not re.fullmatch(r"[0-9a-f]{40}", BUILD_REVISION):
+    raise RuntimeError("REVISION debe contener el SHA público del build.")
 
 logger = logging.getLogger("campusmarket.http")
 
@@ -93,10 +100,10 @@ def reset_ec01_metric() -> None:
 
 
 async def log_http_request(request: Request, call_next):
-    request_id = request.headers.get(
-        "X-Request-ID",
-        str(uuid4()),
-    )
+    try:
+        request_id = str(UUID(request.headers.get("X-Request-ID", "")))
+    except ValueError:
+        request_id = str(uuid4())
 
     start_time = time.perf_counter()
 
@@ -134,5 +141,8 @@ async def log_http_request(request: Request, call_next):
     )
 
     response.headers["X-Request-ID"] = request_id
+    response.headers["X-CampusMarket-Revision"] = BUILD_REVISION
+    if request.url.path.startswith("/usuarios") or request.headers.get("Authorization"):
+        response.headers["Cache-Control"] = "no-store"
 
     return response

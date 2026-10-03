@@ -45,6 +45,8 @@ class PublicacionCatalogo {
     required this.modalidad,
     required this.estado,
     required this.imagenes,
+    this.propietarioId,
+    this.estadoPublicacion = 'disponible',
   });
 
   final int id;
@@ -54,6 +56,8 @@ class PublicacionCatalogo {
   final String modalidad;
   final String estado;
   final List<ImagenCatalogo> imagenes;
+  final int? propietarioId;
+  final String estadoPublicacion;
 
   ImagenCatalogo? get imagenPrincipal {
     if (imagenes.isEmpty) {
@@ -93,6 +97,8 @@ class PublicacionCatalogo {
       modalidad: json['modalidad'] as String,
       estado: json['estado'] as String,
       imagenes: imagenes,
+      propietarioId: json['propietario_id'] as int?,
+      estadoPublicacion: json['estado_publicacion'] as String? ?? 'disponible',
     );
   }
 }

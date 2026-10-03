@@ -243,3 +243,228 @@ El equipo mantiene la responsabilidad de:
 - tomar y defender las decisiones arquitectónicas finales.
 
 Las propuestas generadas por IA no se consideran evidencia por sí mismas. La evidencia utilizada por el proyecto corresponde a resultados verificables del repositorio, pruebas ejecutadas, mediciones, documentación trazable y decisiones revisadas por el equipo.
+## 2026-10-03 — MVP bloque 1: identidad real y propiedad
+
+| Propuesta IA | Decisión del equipo | Motivo / verificación |
+|---|---|---|
+| Sesión opaca revocable, scrypt estándar | Aceptado | ADR-0012; prueba real de registro/login, expiración y reutilización tras logout |
+| Derivar propietario de sesión; no aceptar ID en body | Aceptado | Dos cuentas reales, EC-02 10/10; datos revisados después de cada intento |
+| Allowlist de moderadores por correo sin verificar | Rechazado y corregido | Permite registrar un correo privilegiado; ADR-0014 usa IDs de cuentas comprobadas fuera del flujo público |
+| Asignar datos heredados al primer usuario | Rechazado | Propiedad no demostrada; preservar filas en cuarentena sin propietario |
+| Considerar rowcount=0 como falta de permiso | Corregido | MySQL cuenta filas cambiadas: PUT/PATCH idénticos son válidos; comprobar lectura acotada por propietario |
+| Repetir contraseña en error de validación | Rechazado | Respuesta de validación solo contiene loc/msg/type; nunca input |
+| Añadir JWT, OAuth, recuperación o roles amplios | Rechazado | No necesarios para el MVP; no se añadieron dependencias de producto |
+| Instalar httpx2 para eliminar aviso de deprecación | Rechazado en este bloque | httpx existente pasa las pruebas; aviso documentado, sin añadir dependencia por estética |
+
+Herramienta: Codex. Revisado con Ruff, pruebas sobre MySQL 8.0.46 aislado,
+contrato v2 y mutaciones en copias temporales. Las tres mutaciones (autoría SQL,
+contraseña ignorada y acceso a repository ajeno) hacen fallar una aserción;
+no se consideran detectadas por errores de colección. No se exponen tokens,
+contraseñas ni hashes reales en documentación.
+
+## 2026-10-03 — MVP bloque 2: imágenes y administración
+
+| Propuesta IA | Decisión | Motivo / verificación |
+|---|---|---|
+| Validar imágenes solo por extensión o firma manual | Rechazado | No asegura decodificación ni retiro de metadatos |
+| Pillow 12.3.0 como única dependencia nueva del backend | Aceptado | PyPI oficial: Python >=3.10, CPython 3.12 Linux/Windows, licencia MIT-CMU, código python-pillow; ADR-0015 |
+| pytest-cov como dependencia del proyecto | Rechazado | No es necesario para este bloque; pruebas reales y mutaciones verifican el defecto |
+| Reportes reales y moderación por ID de cuenta comprobada | Aceptado | ADR-0013 y 0014; registro/perfil no pueden conceder capacidad |
+| Panel de métricas o botones ficticios | Rechazado | No hay requisito ni contrato ejecutable que justifique esa interfaz |
+| Resolver reportes sin exclusión mutua | Corregido | Mantener la fila de reporte bloqueada durante la revisión; ocultado de publicación idempotente por servicio |
+| Elegir principal y retirar fotos desde el router/SQL ajeno | Rechazado | Router→service→repository; único escritor y propiedad comprobados |
+| Limitar imágenes solo desde Flutter | Rechazado | Límite tres bajo lock en MySQL; cuatro subidas concurrentes producen 3×201 + 1×400 |
+
+Verificación: 66 pruebas pasan sobre MySQL real; imágenes decodificadas,
+metadatos retirados, autorización y concurrencia; pruebas AST de propiedad
+por tabla y de imports. No se alteraron ADR aceptados.
+
+## MVP — sesión real en Flutter (2026-10-03)
+
+- **Aceptado:** controlador de sesión con token opaco exclusivamente en memoria,
+  registro, login, consulta de usuario, edición de nombre y logout contra la API.
+  Se aplica ADR-0012; no se agrega ninguna dependencia de ejecución.
+- **Corregido:** el cliente enviaba propietario fijo y lo incluía en parámetros de
+  gestión. Ahora obtiene autorización de la sesión y no suministra propietario.
+- **Corregido:** cambiar de cuenta conserva potencialmente vistas privadas en
+  IndexedStack. La navegación descarta las vistas de la identidad anterior y
+  construye pantallas privadas únicamente con sesión autenticada.
+- **Corregido:** reintentar una subida fallida creaba otra publicación; se conserva
+  el identificador ya creado y el progreso de las imágenes confirmadas.
+- **Corregido:** precio con coma pasaba validación pero fallaba al guardarse. Se
+  normaliza la coma y se respetan precio finito, máximo y dos decimales.
+- **Rechazado:** guardar tokens en localStorage, añadir shared_preferences o un
+  gestor global adicional. La memoria y ChangeNotifier del SDK cubren el MVP.
+- **Rechazado:** afirmar Web/Android funcional por revisión de código. Se agrega
+  workflow de análisis, pruebas y compilación; la ejecución del flujo real se
+  documentará cuando exista.
+- **Verificación pendiente:** las pruebas Flutter y los builds se ejecutan en CI
+  porque el entorno local perdió transporte de terminal y la ejecución anterior
+  de Flutter recibió rechazo automático por una solicitud inesperada a metadata.
+  No se reintenta ese acceso local.
+- **Herramientas de CI:** flutter-action mantenido por subosito, referencia v2
+  verificada y fijada a 1a449444c387b1966244ae4d4f8c696479add0b2, SDK oficial
+  3.47.3. actions/setup-java y upload-artifact pertenecen a GitHub. Estas
+  herramientas preparan/verifican el entorno; no incorporan paquetes al producto.
+
+### Correcciones y extensión de producto del cliente
+
+- **Corregido:** CI detectó prefer_interpolation_to_compose_strings y
+  use_super_parameters. Se corrigió el código sin desactivar reglas. Analyze,
+  seis pruebas y builds Web/Android quedaron aprobados en 1aefd452.
+- **Aceptado:** lockfile y analysis_options emitidos por Flutter 3.47.3. El SDK
+  ajustó cuatro dependencias ya existentes de sus pruebas; no se amplía pubspec.
+- **Aceptado:** galería propia editable (subir, eliminar, elegir principal);
+  disponibilidad visible y detalle que consulta datos actuales.
+- **Aceptado:** reporte real desde detalle y cola real de pendientes para la
+  capacidad configurada por IDs del ADR-0014. Sin panel ni estadísticas ficticias.
+- **Rechazado:** botón de contacto deshabilitado y mensajes sobre contratos backend
+  en el detalle. Se sustituyen por información útil y un reporte que sí funciona.
+- **Aceptado:** portada con fotografía de una publicación real cuando existe.
+  No se insertan productos ni fotografías ficticias en datos de producción.
+- **Verificación:** dos mutaciones del cliente verifican que las pruebas detectan
+  propietario fijo y contaminación de sesión entre respuestas de cuentas distintas.
+  Su ejecución quedará registrada en la CI del bloque siguiente.
+
+### Flujo real y sincronización de contrato
+
+- **Corregido:** contrato generado fuera del intérprete contenía default null que
+  FastAPI omite. La igualdad de OpenAPI detectó la discrepancia; se corrigió y
+  todas las verificaciones quedaron verdes en d94cc62, sin relajar la prueba.
+- **Aceptado:** integration_test del SDK para pruebas con backend/MySQL en Chrome
+  y Android; necesidad, mantenimiento y compatibilidad documentados.
+- **Aceptado:** archivos sintéticos controlados y puente del selector real, sin
+  modificar cuentas, almacenamiento ni datos de producción.
+- **Rechazado:** declarar Android funcional únicamente por compilar o sustituir
+  file_picker por un mock que evitaría demostrar lectura/subida de archivos.
+- **Verificación pendiente:** los resultados y capturas del flujo se registrarán
+  después de ejecutar el workflow, sin anticipar que está aprobado.
+
+### Correcciones del arnés tras su primera ejecución real
+
+- **Corregido:** esperar el título del campo de edición adelantaba la consulta de
+  Mis publicaciones. Ahora se exige la pantalla propia cargada tras guardar y subir.
+- **Corregido:** el redimensionado externo de Chrome podía ser sobrescrito por el
+  driver del SDK. Se usa browser-dimension oficial y se comprueba el ancho real.
+- **Corregido:** las tarjetas del grid se crean al entrar al viewport. La prueba
+  desplaza la sección de resultados antes de comprobar su contenido.
+- **Corregido:** Android API 35 rechazó la copia directa a Download. La imagen
+  sintética se escribe por MediaStore y se verifica byte a byte antes del selector.
+  Fuente: Android 15 Content.java (insert/query/write/read), sin nuevos paquetes.
+- **Rechazado:** aceptar capturas de escritorio como evidencia de Web móvil o
+  relajar las aserciones de persistencia por una carrera de sincronización.
+- **Verificación pendiente:** repetir los tres flujos; los fallos anteriores y su
+  hash permanecen disponibles en Actions 37134391642.
+
+- **Corregido:** el flujo de 390 px detectó 8,5 px de desbordamiento en
+  "Información del producto"; se permite envolver el título dentro de su fila.
+- **Corregido:** el arnés Android espera almacenamiento desbloqueado y conserva
+  los errores públicos de MediaStore del emulador para diagnosticar la preparación.
+
+- **Corregido:** el arnés tocaba inmediatamente después de ensureVisible; el
+  cambio de scroll no había recalculado la posición del control. Ahora espera
+  un frame, comprueba hitTestable y confirma entrada de texto con booleanos
+  (sin imprimir valores que podrían ser contraseñas). Se mantiene la validación
+  real del rango y se registra captura ante fallo.
+
+- **Aceptado:** los dos flujos Web pasaron en 78dd5edf; diez denegaciones de
+  modificaciones ajenas y estado intacto después de cada intento por plataforma.
+- **Corregido:** boot_completed y ce_available no garantizan que MediaStore
+  haya registrado external_primary. Se espera ese volumen ante el error
+  observado, con plazo de 60 s, sin reintentar errores de la aplicación.
+- **Aceptado:** resultado sanitizado en el log y artefacto JSON con hash,
+  viewport, comprobaciones y nombres de capturas; sin contraseñas ni tokens.
+
+- **Corregido:** analyze señaló avoid_print en el driver de evidencia. Se usa stdout del proceso del driver; no se desactiva la regla del cliente.
+
+- **Corregido:** fuente oficial AndroidPlatform FilePickerAndroid 2.0.0
+  configura pickFiles con allowMultiple true. El puente ahora confirma
+  OPEN/SELECT/DONE después de elegir el archivo y permite tocar el texto
+  Downloads aunque su TextView delegue el click a su padre.
+- **Aceptado:** plazo externo de 12 minutos y diagnóstico del selector del
+  emulador aislado; los fallos nativos ya no pueden bloquear indefinidamente.
+- **Rechazado:** sustituir el selector Android por bytes inyectados en el plugin.
+  Continúa usando DocumentsUI, URI real, lectura del archivo y subida HTTP.
+
+- **Corregido:** dump escribía /data/local/tmp mientras cat aún leía /sdcard. Se unifica la ruta en una constante; ese error del arnés impedía observar y operar DocumentsUI.
+
+- **Verificado:** flujo completo aprobado en los tres jobs del run 37139056153,
+  hash 30e109137c26634bb77add3ff07a71ab0ea08f50; 19 capturas por plataforma,
+  diez intentos ajenos rechazados en cada una, galerías y logout reales.
+
+### Presupuesto del laboratorio y coherencia de migración
+
+- **Aceptado:** ADR-0016 conserva scrypt y los límites de entrada de imágenes,
+  serializa trabajo intensivo y normaliza a 2048 px para la cuota oficial de
+  512 MB por equipo. Sin dependencias nuevas.
+- **Aceptado:** orientación de cámara antes de retirar EXIF, cuerpos acotados
+  también sin Content-Length, no-store privado y request IDs UUID.
+- **Aceptado:** ADR-0017 coordina inicialización/migración con GET_LOCK de MySQL,
+  porque DDL confirma implícitamente y un Lock de Python no coordina procesos.
+- **Rechazado:** reducir scrypt para ocultar exceso de memoria; declarar una
+  imagen bien orientada solo porque se retiró metadata; dar por atómica una
+  secuencia DDL/DML sin coordinación entre inicializadores.
+- **Verificación pendiente:** pruebas con MySQL, OpenAPI y cuatro mutaciones
+  nuevas; medición posterior del Compose bajo los límites reales.
+
+- **Corregido:** Ruff detectó una separación faltante entre imports estándar y
+  del proyecto en security.py al compartir la guardia. Se aplica su corrección;
+  se conservan las reglas y la ejecución de todas las pruebas.
+
+### Infraestructura reproducible y cuota efectiva
+
+- **Aceptado:** ADR-0018 prepara el backend monolítico y MySQL 8.4 con dos
+  volúmenes nombrados y límites efectivos de 256 MiB/0,5 CPU cada uno.
+  Python 3.12.15-slim-bookworm existe en la imagen oficial mantenida por
+  docker-library. No se incorpora una biblioteca al producto.
+- **Aceptado:** CI genera credenciales efímeras en RUNNER_TEMP con permisos
+  0600, prueba HTTP real, hashes concurrentes, una fotografía de 12 MP,
+  memory.peak, ausencia de OOM y recreación de API/MySQL conservando sesiones,
+  publicaciones y fotos. No imprime inspect/config completos ni secretos.
+- **Aceptado:** REVISION y etiqueta OCI comparadas con el hash de CI;
+  X-CampusMarket-Revision permite verificar /health sin revelar secretos.
+- **Rechazado:** atribuir EC-01 a una prueba con repositorios simulados;
+  la nueva medición usa 1000 filas reales, diez búsquedas HTTP y cuota real.
+- **Rechazado:** declarar desplegado el Compose por construirlo en CI.
+  No se aprovisiona Azure ni se opera Dokploy antes del cierre del MVP.
+- **Verificación pendiente:** ejecución de Compose, mediciones y persistencia.
+
+- **Verificado:** bloque de recursos 0eba3f4: Ruff, 76 pruebas backend/contrato,
+  nueve mutaciones detectadas, Flutter analyze/seis pruebas/dos mutaciones/builds,
+  flujo real en los tres jobs del run 37140687994. La cuota de Docker todavía
+  requiere su propia medición; los runners sin límites no acreditan esa cuota.
+
+- **Corregido:** el verificador Compose convertía HTTPMessage a dict y perdía
+  la búsqueda de headers sin distinción de mayúsculas. Health respondía pero
+  la comparación del hash fallaba. Se conserva HTTPMessage y se repite toda
+  la ejecución; no se relaja la comprobación de revisión.
+
+### Corrección de rendimiento bajo cuota
+
+- **Corregido:** Compose d473b1f superó 60 s en la primera búsqueda de 1000
+  filas. La consulta de imágenes repetía inicialización/conexiones por fila.
+  ADR-0019 incorpora lectura en lote mediante servicio de Publicaciones.
+- **Aceptado:** prueba MySQL con dos galerías/propietarios y 52 filas visibles,
+  sin mezclas ni filas ocultas/heredadas y conexiones constantes. Una mutación
+  reincorpora N consultas; debe ser detectada.
+- **Corregido:** el verificador de rendimiento envía q (nombre del contrato),
+  en lugar de texto. Los filtros de modalidad/estado/precios siguen activos.
+- **Rechazado:** aumentar cuotas del laboratorio, importar un repository ajeno
+  o retirar el objetivo de dos segundos para conseguir un resultado verde.
+- **Verificación pendiente:** diez muestras reales tras la corrección,
+  recreación de contenedores y detección de la nueva mutación.
+
+
+## 2026-10-03 — continuación desde checkpoint fda3897
+
+- **Herramienta:** ChatGPT/Codex; ejecución directa sobre el fork, sin acceso al clon Windows.
+- **Aceptado:** verificar SHA/working tree, repetir backend del mismo SHA en MySQL CI, comparar artefactos/capturas y sincronizar C4, arc42 y aspectos con cuatro contextos, identidad real y OpenAPI v2.
+- **Aceptado:** separar pytest/httpx existentes a requirements-dev; conservar runtime y Pillow 12.3.0, sin nuevas dependencias del producto. Textos de Inicio orientados a búsqueda/detalles/gestión.
+- **Corregido:** Ruff ampliado a backend/scripts detectó espaciado de imports histórico y la ausencia de check=False explícito en subprocess del verificador Flutter. Se corrigieron y CI incorpora ese alcance.
+- **Rechazado:** rehacer autenticación o catálogo sin defecto demostrado, atribuir resultados de otro SHA al HEAD actual, presentar un 403 de acceso a SonarCloud como gate aprobado, cambiar ADR aceptados o efectuar despliegue en esta fase.
+- **Verificación:** backend fda3897 relanzado: Ruff, 73+4 pruebas y diez mutaciones aprobadas; contrato/modularidad/erosión/propiedad ejecutados aquí con 15 pruebas aprobadas. MySQL local no arrancó por restricción de socket; no se sustituyó por mocks/SQLite. Gitleaks escanea historial de fase y working tree. Validación del nuevo HEAD se registra en docs/evidencias/auditoria-mvp-continuacion-2026-10-03.md.
+- **Corregido:** Android 266a08d completó los nueve checks pero falló por SemanticsHandle al cerrar. Se limita UiAutomation al selector DocumentsUI, se espera recuperar los handles iniciales y el helper de campos espera hit-test. La ejecución fallida permanece documentada y se exige repetir CI.
+- **Bloqueo comprobado:** el conector rechaza con 403 crear el PR oficial; SonarCloud del HEAD no puede declararse verde. No se efectuó despliegue ni merge.
+- **Verificado:** 094eaaa aprobó cuatro workflows/seis jobs: Ruff backend/scripts, 73+4 pruebas, diez mutaciones backend, analyze, seis tests Flutter, dos mutaciones cliente y builds Web/APK debug. Chrome escritorio/móvil y Android API 35 completan nueve checks/19 capturas; Android registra semantics_handles_restored=true. Compose pasa persistencia, cuotas, EC-02 10/10 y EC-01 10/10.
+- **Persistencia ante interrupción:** el entorno devolvió 409 environment_offline al descargar artefactos. Los cambios de cierre se reconstruyen contra 094eaaa mediante GitHub y se añade Gitleaks fijado por checksum y comprobación de checkout CI limpio. El status del scratch desconectado no se presenta como verificado.
+- **Integración de trabajo remoto:** se conserva 7c73279 y sus mejoras del selector. Se pausa UiAutomation cuando CampusMarket es la actividad resumida para conservar la liberación demostrada en 094eaaa, sin retirar el manejo nativo de DocumentsUI/ANR. El flujo combinado requiere CI del HEAD final.

@@ -13,21 +13,21 @@ actor "Estudiante" as estudiante
 actor "Administrador" as administrador
 
 package "CampusMarket" {
-    rectangle "Frontend\n\nFlutter / Dart\n\nWeb y Android\nInicio, Catálogo, Publicar\ny Mis publicaciones" as frontend
+    rectangle "Frontend\n\nFlutter / Dart\n\nWeb y Android\nInicio, Catálogo, sesión, perfil,\nPublicar y moderación" as frontend
 
-    rectangle "Backend API\n\nFastAPI / Python\n\nContrato HTTP/JSON, Catálogo,\nGestión de Publicaciones, health\ny observabilidad" as backend
+    rectangle "Backend API\n\nFastAPI / Python\n\nHTTP/JSON, Usuarios, Publicaciones,\nCatálogo, Administración,\nhealth y observabilidad" as backend
 
-    database "Persistencia\n\nMySQL\n\nBase: campusmarket\nPublicaciones y metadatos\nde imágenes" as mysql
+    database "Persistencia\n\nMySQL\n\nBase: campusmarket\nUsuarios, sesiones, intentos,\npublicaciones, fotos y reportes" as mysql
 
-    folder "Archivos de imágenes\n\nFilesystem local de desarrollo\nbackend/uploads/" as uploads
+    folder "Archivos de imágenes\n\nDirectorio configurable\nVolumen nombrado en Compose" as uploads
 }
 
 estudiante --> frontend : Consulta, publica y gestiona productos\n[HTTPS / Flutter]
-administrador --> frontend : Supervisa contenido\n[capacidad prevista]
+administrador --> frontend : Supervisa contenido\n[Web / Android con capacidad]
 
-frontend --> backend : Catálogo + Publicaciones + imágenes\n[HTTP/JSON + multipart]
+frontend --> backend : Cuatro contextos, Bearer e imágenes\n[HTTP/JSON + multipart]
 backend --> mysql : Lee/escribe datos del dominio\n[PyMySQL / SQL]
-backend --> uploads : Guarda/sirve archivos de imágenes\n[filesystem local de desarrollo]
+backend --> uploads : Guarda/sirve archivos de imágenes\n[filesystem / volumen]
 
 note bottom of backend
 **MONOLITO MODULAR**
@@ -44,12 +44,11 @@ end note
 note right of uploads
 **ALCANCE DEL FILESYSTEM**
 
-El filesystem local se utiliza para
-desarrollo y verificación local.
-
-No se presenta como almacenamiento
-durable para producción en Azure.
-La decisión se documenta en ADR-0011.
+Desarrollo: directorio configurable.
+Compose: volumen nombrado verificado.
+Azure requiere almacenamiento durable.
+ADR-0011, ADR-0015 y ADR-0018.
+MVP público todavía no desplegado.
 end note
 
 note right of mysql
@@ -59,8 +58,10 @@ Gestión de Publicaciones mantiene
 la escritura de publicaciones y
 publicacion_imagenes.
 
-El acceso productivo a MySQL queda
-encapsulado en repository.py.
+Usuarios y Administración escriben
+sus tablas mediante sus repositories.
+Catálogo no tiene repository SQL.
+Conexión compartida: db.py.
 end note
 
 legend right
@@ -69,7 +70,7 @@ legend right
 | Frontend | Flutter Web / Android |
 | Backend API | FastAPI, monolito modular |
 | MySQL | Persistencia relacional vigente |
-| Archivos | Recurso de desarrollo para imágenes |
+| Archivos | Directorio configurable / volumen de fotos |
 | HTTP/JSON | Integración síncrona principal |
 | multipart | Carga de imágenes |
 | Flecha | Comunicación con propósito y tecnología |

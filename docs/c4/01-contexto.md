@@ -60,9 +60,9 @@ Los detalles internos se documentan en niveles posteriores del modelo C4.
 ## Relaciones principales
 
 - **Estudiante → CampusMarket:** publica, consulta y busca productos mediante
-  un navegador web.
+  Flutter Web o Android; se registra/inicia sesión para gestionar sus productos.
 - **Administrador → CampusMarket:** supervisa publicaciones y contenido
-  mediante un navegador web.
+  mediante Flutter Web o Android con capacidad de moderación habilitada.
 
 Durante el desarrollo local del prototipo la comunicación utiliza HTTP.
 
@@ -95,19 +95,14 @@ El:
 
 realiza un acercamiento al interior de CampusMarket.
 
-La arquitectura vigente del Nivel 2 se materializa mediante:
-
-```text
-Frontend Web
-    ↓ HTTP/JSON
-Backend API
-    ↓ PyMySQL / SQL
-MySQL
-````
+La arquitectura vigente del Nivel 2 conecta Flutter Web/Android con un backend
+FastAPI mediante HTTP/JSON, Bearer y multipart. Los repositories del backend
+acceden a MySQL mediante PyMySQL; el contexto Publicaciones conserva fotografías
+en archivos y metadatos en su tabla propia.
 
 Los contenedores vigentes son:
 
-* **Frontend Web** — Flutter / Dart;
+* **Frontend Web/Android** — Flutter / Dart;
 * **Backend API** — FastAPI / Python;
 * **Persistencia** — MySQL.
 

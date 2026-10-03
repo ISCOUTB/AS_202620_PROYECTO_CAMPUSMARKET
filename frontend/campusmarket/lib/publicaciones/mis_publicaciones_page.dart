@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 
+import '../shared/formatters.dart';
+
+import '../shared/api_error.dart';
+import 'imagenes_page.dart';
 import 'publicaciones_api.dart';
 
 class MisPublicacionesPage extends StatefulWidget {
-  const MisPublicacionesPage({super.key});
+  const MisPublicacionesPage({super.key, this.onChanged});
+
+  final VoidCallback? onChanged;
 
   @override
   State<MisPublicacionesPage> createState() => _MisPublicacionesPageState();
@@ -22,6 +28,18 @@ class _MisPublicacionesPageState extends State<MisPublicacionesPage> {
     _cargar();
   }
 
+  @override
+  void dispose() { _api.dispose(); super.dispose(); }
+
+  Future<void> _fotos(Map<String, dynamic> publicacion) async {
+    await Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => ImagenesPage(publicacionId: publicacion['id'] as int),
+    ));
+    if (!mounted) return;
+    await _cargar();
+    if (mounted) widget.onChanged?.call();
+  }
+
   Future<void> _cargar() async {
     setState(() {
       _cargando = true;
@@ -34,7 +52,7 @@ class _MisPublicacionesPageState extends State<MisPublicacionesPage> {
       setState(() => _publicaciones = publicaciones);
     } catch (error) {
       if (!mounted) return;
-      setState(() => _error = error.toString());
+      setState(() => _error = readableError(error));
     } finally {
       if (mounted) setState(() => _cargando = false);
     }
@@ -62,13 +80,14 @@ class _MisPublicacionesPageState extends State<MisPublicacionesPage> {
       );
       await _cargar();
       if (!mounted) return;
+      widget.onChanged?.call();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Estado actualizado correctamente.')),
       );
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.toString())),
+        SnackBar(content: Text(readableError(error))),
       );
     }
   }
@@ -100,13 +119,14 @@ class _MisPublicacionesPageState extends State<MisPublicacionesPage> {
       await _api.eliminarPublicacion(publicacion['id'] as int);
       await _cargar();
       if (!mounted) return;
+      widget.onChanged?.call();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Publicación eliminada.')),
       );
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.toString())),
+        SnackBar(content: Text(readableError(error))),
       );
     }
   }
@@ -130,13 +150,14 @@ class _MisPublicacionesPageState extends State<MisPublicacionesPage> {
       );
       await _cargar();
       if (!mounted) return;
+      widget.onChanged?.call();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Publicación actualizada.')),
       );
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.toString())),
+        SnackBar(content: Text(readableError(error))),
       );
     }
   }
@@ -291,6 +312,7 @@ class _MisPublicacionesPageState extends State<MisPublicacionesPage> {
                         publicacion: publicacion,
                         apiBaseUrl: _api.baseUrl,
                         onEditar: () => _editar(publicacion),
+                        onFotos: () => _fotos(publicacion),
                         onEliminar: () => _eliminar(publicacion),
                         onCambiarEstado: (estado) =>
                             _cambiarEstado(publicacion, estado),
@@ -363,6 +385,7 @@ class _PublicacionGestionCard extends StatelessWidget {
     required this.publicacion,
     required this.apiBaseUrl,
     required this.onEditar,
+    required this.onFotos,
     required this.onEliminar,
     required this.onCambiarEstado,
   });
@@ -370,6 +393,7 @@ class _PublicacionGestionCard extends StatelessWidget {
   final Map<String, dynamic> publicacion;
   final String apiBaseUrl;
   final VoidCallback onEditar;
+  final VoidCallback onFotos;
   final VoidCallback onEliminar;
   final ValueChanged<String> onCambiarEstado;
 
@@ -395,17 +419,7 @@ class _PublicacionGestionCard extends StatelessWidget {
     return '$apiBaseUrl$raw';
   }
 
-  String _formatearPrecio(double value) {
-    final digits = value.round().toString();
-    final buffer = StringBuffer();
-    for (var i = 0; i < digits.length; i++) {
-      if (i > 0 && (digits.length - i) % 3 == 0) {
-        buffer.write('.');
-      }
-      buffer.write(digits[i]);
-    }
-    return 'COP \$${buffer.toString()}';
-  }
+  String _formatearPrecio(double value) => formatoPrecio(value);
 
   @override
   Widget build(BuildContext context) {
@@ -455,6 +469,8 @@ class _PublicacionGestionCard extends StatelessWidget {
                   runSpacing: 8,
                   children: [
                     _EstadoBadge(estado: estadoPublicacion),
+                    if (publicacion['visible'] == false)
+                      const Chip(label: Text('Oculta del catálogo')),
                     Chip(
                       label: Text(publicacion['estado']?.toString() ?? ''),
                       visualDensity: VisualDensity.compact,
@@ -498,6 +514,9 @@ class _PublicacionGestionCard extends StatelessWidget {
                       onPressed: onEditar,
                       icon: const Icon(Icons.edit_outlined),
                       label: const Text('Editar'),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: onFotos, icon: const Icon(Icons.photo_library_outlined), label: const Text('Fotografías'),
                     ),
                     PopupMenuButton<String>(
                       onSelected: onCambiarEstado,
@@ -706,7 +725,7 @@ class _EditarPublicacionDialogState extends State<_EditarPublicacionDialog> {
     Navigator.pop(context, {
       'titulo': _titulo.text.trim(),
       'descripcion': _descripcion.text.trim(),
-      'precio': double.parse(_precio.text.trim()),
+      'precio': double.parse(_precio.text.trim().replaceAll(',', '.')),
       'modalidad': _modalidad,
       'estado': _estado,
     });
@@ -724,30 +743,33 @@ class _EditarPublicacionDialogState extends State<_EditarPublicacionDialog> {
             mainAxisSize: MainAxisSize.min,
             children: [
               TextFormField(
+                key: const Key('editar-titulo'),
                 controller: _titulo,
                 decoration: const InputDecoration(labelText: 'Título'),
-                validator: (value) => value == null || value.trim().length < 3
-                    ? 'Ingresa un título válido.'
+                validator: (value) => value == null || (value.trim().length < 3 || value.trim().length > 100)
+                    ? 'Usa entre 3 y 100 caracteres.'
                     : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
+                key: const Key('editar-descripcion'),
                 controller: _descripcion,
                 minLines: 3,
                 maxLines: 5,
                 decoration: const InputDecoration(labelText: 'Descripción'),
-                validator: (value) => value == null || value.trim().length < 3
-                    ? 'Ingresa una descripción válida.'
+                validator: (value) => value == null || (value.trim().length < 3 || value.trim().length > 500)
+                    ? 'Usa entre 3 y 500 caracteres.'
                     : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
+                key: const Key('editar-precio'),
                 controller: _precio,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 decoration: const InputDecoration(labelText: 'Precio'),
                 validator: (value) {
-                  final parsed = double.tryParse(value?.trim() ?? '');
-                  return parsed == null || parsed <= 0
+                  final parsed = double.tryParse((value ?? '').trim().replaceAll(',', '.'));
+                  return parsed == null || !parsed.isFinite || parsed <= 0 || parsed > 9999999999.99 || ((parsed * 100) - (parsed * 100).round()).abs() > 0.0001
                       ? 'Ingresa un precio válido.'
                       : null;
                 },

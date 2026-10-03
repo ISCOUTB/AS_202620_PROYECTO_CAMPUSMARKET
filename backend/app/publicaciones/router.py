@@ -8,25 +8,23 @@ from fastapi import (
     UploadFile,
     status,
 )
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+from starlette.concurrency import run_in_threadpool
 
-from .image_storage import (
-    InvalidImageError,
-    delete_publication_image,
-    save_publication_image,
-)
+from backend.app.usuarios.dependencies import UsuarioActual
+
 from .service import (
     PublicationNotFoundError,
     PublicationPersistenceUnavailableError,
     cambiar_estado_publicacion,
     crear_publicacion,
     editar_publicacion,
+    elegir_imagen_principal,
+    eliminar_imagen_publicacion,
     eliminar_publicacion,
-    existe_publicacion,
-    listar_imagenes_publicacion,
     listar_publicaciones,
     listar_publicaciones_propietario,
-    registrar_imagen_publicacion,
+    subir_imagen_publicacion,
 )
 
 router = APIRouter(
@@ -36,15 +34,22 @@ router = APIRouter(
 
 
 class PublicacionBase(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
     titulo: str = Field(min_length=3, max_length=100)
     descripcion: str = Field(min_length=3, max_length=500)
-    precio: float = Field(gt=0)
+    precio: float = Field(gt=0, le=9999999999.99, allow_inf_nan=False)
     modalidad: Literal["venta", "alquiler"]
     estado: Literal["nuevo", "usado", "reacondicionado"]
 
+    @field_validator("precio")
+    @classmethod
+    def precio_en_centavos(cls, value):
+        if round(value, 2) != value:
+            raise ValueError("El precio admite máximo dos decimales.")
+        return value
+
 
 class PublicacionCreate(PublicacionBase):
-    propietario_id: int = Field(default=1, gt=0)
     estado_publicacion: Literal[
         "disponible",
         "reservado",
@@ -66,6 +71,8 @@ class EstadoPublicacionUpdate(BaseModel):
 
 class Publicacion(PublicacionCreate):
     id: int
+    propietario_id: int
+    visible: bool = True
 
 
 class PublicacionImagen(BaseModel):
@@ -107,9 +114,9 @@ def _service_unavailable(error: Exception) -> HTTPException:
         }
     },
 )
-def crear(payload: PublicacionCreate):
+def crear(payload: PublicacionCreate, user: UsuarioActual):
     try:
-        return crear_publicacion(payload.model_dump())
+        return crear_publicacion(payload.model_dump(), user["id"])
     except PublicationPersistenceUnavailableError as error:
         raise _service_unavailable(error) from error
 
@@ -133,9 +140,9 @@ def listar():
     operation_id="listarMisPublicaciones",
     summary="Listar publicaciones de un propietario",
 )
-def listar_mias(propietario_id: int = 1):
+def listar_mias(user: UsuarioActual):
     try:
-        return listar_publicaciones_propietario(propietario_id)
+        return listar_publicaciones_propietario(user["id"])
     except PublicationPersistenceUnavailableError as error:
         raise _service_unavailable(error) from error
 
@@ -159,12 +166,12 @@ def listar_mias(propietario_id: int = 1):
 def editar(
     publication_id: int,
     payload: PublicacionUpdate,
-    propietario_id: int = 1,
+    user: UsuarioActual,
 ):
     try:
         return editar_publicacion(
             publication_id,
-            propietario_id,
+            user["id"],
             payload.model_dump(),
         )
     except PublicationNotFoundError as error:
@@ -195,12 +202,12 @@ def editar(
 def cambiar_estado(
     publication_id: int,
     payload: EstadoPublicacionUpdate,
-    propietario_id: int = 1,
+    user: UsuarioActual,
 ):
     try:
         return cambiar_estado_publicacion(
             publication_id,
-            propietario_id,
+            user["id"],
             payload.estado_publicacion,
         )
     except PublicationNotFoundError as error:
@@ -228,9 +235,9 @@ def cambiar_estado(
         },
     },
 )
-def eliminar(publication_id: int, propietario_id: int = 1):
+def eliminar(publication_id: int, user: UsuarioActual):
     try:
-        eliminar_publicacion(publication_id, propietario_id)
+        eliminar_publicacion(publication_id, user["id"])
         return Response(status_code=status.HTTP_204_NO_CONTENT)
     except PublicationNotFoundError as error:
         raise HTTPException(
@@ -264,51 +271,40 @@ def eliminar(publication_id: int, propietario_id: int = 1):
 )
 async def subir_imagen(
     publication_id: int,
+    user: UsuarioActual,
     archivo: Annotated[UploadFile, File()],
 ):
-    imagen_url: str | None = None
-
     try:
-        if not existe_publicacion(publication_id):
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="La publicación no existe.",
-            )
-
-        if len(listar_imagenes_publicacion(publication_id)) >= 3:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=(
-                    "La publicación ya tiene el máximo "
-                    "de 3 imágenes."
-                ),
-            )
-
-        contenido = await archivo.read()
-        imagen_url = save_publication_image(
-            publication_id=publication_id,
-            original_filename=archivo.filename or "",
-            content=contenido,
+        contenido = await archivo.read(5 * 1024 * 1024 + 1)
+        return await run_in_threadpool(
+            subir_imagen_publicacion, publication_id, user["id"], archivo.filename or "", contenido,
         )
-
-        return registrar_imagen_publicacion(
-            publicacion_id=publication_id,
-            imagen_url=imagen_url,
-        )
-
-    except InvalidImageError as error:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(error),
-        ) from error
+    except PublicationNotFoundError as error:
+        raise HTTPException(404, str(error)) from error
     except ValueError as error:
-        if imagen_url is not None:
-            delete_publication_image(imagen_url)
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(error),
-        ) from error
+        raise HTTPException(400, str(error)) from error
     except PublicationPersistenceUnavailableError as error:
-        if imagen_url is not None:
-            delete_publication_image(imagen_url)
+        raise _service_unavailable(error) from error
+    finally:
+        await archivo.close()
+
+
+@router.delete("/{publication_id}/imagenes/{image_id}", status_code=204, operation_id="eliminarImagenPublicacion")
+def eliminar_imagen(publication_id: int, image_id: int, user: UsuarioActual):
+    try:
+        eliminar_imagen_publicacion(publication_id, user["id"], image_id)
+        return Response(status_code=204)
+    except PublicationNotFoundError as error:
+        raise HTTPException(404, str(error)) from error
+    except PublicationPersistenceUnavailableError as error:
+        raise _service_unavailable(error) from error
+
+
+@router.put("/{publication_id}/imagenes/{image_id}/principal", response_model=list[PublicacionImagen], operation_id="elegirImagenPrincipal")
+def principal(publication_id: int, image_id: int, user: UsuarioActual):
+    try:
+        return elegir_imagen_principal(publication_id, user["id"], image_id)
+    except PublicationNotFoundError as error:
+        raise HTTPException(404, str(error)) from error
+    except PublicationPersistenceUnavailableError as error:
         raise _service_unavailable(error) from error

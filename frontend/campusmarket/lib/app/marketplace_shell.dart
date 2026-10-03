@@ -3,195 +3,168 @@ import 'package:flutter/material.dart';
 import '../catalogo/catalogo_page.dart';
 import '../publicaciones/mis_publicaciones_page.dart';
 import '../publicaciones/publicacion_form_page.dart';
+import '../usuarios/auth_page.dart';
+import '../usuarios/perfil_page.dart';
+import '../usuarios/session_controller.dart';
 import 'inicio_page.dart';
 
 class MarketplaceShell extends StatefulWidget {
   const MarketplaceShell({super.key});
-
   @override
   State<MarketplaceShell> createState() => _MarketplaceShellState();
 }
 
 class _MarketplaceShellState extends State<MarketplaceShell> {
   int _indice = 0;
+  int _catalogRevision = 0;
+  int _ownRevision = 0;
+  int? _accountId;
+  final Set<int> _visited = {0};
 
-  void _irInicio() => setState(() => _indice = 0);
-  void _irCatalogo() => setState(() => _indice = 1);
-  void _irMisPublicaciones() => setState(() => _indice = 2);
-  void _irPublicar() => setState(() => _indice = 3);
+  @override
+  void initState() {
+    super.initState();
+    _accountId = SessionController.instance.usuario?.id;
+    SessionController.instance.addListener(_sessionChanged);
+  }
 
-  void _seleccionar(int indice) {
-    if (indice == _indice) return;
-    setState(() => _indice = indice);
+  @override
+  void dispose() {
+    SessionController.instance.removeListener(_sessionChanged);
+    super.dispose();
+  }
+
+  void _sessionChanged() {
+    if (!mounted) return;
+    setState(() {
+      final id = SessionController.instance.usuario?.id;
+      if (id != _accountId) {
+        _accountId = id;
+        _indice = 0;
+        _visited..clear()..add(0);
+        _ownRevision++;
+      }
+    });
+  }
+
+  Future<void> _seleccionar(int indice) async {
+    if (indice >= 2 && !SessionController.instance.authenticated) {
+      final entered = await Navigator.of(context).push<bool>(
+        MaterialPageRoute(builder: (_) => const AuthPage()),
+      );
+      if (!mounted || entered != true || !SessionController.instance.authenticated) return;
+    }
+    if (!mounted) return;
+    setState(() { _indice = indice; _visited.add(indice); });
+  }
+
+  void _irInicio() => _seleccionar(0);
+  void _irCatalogo() => _seleccionar(1);
+  void _irMisPublicaciones() => _seleccionar(2);
+  void _irPublicar() => _seleccionar(3);
+
+  void _publicacionCambiada() => setState(() => _catalogRevision++);
+
+  void _publicacionCreada() {
+    setState(() {
+      _catalogRevision++;
+      _ownRevision++;
+      _visited.add(2);
+      _indice = 2;
+    });
+  }
+
+  void _cuenta() {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => SessionController.instance.authenticated ? const PerfilPage() : const AuthPage(),
+    ));
+  }
+
+  Widget _accountButton({bool compact = false}) {
+    final authenticated = SessionController.instance.authenticated;
+    final icon = authenticated ? Icons.account_circle_outlined : Icons.login;
+    final label = authenticated ? 'Mi cuenta' : 'Iniciar sesión';
+    return compact
+      ? IconButton(key: const Key('cuenta'), tooltip: label, onPressed: _cuenta, icon: Icon(icon))
+      : TextButton.icon(key: const Key('cuenta'), onPressed: _cuenta, icon: Icon(icon), label: Text(label));
   }
 
   @override
   Widget build(BuildContext context) {
+    final authenticated = SessionController.instance.authenticated;
+    final identity = _accountId?.toString() ?? 'visitante';
     final paginas = [
-      InicioPage(onIrCatalogo: _irCatalogo, onIrPublicar: _irPublicar),
-      const CatalogoPage(),
-      const MisPublicacionesPage(),
-      const PublicacionFormPage(),
+      InicioPage(
+        key: ValueKey('inicio-$_catalogRevision'),
+        onIrCatalogo: _irCatalogo, onIrPublicar: _irPublicar,
+      ),
+      _visited.contains(1)
+        ? CatalogoPage(key: ValueKey('catalogo-$_catalogRevision'))
+        : const SizedBox.shrink(),
+      authenticated && _visited.contains(2)
+        ? MisPublicacionesPage(
+            key: ValueKey('mias-$identity-$_ownRevision'), onChanged: _publicacionCambiada,
+          )
+        : const SizedBox.shrink(),
+      authenticated && _visited.contains(3)
+        ? PublicacionFormPage(
+            key: ValueKey('publicar-$identity'), onPublicada: _publicacionCreada,
+          )
+        : const SizedBox.shrink(),
     ];
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        final desktop = width >= 1100;
-        final tablet = width >= 700 && width < 1100;
-
-        if (desktop) {
-          return Scaffold(
-            appBar: AppBar(
-              toolbarHeight: 76,
-              titleSpacing: 32,
-              title: InkWell(
-                borderRadius: BorderRadius.circular(14),
-                onTap: _irInicio,
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 6),
-                  child: _CampusMarketBrand(),
-                ),
-              ),
-              actions: [
-                _DesktopNavButton(
-                  icon: Icons.home_outlined,
-                  label: 'Inicio',
-                  selected: _indice == 0,
-                  onPressed: _irInicio,
-                ),
-                const SizedBox(width: 6),
-                _DesktopNavButton(
-                  icon: Icons.storefront_outlined,
-                  label: 'Catálogo',
-                  selected: _indice == 1,
-                  onPressed: _irCatalogo,
-                ),
-                const SizedBox(width: 6),
-                _DesktopNavButton(
-                  icon: Icons.inventory_2_outlined,
-                  label: 'Mis publicaciones',
-                  selected: _indice == 2,
-                  onPressed: _irMisPublicaciones,
-                ),
-                const SizedBox(width: 6),
-                _DesktopNavButton(
-                  icon: Icons.add_circle_outline,
-                  label: 'Publicar',
-                  selected: _indice == 3,
-                  onPressed: _irPublicar,
-                ),
-                const SizedBox(width: 24),
-              ],
-            ),
-            body: IndexedStack(index: _indice, children: paginas),
-          );
-        }
-
-        if (tablet) {
-          return Scaffold(
-            appBar: AppBar(
-              titleSpacing: 20,
-              title: InkWell(
-                borderRadius: BorderRadius.circular(14),
-                onTap: _irInicio,
-                child: const _CampusMarketBrand(compact: true),
-              ),
-            ),
-            body: Row(
-              children: [
-                NavigationRail(
-                  selectedIndex: _indice,
-                  onDestinationSelected: _seleccionar,
-                  labelType: NavigationRailLabelType.all,
-                  groupAlignment: -0.75,
-                  leading: Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: IconButton.filledTonal(
-                      tooltip: 'Publicar producto',
-                      onPressed: _irPublicar,
-                      icon: const Icon(Icons.add),
-                    ),
-                  ),
-                  destinations: const [
-                    NavigationRailDestination(
-                      icon: Icon(Icons.home_outlined),
-                      selectedIcon: Icon(Icons.home),
-                      label: Text('Inicio'),
-                    ),
-                    NavigationRailDestination(
-                      icon: Icon(Icons.storefront_outlined),
-                      selectedIcon: Icon(Icons.storefront),
-                      label: Text('Catálogo'),
-                    ),
-                    NavigationRailDestination(
-                      icon: Icon(Icons.inventory_2_outlined),
-                      selectedIcon: Icon(Icons.inventory_2),
-                      label: Text('Mis publicaciones'),
-                    ),
-                    NavigationRailDestination(
-                      icon: Icon(Icons.add_circle_outline),
-                      selectedIcon: Icon(Icons.add_circle),
-                      label: Text('Publicar'),
-                    ),
-                  ],
-                ),
-                const VerticalDivider(width: 1),
-                Expanded(
-                  child: IndexedStack(index: _indice, children: paginas),
-                ),
-              ],
-            ),
-          );
-        }
-
-        return Scaffold(
-          appBar: AppBar(
-            titleSpacing: 16,
-            title: InkWell(
-              borderRadius: BorderRadius.circular(14),
-              onTap: _irInicio,
-              child: const _CampusMarketBrand(compact: true),
-            ),
-            actions: [
-              IconButton(
-                tooltip: 'Publicar producto',
-                onPressed: _irPublicar,
-                icon: const Icon(Icons.add_circle_outline),
-              ),
-              const SizedBox(width: 8),
-            ],
+    return LayoutBuilder(builder: (context, constraints) {
+      final desktop = constraints.maxWidth >= 1100;
+      final tablet = constraints.maxWidth >= 700 && !desktop;
+      final content = IndexedStack(index: _indice, children: paginas);
+      return Scaffold(
+        appBar: AppBar(
+          toolbarHeight: desktop ? 76 : 64,
+          titleSpacing: desktop ? 28 : 16,
+          title: InkWell(
+            borderRadius: BorderRadius.circular(14), onTap: _irInicio,
+            child: _CampusMarketBrand(compact: !desktop),
           ),
-          body: IndexedStack(index: _indice, children: paginas),
-          bottomNavigationBar: NavigationBar(
-            selectedIndex: _indice,
-            onDestinationSelected: _seleccionar,
-            destinations: const [
-              NavigationDestination(
-                icon: Icon(Icons.home_outlined),
-                selectedIcon: Icon(Icons.home),
-                label: 'Inicio',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.storefront_outlined),
-                selectedIcon: Icon(Icons.storefront),
-                label: 'Catálogo',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.inventory_2_outlined),
-                selectedIcon: Icon(Icons.inventory_2),
-                label: 'Mis publicaciones',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.add_circle_outline),
-                selectedIcon: Icon(Icons.add_circle),
-                label: 'Publicar',
-              ),
+          actions: [
+            if (desktop) ...[
+              _DesktopNavButton(key: const Key('nav-inicio'), icon: Icons.home_outlined, label: 'Inicio', selected: _indice == 0, onPressed: _irInicio),
+              _DesktopNavButton(key: const Key('nav-catalogo'), icon: Icons.storefront_outlined, label: 'Catálogo', selected: _indice == 1, onPressed: _irCatalogo),
+              _DesktopNavButton(key: const Key('nav-mias'), icon: Icons.inventory_2_outlined, label: 'Mis publicaciones', selected: _indice == 2, onPressed: _irMisPublicaciones),
+              _DesktopNavButton(key: const Key('nav-publicar'), icon: Icons.add_circle_outline, label: 'Publicar', selected: _indice == 3, onPressed: _irPublicar),
+              const SizedBox(width: 12),
             ],
-          ),
-        );
-      },
-    );
+            _accountButton(compact: !desktop),
+            const SizedBox(width: 12),
+          ],
+        ),
+        body: tablet
+          ? Row(children: [
+              NavigationRail(
+                selectedIndex: _indice,
+                onDestinationSelected: _seleccionar,
+                labelType: NavigationRailLabelType.all,
+                destinations: const [
+                  NavigationRailDestination(icon: Icon(Icons.home_outlined, key: Key('nav-inicio')), selectedIcon: Icon(Icons.home), label: Text('Inicio')),
+                  NavigationRailDestination(icon: Icon(Icons.storefront_outlined, key: Key('nav-catalogo')), selectedIcon: Icon(Icons.storefront), label: Text('Catálogo')),
+                  NavigationRailDestination(icon: Icon(Icons.inventory_2_outlined, key: Key('nav-mias')), selectedIcon: Icon(Icons.inventory_2), label: Text('Mis publicaciones')),
+                  NavigationRailDestination(icon: Icon(Icons.add_circle_outline, key: Key('nav-publicar')), selectedIcon: Icon(Icons.add_circle), label: Text('Publicar')),
+                ],
+              ),
+              const VerticalDivider(width: 1),
+              Expanded(child: content),
+            ])
+          : content,
+        bottomNavigationBar: desktop || tablet ? null : NavigationBar(
+          selectedIndex: _indice, onDestinationSelected: _seleccionar,
+          destinations: const [
+            NavigationDestination(key: Key('nav-inicio'), icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Inicio'),
+            NavigationDestination(key: Key('nav-catalogo'), icon: Icon(Icons.storefront_outlined), selectedIcon: Icon(Icons.storefront), label: 'Catálogo'),
+            NavigationDestination(key: Key('nav-mias'), icon: Icon(Icons.inventory_2_outlined), selectedIcon: Icon(Icons.inventory_2), label: 'Mis publicaciones'),
+            NavigationDestination(key: Key('nav-publicar'), icon: Icon(Icons.add_circle_outline), selectedIcon: Icon(Icons.add_circle), label: 'Publicar'),
+          ],
+        ),
+      );
+    });
   }
 }
 
@@ -248,6 +221,7 @@ class _CampusMarketBrand extends StatelessWidget {
 
 class _DesktopNavButton extends StatelessWidget {
   const _DesktopNavButton({
+    super.key,
     required this.icon,
     required this.label,
     required this.selected,

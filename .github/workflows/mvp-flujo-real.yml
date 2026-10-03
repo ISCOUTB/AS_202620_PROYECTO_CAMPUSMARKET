@@ -1,0 +1,144 @@
+name: Flujo real Web y Android
+
+on:
+  push:
+    branches: [master, mvp-autenticacion-producto]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  flujo:
+    name: Flujo ${{ matrix.platform }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: web-desktop
+            width: 1440
+            height: 1000
+          - platform: web-mobile
+            width: 390
+            height: 844
+          - platform: android
+            width: 411
+            height: 731
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root_ci
+          MYSQL_DATABASE: campusmarket_e2e_test
+          MYSQL_USER: campusmarket_app
+          MYSQL_PASSWORD: campusmarket_ci
+        ports: ["3306:3306"]
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -uroot -proot_ci"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+    env:
+      CAMPUSMARKET_DB_HOST: 127.0.0.1
+      CAMPUSMARKET_DB_PORT: 3306
+      CAMPUSMARKET_DB_USER: campusmarket_app
+      CAMPUSMARKET_DB_PASSWORD: campusmarket_ci
+      CAMPUSMARKET_DB_NAME: campusmarket_e2e_test
+      CAMPUSMARKET_UPLOAD_DIR: /tmp/campusmarket-e2e-uploads
+      CAMPUSMARKET_ADMIN_USER_IDS: "3"
+      CAMPUSMARKET_CORS_ORIGINS: http://localhost:7357,http://127.0.0.1:7357
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: "3.47.3"
+          channel: stable
+          cache: true
+      - name: Preparar backend y dependencias del SDK
+        run: |
+          python -m pip install -r backend/requirements.txt
+          cd frontend/campusmarket
+          flutter pub get
+      - name: Iniciar backend real y verificar health
+        run: |
+          mkdir -p artifacts/e2e
+          python -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --limit-concurrency 6 --no-proxy-headers > artifacts/e2e/backend.log 2>&1 &
+          python - <<'PY'
+          import time
+          import urllib.request
+          for attempt in range(60):
+              try:
+                  with urllib.request.urlopen("http://127.0.0.1:8000/health", timeout=2) as response:
+                      if response.status == 200:
+                          print("Backend y MySQL reales listos.")
+                          break
+              except OSError:
+                  time.sleep(0.25)
+          else:
+              raise SystemExit("Backend no está disponible para el flujo real.")
+          PY
+      - name: Preparar ChromeDriver oficial y PNG de prueba
+        if: startsWith(matrix.platform, 'web')
+        run: python scripts/preparar_e2e_ci.py --chrome
+      - name: Ejecutar flujo Web en Chrome real
+        if: startsWith(matrix.platform, 'web')
+        working-directory: frontend/campusmarket
+        run: |
+          chromedriver --port=4444 --allowed-ips=127.0.0.1 > ../../artifacts/e2e/chromedriver.log 2>&1 &
+          python3 ../../scripts/asistir_selector_e2e.py web --width ${{ matrix.width }} --height ${{ matrix.height }} > ../../artifacts/e2e/selector.log 2>&1 &
+          picker_pid=$!
+          trap 'kill "$picker_pid" 2>/dev/null || true' EXIT
+          flutter drive --driver=test_driver/mvp_driver.dart --target=integration_test/mvp_flow_test.dart -d web-server --web-port=7357 --web-hostname=127.0.0.1 --browser-name=chrome --browser-dimension=${{ matrix.width }}x${{ matrix.height }}@1 --dart-define=CAMPUSMARKET_API_BASE_URL=http://127.0.0.1:8000 --dart-define=CAMPUSMARKET_VIEWPORT=${{ matrix.platform }}
+      - name: Preparar PNG y KVM de Android
+        if: matrix.platform == 'android'
+        run: |
+          python scripts/preparar_e2e_ci.py
+          sudo chmod a+rw /dev/kvm
+      - name: Ejecutar flujo Android en emulador real
+        if: matrix.platform == 'android'
+        uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          profile: pixel_2
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          script: bash scripts/ejecutar_android_e2e.sh
+      - name: Registrar hash, SDK y configuración generada
+        if: always()
+        run: |
+          git rev-parse HEAD > artifacts/e2e/hash.txt
+          flutter --version > artifacts/e2e/flutter-version.txt
+          python - <<'PY'
+          import json
+          import subprocess
+          from pathlib import Path
+          files = subprocess.check_output(["git", "diff", "--name-only"], text=True).splitlines()
+          allowed = {".yaml", ".lock", ".dart", ".xml", ".kts", ".properties", ".cc", ".h", ".cmake"}
+          snapshot = {path: Path(path).read_text() for path in files if Path(path).suffix in allowed}
+          print("CAMPUSMARKET_TOOLCHAIN_SNAPSHOT=" + json.dumps(snapshot))
+          PY
+      - name: Construir índice visual de evidencia
+        if: always()
+        run: python scripts/resumir_evidencia_visual.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: flujo-${{ matrix.platform }}-${{ github.sha }}
+          path: |
+            artifacts/e2e/*.png
+            artifacts/e2e/*.json
+            artifacts/e2e/*.txt
+            artifacts/e2e/*.log

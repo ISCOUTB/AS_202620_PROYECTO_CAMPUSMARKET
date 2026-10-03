@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
+import '../shared/api_error.dart';
 import 'publicaciones_api.dart';
 
 class ImagenSeleccionada {
@@ -15,7 +16,9 @@ class ImagenSeleccionada {
 }
 
 class PublicacionFormPage extends StatefulWidget {
-  const PublicacionFormPage({super.key});
+  const PublicacionFormPage({super.key, this.onPublicada});
+
+  final VoidCallback? onPublicada;
 
   @override
   State<PublicacionFormPage> createState() => _PublicacionFormPageState();
@@ -35,10 +38,14 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
   String _modalidad = 'venta';
   String _estado = 'usado';
   bool _guardando = false;
+  int? _publicacionPendiente;
+  int _imagenesSubidas = 0;
+  String? _errorGuardado;
   bool _seleccionandoImagenes = false;
 
   @override
   void dispose() {
+    _api.dispose();
     _tituloController.dispose();
     _descripcionController.dispose();
     _precioController.dispose();
@@ -48,6 +55,7 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
   Future<void> _seleccionarImagenes() async {
     if (_guardando || _seleccionandoImagenes) return;
 
+    if (_publicacionPendiente != null) return;
     final disponibles = _maxImagenes - _imagenes.length;
     if (disponibles <= 0) {
       _mostrarMensaje('Ya seleccionaste el máximo de $_maxImagenes imágenes.');
@@ -122,60 +130,41 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
   }
 
   void _eliminarImagen(int index) {
-    if (_guardando) return;
+    if (_guardando || _publicacionPendiente != null) return;
     setState(() => _imagenes.removeAt(index));
   }
 
   Future<void> _guardar() async {
     if (_guardando || !_formKey.currentState!.validate()) return;
-
-    setState(() => _guardando = true);
-    Map<String, dynamic>? creada;
-
+    FocusScope.of(context).unfocus();
+    setState(() { _guardando = true; _errorGuardado = null; });
     try {
-      creada = await _api.crearPublicacion(
-        titulo: _tituloController.text.trim(),
-        descripcion: _descripcionController.text.trim(),
-        precio: double.parse(_precioController.text.trim()),
-        modalidad: _modalidad,
-        estado: _estado,
-      );
-
-      final rawId = creada['id'];
-      if (rawId is! num) {
-        throw Exception('La API no devolvió un identificador válido.');
-      }
-
-      final publicacionId = rawId.toInt();
-      if (_imagenes.isNotEmpty) {
-        final imagenesApi = _imagenes
-            .map((imagen) => ImagenPublicacion(nombre: imagen.nombre, bytes: imagen.bytes))
-            .toList();
-        await _api.subirImagenes(
-          publicacionId: publicacionId,
-          imagenes: imagenesApi,
+      if (_publicacionPendiente == null) {
+        final creada = await _api.crearPublicacion(
+          titulo: _tituloController.text.trim(),
+          descripcion: _descripcionController.text.trim(),
+          precio: double.parse(_precioController.text.trim().replaceAll(',', '.')),
+          modalidad: _modalidad, estado: _estado,
         );
+        _publicacionPendiente = (creada['id'] as num).toInt();
       }
-
+      final id = _publicacionPendiente!;
+      while (_imagenesSubidas < _imagenes.length) {
+        final imagen = _imagenes[_imagenesSubidas];
+        await _api.subirImagen(
+          publicacionId: id, imagen: ImagenPublicacion(nombre: imagen.nombre, bytes: imagen.bytes),
+        );
+        _imagenesSubidas++;
+      }
       if (!mounted) return;
-      final cantidadImagenes = _imagenes.length;
-      _mostrarMensaje(
-        cantidadImagenes == 0
-            ? 'Publicación #$publicacionId guardada correctamente.'
-            : 'Publicación #$publicacionId guardada con $cantidadImagenes ${cantidadImagenes == 1 ? 'imagen' : 'imágenes'}.',
-      );
+      _mostrarMensaje('Tu publicación ya está en CampusMarket.');
       _limpiarFormulario();
-    } on PublicacionTemporalmenteNoDisponible catch (error) {
-      if (mounted) _mostrarMensaje(error.mensaje);
-    } catch (_) {
+      widget.onPublicada?.call();
+    } catch (error) {
       if (!mounted) return;
-      if (creada != null) {
-        _mostrarMensaje(
-          'La publicación #${creada['id']} fue creada, pero no fue posible subir todas las imágenes.',
-        );
-      } else {
-        _mostrarMensaje('No fue posible guardar la publicación.');
-      }
+      setState(() => _errorGuardado = _publicacionPendiente == null
+        ? readableError(error)
+        : 'Tu publicación ya fue creada. Reintenta para subir las imágenes pendientes. ${readableError(error)}');
     } finally {
       if (mounted) setState(() => _guardando = false);
     }
@@ -187,6 +176,9 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
     _precioController.clear();
     setState(() {
       _imagenes.clear();
+      _publicacionPendiente = null;
+      _imagenesSubidas = 0;
+      _errorGuardado = null;
       _modalidad = 'venta';
       _estado = 'usado';
     });
@@ -300,18 +292,21 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
                   child: Icon(Icons.description_outlined, color: colors.primary),
                 ),
                 const SizedBox(width: 12),
-                Text(
-                  'Información del producto',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
+                Expanded(
+                  child: Text(
+                    'Información del producto',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 24),
             TextFormField(
+              key: const Key('publicacion-titulo'),
               controller: _tituloController,
-              enabled: !_guardando,
+              enabled: !_guardando && _publicacionPendiente == null,
               textInputAction: TextInputAction.next,
               decoration: const InputDecoration(
                 labelText: 'Título',
@@ -333,8 +328,9 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
               builder: (context, constraints) {
                 final compact = constraints.maxWidth < 620;
                 final precio = TextFormField(
+                  key: const Key('publicacion-precio'),
                   controller: _precioController,
-                  enabled: !_guardando,
+                  enabled: !_guardando && _publicacionPendiente == null,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   decoration: const InputDecoration(
                     labelText: 'Precio',
@@ -346,8 +342,8 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
                     final parsed = double.tryParse(
                       (value ?? '').replaceAll(',', '.').trim(),
                     );
-                    if (parsed == null || parsed <= 0) {
-                      return 'Ingresa un precio mayor que cero.';
+                    if (parsed == null || !parsed.isFinite || parsed <= 0 || parsed > 9999999999.99 || ((parsed * 100) - (parsed * 100).round()).abs() > 0.0001) {
+                      return 'Usa un precio positivo con máximo 2 decimales.';
                     }
                     return null;
                   },
@@ -364,7 +360,7 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
                     DropdownMenuItem(value: 'venta', child: Text('Venta')),
                     DropdownMenuItem(value: 'alquiler', child: Text('Alquiler')),
                   ],
-                  onChanged: _guardando
+                  onChanged: _guardando || _publicacionPendiente != null
                       ? null
                       : (value) {
                           if (value != null) setState(() => _modalidad = value);
@@ -402,7 +398,7 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
                   child: Text('Reacondicionado'),
                 ),
               ],
-              onChanged: _guardando
+              onChanged: _guardando || _publicacionPendiente != null
                   ? null
                   : (value) {
                       if (value != null) setState(() => _estado = value);
@@ -410,8 +406,9 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
             ),
             const SizedBox(height: 16),
             TextFormField(
+              key: const Key('publicacion-descripcion'),
               controller: _descripcionController,
-              enabled: !_guardando,
+              enabled: !_guardando && _publicacionPendiente == null,
               minLines: 5,
               maxLines: 8,
               decoration: const InputDecoration(
@@ -434,6 +431,7 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
             SizedBox(
               height: 54,
               child: FilledButton.icon(
+                key: const Key('publicacion-guardar'),
                 onPressed: _guardando ? null : _guardar,
                 icon: _guardando
                     ? const SizedBox(
@@ -442,9 +440,13 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.send_outlined),
-                label: Text(_guardando ? 'Publicando...' : 'Publicar producto'),
+                label: Text(_guardando ? 'Publicando...' : _publicacionPendiente != null ? 'Reintentar imágenes' : 'Publicar producto'),
               ),
             ),
+            if (_errorGuardado != null) ...[
+              const SizedBox(height: 16),
+              Semantics(liveRegion: true, child: Text(_errorGuardado!, style: TextStyle(color: colors.error))),
+            ],
             if (_guardando) ...[
               const SizedBox(height: 12),
               const Text(
@@ -573,7 +575,8 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
     final colors = Theme.of(context).colorScheme;
 
     return InkWell(
-      onTap: _guardando || _seleccionandoImagenes ? null : _seleccionarImagenes,
+      key: const Key('publicacion-fotografias'),
+      onTap: _guardando || _seleccionandoImagenes || _publicacionPendiente != null ? null : _seleccionarImagenes,
       borderRadius: BorderRadius.circular(16),
       child: Container(
         width: double.infinity,
@@ -663,7 +666,7 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
               shape: const CircleBorder(),
               child: InkWell(
                 customBorder: const CircleBorder(),
-                onTap: _guardando ? null : () => _eliminarImagen(index),
+                onTap: _guardando || _publicacionPendiente != null ? null : () => _eliminarImagen(index),
                 child: const Padding(
                   padding: EdgeInsets.all(7),
                   child: Icon(Icons.close, color: Colors.white, size: 18),
@@ -678,7 +681,8 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
 
   Widget _buildAgregarImagen() {
     return InkWell(
-      onTap: _guardando || _seleccionandoImagenes ? null : _seleccionarImagenes,
+      key: const Key('publicacion-fotografias'),
+      onTap: _guardando || _seleccionandoImagenes || _publicacionPendiente != null ? null : _seleccionarImagenes,
       borderRadius: BorderRadius.circular(16),
       child: Container(
         width: 190,
