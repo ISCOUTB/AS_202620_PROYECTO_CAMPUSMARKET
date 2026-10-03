@@ -52,6 +52,41 @@ def test_mis_publicaciones_solo_lista_las_del_propietario():
     assert publicaciones[0]["id"] == propia["id"]
     assert publicaciones[0]["propietario_id"] == 1
     assert publicaciones[0]["estado_publicacion"] == "disponible"
+    assert publicaciones[0]["imagenes"] == []
+
+
+def test_mis_publicaciones_incluye_imagen_principal():
+    _limpiar_publicaciones()
+    propia = _crear_publicacion(1, "Producto con foto")
+
+    upload = client.post(
+        f"/publicaciones/{propia['id']}/imagenes",
+        files={
+            "archivo": (
+                "foto.jpg",
+                b"contenido-imagen-prueba",
+                "image/jpeg",
+            )
+        },
+    )
+    assert upload.status_code == 201
+
+    response = client.get("/publicaciones/mias?propietario_id=1")
+    assert response.status_code == 200
+
+    publicaciones = response.json()
+    assert len(publicaciones) == 1
+    assert len(publicaciones[0]["imagenes"]) == 1
+    assert publicaciones[0]["imagenes"][0]["es_principal"] is True
+    assert publicaciones[0]["imagenes"][0]["orden"] == 1
+    assert publicaciones[0]["imagenes"][0]["imagen_url"].startswith(
+        f"/uploads/publicaciones/{propia['id']}/"
+    )
+
+    delete_response = client.delete(
+        f"/publicaciones/{propia['id']}?propietario_id=1"
+    )
+    assert delete_response.status_code == 204
 
 
 def test_propietario_edita_su_publicacion():
