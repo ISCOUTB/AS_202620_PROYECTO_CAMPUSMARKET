@@ -289,6 +289,7 @@ class _MisPublicacionesPageState extends State<MisPublicacionesPage> {
                       constraints: const BoxConstraints(maxWidth: 1180),
                       child: _PublicacionGestionCard(
                         publicacion: publicacion,
+                        apiBaseUrl: _api.baseUrl,
                         onEditar: () => _editar(publicacion),
                         onEliminar: () => _eliminar(publicacion),
                         onCambiarEstado: (estado) =>
@@ -360,15 +361,51 @@ class _FiltroChip extends StatelessWidget {
 class _PublicacionGestionCard extends StatelessWidget {
   const _PublicacionGestionCard({
     required this.publicacion,
+    required this.apiBaseUrl,
     required this.onEditar,
     required this.onEliminar,
     required this.onCambiarEstado,
   });
 
   final Map<String, dynamic> publicacion;
+  final String apiBaseUrl;
   final VoidCallback onEditar;
   final VoidCallback onEliminar;
   final ValueChanged<String> onCambiarEstado;
+
+  String? _imagenPrincipalUrl() {
+    final imagenes = publicacion['imagenes'];
+    if (imagenes is! List || imagenes.isEmpty) return null;
+
+    Map<String, dynamic>? principal;
+    for (final item in imagenes) {
+      if (item is Map<String, dynamic> && item['es_principal'] == true) {
+        principal = item;
+        break;
+      }
+    }
+
+    principal ??= imagenes.first is Map<String, dynamic>
+        ? imagenes.first as Map<String, dynamic>
+        : null;
+
+    final raw = principal?['imagen_url']?.toString();
+    if (raw == null || raw.isEmpty) return null;
+    if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
+    return '$apiBaseUrl$raw';
+  }
+
+  String _formatearPrecio(double value) {
+    final digits = value.round().toString();
+    final buffer = StringBuffer();
+    for (var i = 0; i < digits.length; i++) {
+      if (i > 0 && (digits.length - i) % 3 == 0) {
+        buffer.write('.');
+      }
+      buffer.write(digits[i]);
+    }
+    return 'COP \$${buffer.toString()}';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -377,6 +414,15 @@ class _PublicacionGestionCard extends StatelessWidget {
     final estadoPublicacion =
         publicacion['estado_publicacion']?.toString() ?? 'disponible';
     final precio = (publicacion['precio'] as num?)?.toDouble() ?? 0;
+    final imagenUrl = _imagenPrincipalUrl();
+
+    Widget fallbackVisual() => Center(
+      child: Icon(
+        Icons.inventory_2_outlined,
+        size: 54,
+        color: colors.secondary,
+      ),
+    );
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -385,16 +431,19 @@ class _PublicacionGestionCard extends StatelessWidget {
           final compact = constraints.maxWidth < 720;
           final productVisual = Container(
             width: compact ? double.infinity : 160,
-            height: compact ? 150 : 150,
+            height: compact ? 170 : 150,
+            clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
               color: colors.secondaryContainer.withValues(alpha: 0.55),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: Icon(
-              Icons.inventory_2_outlined,
-              size: 54,
-              color: colors.secondary,
-            ),
+            child: imagenUrl == null
+                ? fallbackVisual()
+                : Image.network(
+                    imagenUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, _, _) => fallbackVisual(),
+                  ),
           );
 
           final details = Expanded(
@@ -434,7 +483,7 @@ class _PublicacionGestionCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  '\$${precio.toStringAsFixed(0)}',
+                  _formatearPrecio(precio),
                   style: theme.textTheme.titleLarge?.copyWith(
                     color: colors.primary,
                     fontWeight: FontWeight.w900,
