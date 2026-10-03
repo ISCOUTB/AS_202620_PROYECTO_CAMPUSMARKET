@@ -65,9 +65,6 @@ Este documento registra el uso de herramientas de IA como apoyo al proyecto. Tod
 | ChatGPT | Apoyo para actualizar la trazabilidad documental de S6 en README, `docs/aspectos.md` y arc42. | Se revisó que los documentos apunten a C4 Nivel 3, auditoría, propiedad de datos y prueba automática sin contradecir ADR-0001. | Se rechazó crear un nuevo ADR porque los límites definidos en el primer corte no cambiaron. |
 | ChatGPT | Apoyo para la revisión final de S6 contra los criterios de la actividad. | Se contrastaron los artefactos con el estado actual de `master`, las pruebas de GitHub Actions y el Quality Gate de SonarQube Cloud. | Se rechazó agregar microservicios, nueva infraestructura o documentación artificial que no correspondiera con el repositorio. |
 
-
-
-
 ## Evidencia S7
 
 **Fecha:** 15/09/2026
@@ -183,7 +180,7 @@ https://campusmarket-s8-api-nilver.azurewebsites.net
 
 Health:
 https://campusmarket-s8-api-nilver.azurewebsites.net/health
-
+```
 
 ## Evidencia S9
 
@@ -199,6 +196,39 @@ https://campusmarket-s8-api-nilver.azurewebsites.net/health
 | ChatGPT | Apoyo para realizar una mutación controlada agregando temporalmente `from backend.app.publicaciones import repository` dentro de Catálogo. | La ejecución produjo `1 failed, 2 passed` y falló específicamente `test_catalogo_no_importa_repository_de_publicaciones`. Tras retirar la mutación, la prueba volvió a `3 passed`. | Se rechazó conservar la importación directa del repositorio o debilitar la prueba para hacerla pasar, porque esa dependencia viola la frontera acordada. |
 | ChatGPT | Apoyo para diseñar la medición controlada de EC-01 con 1.000 publicaciones y 10 búsquedas consecutivas. | `backend/tests/test_ec01_catalogo.py` obtuvo `10/10` ejecuciones bajo 2 segundos, promedio `0.020482 s` y máximo `0.050431 s`. La prueba terminó con `1 passed`. | Se rechazó declarar esta medición como validación productiva completa porque usa publicaciones controladas mediante `monkeypatch` y no incluye latencia real de MySQL ni red. |
 | ChatGPT | Apoyo para corregir el manejo de indisponibilidad de persistencia en la consulta de publicaciones. | `listar_publicaciones()` traduce `PersistenceUnavailableError` a `PublicationPersistenceUnavailableError`, y el router de Catálogo responde con HTTP `503` controlado. | Se rechazó permitir que la excepción de PyMySQL escapara directamente hasta la capa HTTP, porque expondría detalles internos y produciría comportamiento no controlado. |
+
+---
+
+## Actualización de producto — 02–03/10/2026
+
+| Herramienta | Uso realizado | Verificación del equipo | Qué se corrigió o rechazó y por qué |
+|---|---|---|---|
+| ChatGPT | Apoyo para evolucionar la interfaz Flutter hacia una experiencia de marketplace responsive con Inicio, Catálogo, detalle, Publicar y Mis publicaciones. | Se ejecutó la aplicación en Android y se recorrieron flujos reales contra FastAPI y MySQL. `flutter analyze` terminó con `No issues found!`. | Se rechazó copiar de referencias visuales funciones que no existen en el backend, como favoritos, mensajería, vendedor verificado, ubicación, perfil, reservas o contacto. Mostrar controles falsos habría hecho divergir la interfaz de las capacidades reales. |
+| ChatGPT | Apoyo para diseñar la carga de hasta tres imágenes por publicación y mantener la propiedad del dato dentro de Gestión de Publicaciones. | Se verificó creación real con tres imágenes, lectura desde Catálogo, visualización de imagen principal y galería, y respuesta de imágenes en Mis publicaciones. La suite backend terminó con `36 passed`. | Se rechazó almacenar imágenes como BLOB/Base64 dentro de `publicaciones` y se rechazó que Catálogo accediera directamente a la persistencia. La decisión quedó formalizada en ADR-0011. |
+| ChatGPT | Apoyo para implementar Mis publicaciones: listar, editar, cambiar estado y eliminar. | En Android se creó una publicación real, se comprobó su aparición en Catálogo y Mis publicaciones y se probaron edición, cambio de estado y eliminación. | Se corrigió la interpretación de identidad: `propietario_id = 1` se conserva únicamente como mecanismo temporal y no se presenta como autenticación implementada. |
+| ChatGPT | Apoyo para detectar y corregir overflows de tarjetas responsive en Catálogo e Inicio. | Los defectos fueron observados en ejecución Android mediante `RenderFlex overflowed`; después de los ajustes y hot restart la interfaz dejó de mostrar la franja de overflow. `flutter analyze` permaneció limpio. | Se rechazó ocultar el error visual o considerarlo irrelevante solo porque el flujo funcional continuaba operando. |
+| ChatGPT | Apoyo para sincronizar el contrato OpenAPI después de ampliar la respuesta de `/publicaciones/mias` con imágenes. | `backend/tests/test_contrato_openapi.py` terminó con `3 passed`; la suite completa terminó con `36 passed`. | Se rechazó restaurar el snapshot anterior para forzar las pruebas a verde. El contrato se actualizó para representar el proveedor real. |
+| ChatGPT | Auditoría final de modularidad y trazabilidad antes del cierre. | Se revisó `test_modularidad_s6.py`, la dirección `router → service → repository → MySQL`, la dependencia Catálogo → servicio de Publicaciones y el working tree limpio antes del bloque documental. | Se rechazó declarar EC-02 como completamente cumplido porque el escenario exige usuarios autenticados distintos y esa capacidad todavía no existe. También se corrigió la duplicación de numeración ADR: la gestión de imágenes pasó a ADR-0011 y ADR-0010 permanece como la decisión S9 sobre no incorporar un componente generativo. |
+
+### Resultado de verificación del 03/10/2026
+
+```text
+backend completo:
+36 passed, 2 warnings
+
+contrato OpenAPI:
+3 passed
+
+Flutter:
+No issues found!
+
+git diff --check:
+sin errores
+```
+
+La generación asistida no se considera evidencia suficiente por sí sola. Los
+cambios anteriores fueron contrastados con ejecución real, pruebas automáticas,
+análisis estático y las fronteras arquitectónicas vigentes.
 
 ## Criterio de uso
 
