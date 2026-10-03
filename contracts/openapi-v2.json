@@ -63,22 +63,22 @@
               }
             }
           },
-          "503": {
-            "description": "Persistencia temporalmente no disponible",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "422": {
             "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Persistencia temporalmente no disponible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -175,22 +175,22 @@
               }
             }
           },
-          "503": {
-            "description": "Persistencia temporalmente no disponible",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "422": {
             "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Persistencia temporalmente no disponible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -233,22 +233,22 @@
               }
             }
           },
-          "503": {
-            "description": "Persistencia temporalmente no disponible",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "422": {
             "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Persistencia temporalmente no disponible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -310,22 +310,22 @@
               }
             }
           },
-          "503": {
-            "description": "Persistencia temporalmente no disponible",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "422": {
             "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Persistencia temporalmente no disponible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -397,22 +397,22 @@
               }
             }
           },
-          "503": {
-            "description": "Persistencia temporalmente no disponible",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "422": {
             "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Persistencia temporalmente no disponible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1189,7 +1189,7 @@
           "precio": {
             "type": "number",
             "maximum": 9999999999.99,
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Precio"
           },
           "modalidad": {
@@ -1287,6 +1287,28 @@
             },
             "type": "array",
             "title": "Imagenes"
+          },
+          "propietario_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Propietario Id",
+            "default": null
+          },
+          "estado_publicacion": {
+            "type": "string",
+            "enum": [
+              "disponible",
+              "reservado",
+              "vendido"
+            ],
+            "title": "Estado Publicacion",
+            "default": "disponible"
           }
         },
         "type": "object",
@@ -1317,7 +1339,7 @@
           "precio": {
             "type": "number",
             "maximum": 9999999999.99,
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Precio"
           },
           "modalidad": {
@@ -1376,7 +1398,7 @@
           "precio": {
             "type": "number",
             "maximum": 9999999999.99,
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Precio"
           },
           "modalidad": {
@@ -1490,7 +1512,7 @@
           "precio": {
             "type": "number",
             "maximum": 9999999999.99,
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Precio"
           },
           "modalidad": {
@@ -1649,7 +1671,7 @@
         "properties": {
           "publicacion_id": {
             "type": "integer",
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Publicacion Id"
           },
           "motivo": {

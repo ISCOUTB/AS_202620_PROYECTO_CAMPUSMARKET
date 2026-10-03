@@ -189,3 +189,21 @@ def test_catalogo_detalle_inexistente(monkeypatch):
 
     assert response.status_code == 404
     assert response.json()["detail"] == "Publicación no encontrada"
+
+
+def test_catalogo_expone_disponibilidad_y_propietario_real(cuentas, payload_publicacion):
+    a, b = cuentas
+    creada = a["client"].post("/publicaciones", json=payload_publicacion).json()
+    a["client"].patch(
+        f"/publicaciones/{creada['id']}/estado",
+        json={"estado_publicacion": "reservado"},
+    )
+    detalle = b["client"].get(f"/catalogo/{creada['id']}").json()
+    assert detalle["propietario_id"] == a["usuario"]["id"]
+    assert detalle["propietario_id"] != b["usuario"]["id"]
+    assert detalle["estado_publicacion"] == "reservado"
+
+
+def test_catalogo_rechaza_filtros_no_finitos():
+    for value in ["inf", "nan", "-inf"]:
+        assert client.get("/catalogo", params={"precio_min": value}).status_code == 422

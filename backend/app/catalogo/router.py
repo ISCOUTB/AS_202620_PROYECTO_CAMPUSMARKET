@@ -27,6 +27,8 @@ class PublicacionCatalogo(BaseModel):
     precio: float
     modalidad: Literal["venta", "alquiler"]
     estado: Literal["nuevo", "usado", "reacondicionado"]
+    propietario_id: int | None = None
+    estado_publicacion: Literal["disponible", "reservado", "vendido"] = "disponible"
     imagenes: list[ImagenCatalogo] = Field(default_factory=list)
 
 
@@ -40,8 +42,8 @@ def consultar_catalogo(
     q: str | None = Query(default=None, max_length=100),
     modalidad: Literal["venta", "alquiler"] | None = None,
     estado: Literal["nuevo", "usado", "reacondicionado"] | None = None,
-    precio_min: float | None = Query(default=None, ge=0),
-    precio_max: float | None = Query(default=None, ge=0),
+    precio_min: float | None = Query(default=None, ge=0, allow_inf_nan=False),
+    precio_max: float | None = Query(default=None, ge=0, allow_inf_nan=False),
 ):
     if (
         precio_min is not None
