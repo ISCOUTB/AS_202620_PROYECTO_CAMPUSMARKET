@@ -433,3 +433,8 @@ por tabla y de imports. No se alteraron ADR aceptados.
   nueve mutaciones detectadas, Flutter analyze/seis pruebas/dos mutaciones/builds,
   flujo real en los tres jobs del run 37140687994. La cuota de Docker todavía
   requiere su propia medición; los runners sin límites no acreditan esa cuota.
+
+- **Corregido:** el verificador Compose convertía HTTPMessage a dict y perdía
+  la búsqueda de headers sin distinción de mayúsculas. Health respondía pero
+  la comparación del hash fallaba. Se conserva HTTPMessage y se repite toda
+  la ejecución; no se relaja la comprobación de revisión.

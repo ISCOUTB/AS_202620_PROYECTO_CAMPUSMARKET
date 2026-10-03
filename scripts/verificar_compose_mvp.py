@@ -66,7 +66,7 @@ def request(method, path, token=None, payload=None, body=None, content_type=None
     with response:
         data = response.read()
         value = json.loads(data) if data and "application/json" in response.headers.get("Content-Type", "") else data
-        return response.status, value, dict(response.headers)
+        return response.status, value, response.headers
 
 
 def expect(method, path, status, **options):
