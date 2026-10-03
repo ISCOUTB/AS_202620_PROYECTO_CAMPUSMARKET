@@ -1,7 +1,6 @@
 from pathlib import Path
 from uuid import uuid4
 
-
 UPLOAD_ROOT = Path("backend/uploads/publicaciones")
 
 ALLOWED_EXTENSIONS = {
