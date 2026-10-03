@@ -4,6 +4,7 @@ from fastapi import (
     APIRouter,
     File,
     HTTPException,
+    Response,
     UploadFile,
     status,
 )
@@ -14,16 +15,18 @@ from .image_storage import (
     delete_publication_image,
     save_publication_image,
 )
-from .repository import (
-    PersistenceUnavailableError,
-    count_publication_images,
-    create_publication_image,
-    publication_exists,
-)
 from .service import (
+    PublicationNotFoundError,
     PublicationPersistenceUnavailableError,
+    cambiar_estado_publicacion,
     crear_publicacion,
+    editar_publicacion,
+    eliminar_publicacion,
+    existe_publicacion,
+    listar_imagenes_publicacion,
     listar_publicaciones,
+    listar_publicaciones_propietario,
+    registrar_imagen_publicacion,
 )
 
 
@@ -33,12 +36,33 @@ router = APIRouter(
 )
 
 
-class PublicacionCreate(BaseModel):
+class PublicacionBase(BaseModel):
     titulo: str = Field(min_length=3, max_length=100)
     descripcion: str = Field(min_length=3, max_length=500)
     precio: float = Field(gt=0)
     modalidad: Literal["venta", "alquiler"]
     estado: Literal["nuevo", "usado", "reacondicionado"]
+
+
+class PublicacionCreate(PublicacionBase):
+    propietario_id: int = Field(default=1, gt=0)
+    estado_publicacion: Literal[
+        "disponible",
+        "reservado",
+        "vendido",
+    ] = "disponible"
+
+
+class PublicacionUpdate(PublicacionBase):
+    pass
+
+
+class EstadoPublicacionUpdate(BaseModel):
+    estado_publicacion: Literal[
+        "disponible",
+        "reservado",
+        "vendido",
+    ]
 
 
 class Publicacion(PublicacionCreate):
@@ -57,6 +81,16 @@ class ErrorResponse(BaseModel):
     detail: str
 
 
+def _service_unavailable(error: Exception) -> HTTPException:
+    return HTTPException(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        detail=(
+            "La persistencia está temporalmente no disponible. "
+            "Intenta nuevamente."
+        ),
+    )
+
+
 @router.post(
     "",
     response_model=Publicacion,
@@ -73,15 +107,8 @@ class ErrorResponse(BaseModel):
 def crear(payload: PublicacionCreate):
     try:
         return crear_publicacion(payload.model_dump())
-
     except PublicationPersistenceUnavailableError as error:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=(
-                "La persistencia está temporalmente no disponible. "
-                "Intenta nuevamente."
-            ),
-        ) from error
+        raise _service_unavailable(error) from error
 
 
 @router.get(
@@ -91,7 +118,124 @@ def crear(payload: PublicacionCreate):
     summary="Listar publicaciones",
 )
 def listar():
-    return listar_publicaciones()
+    try:
+        return listar_publicaciones()
+    except PublicationPersistenceUnavailableError as error:
+        raise _service_unavailable(error) from error
+
+
+@router.get(
+    "/mias",
+    response_model=list[Publicacion],
+    operation_id="listarMisPublicaciones",
+    summary="Listar publicaciones de un propietario",
+)
+def listar_mias(propietario_id: int = 1):
+    try:
+        return listar_publicaciones_propietario(propietario_id)
+    except PublicationPersistenceUnavailableError as error:
+        raise _service_unavailable(error) from error
+
+
+@router.put(
+    "/{publication_id}",
+    response_model=Publicacion,
+    operation_id="editarPublicacion",
+    summary="Editar una publicación propia",
+    responses={
+        status.HTTP_404_NOT_FOUND: {
+            "model": ErrorResponse,
+            "description": "Publicación no encontrada para el propietario",
+        },
+        status.HTTP_503_SERVICE_UNAVAILABLE: {
+            "model": ErrorResponse,
+            "description": "Persistencia temporalmente no disponible",
+        },
+    },
+)
+def editar(
+    publication_id: int,
+    payload: PublicacionUpdate,
+    propietario_id: int = 1,
+):
+    try:
+        return editar_publicacion(
+            publication_id,
+            propietario_id,
+            payload.model_dump(),
+        )
+    except PublicationNotFoundError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+    except PublicationPersistenceUnavailableError as error:
+        raise _service_unavailable(error) from error
+
+
+@router.patch(
+    "/{publication_id}/estado",
+    response_model=Publicacion,
+    operation_id="cambiarEstadoPublicacion",
+    summary="Cambiar disponibilidad de una publicación propia",
+    responses={
+        status.HTTP_404_NOT_FOUND: {
+            "model": ErrorResponse,
+            "description": "Publicación no encontrada para el propietario",
+        },
+        status.HTTP_503_SERVICE_UNAVAILABLE: {
+            "model": ErrorResponse,
+            "description": "Persistencia temporalmente no disponible",
+        },
+    },
+)
+def cambiar_estado(
+    publication_id: int,
+    payload: EstadoPublicacionUpdate,
+    propietario_id: int = 1,
+):
+    try:
+        return cambiar_estado_publicacion(
+            publication_id,
+            propietario_id,
+            payload.estado_publicacion,
+        )
+    except PublicationNotFoundError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+    except PublicationPersistenceUnavailableError as error:
+        raise _service_unavailable(error) from error
+
+
+@router.delete(
+    "/{publication_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    operation_id="eliminarPublicacion",
+    summary="Eliminar una publicación propia",
+    responses={
+        status.HTTP_404_NOT_FOUND: {
+            "model": ErrorResponse,
+            "description": "Publicación no encontrada para el propietario",
+        },
+        status.HTTP_503_SERVICE_UNAVAILABLE: {
+            "model": ErrorResponse,
+            "description": "Persistencia temporalmente no disponible",
+        },
+    },
+)
+def eliminar(publication_id: int, propietario_id: int = 1):
+    try:
+        eliminar_publicacion(publication_id, propietario_id)
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+    except PublicationNotFoundError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+    except PublicationPersistenceUnavailableError as error:
+        raise _service_unavailable(error) from error
 
 
 @router.post(
@@ -122,13 +266,13 @@ async def subir_imagen(
     imagen_url: str | None = None
 
     try:
-        if not publication_exists(publication_id):
+        if not existe_publicacion(publication_id):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="La publicación no existe.",
             )
 
-        if count_publication_images(publication_id) >= 3:
+        if len(listar_imagenes_publicacion(publication_id)) >= 3:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=(
@@ -138,15 +282,14 @@ async def subir_imagen(
             )
 
         contenido = await archivo.read()
-
         imagen_url = save_publication_image(
             publication_id=publication_id,
             original_filename=archivo.filename or "",
             content=contenido,
         )
 
-        return create_publication_image(
-            publication_id=publication_id,
+        return registrar_imagen_publicacion(
+            publicacion_id=publication_id,
             imagen_url=imagen_url,
         )
 
@@ -155,23 +298,14 @@ async def subir_imagen(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(error),
         ) from error
-
     except ValueError as error:
         if imagen_url is not None:
             delete_publication_image(imagen_url)
-
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(error),
         ) from error
-
-    except PersistenceUnavailableError as error:
+    except PublicationPersistenceUnavailableError as error:
         if imagen_url is not None:
             delete_publication_image(imagen_url)
-
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=(
-                "La persistencia está temporalmente no disponible."
-            ),
-        ) from error
+        raise _service_unavailable(error) from error
