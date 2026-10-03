@@ -10,6 +10,34 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 MUTATIONS = [
     (
+        "inicializacion-ignora-lock-mysql",
+        "backend/app/publicaciones/repository.py",
+        "SELECT GET_LOCK(CONCAT('cm:pub:', LEFT(SHA2(DATABASE(), 256), 40)), 5) AS acquired",
+        "SELECT 1 AS acquired",
+        "backend/tests/test_migracion_identidad.py::test_inicializadores_concurrentes_preservan_propietario_real",
+    ),
+    (
+        "cuerpo-streaming-sin-limite",
+        "backend/app/resource_limits.py",
+        "if received > limit:",
+        "if False:",
+        "backend/tests/test_limites_http.py::test_body_sin_content_length_se_acota_por_bytes_recibidos",
+    ),
+    (
+        "imagen-sin-normalizar-resolucion",
+        "backend/app/publicaciones/image_storage.py",
+        "MAX_IMAGE_EDGE = 2048",
+        "MAX_IMAGE_EDGE = 8192",
+        "backend/tests/test_imagenes_seguras.py::test_fotografia_grande_se_normaliza_sin_perder_formato",
+    ),
+    (
+        "imagen-ignora-orientacion-camara",
+        "backend/app/publicaciones/image_storage.py",
+        "oriented = ImageOps.exif_transpose(original)",
+        "oriented = original",
+        "backend/tests/test_imagenes_seguras.py::test_orientacion_de_camara_se_conserva_al_retirar_exif",
+    ),
+    (
         "imagen-disfrazada-sin-decodificacion",
         "backend/app/publicaciones/image_storage.py",
         "validated = _validated_image(extension, content)",

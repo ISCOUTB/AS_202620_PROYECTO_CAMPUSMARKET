@@ -2,17 +2,18 @@ import os
 import warnings
 from io import BytesIO
 from pathlib import Path
-from threading import BoundedSemaphore
 from uuid import uuid4
 
-from PIL import Image, UnidentifiedImageError
+from PIL import Image, ImageOps, UnidentifiedImageError
+
+from backend.app.resource_limits import HEAVY_WORK_SLOT
 
 UPLOAD_ROOT = Path(os.getenv("CAMPUSMARKET_UPLOAD_DIR", "backend/uploads")) / "publicaciones"
 ALLOWED_EXTENSIONS = {".jpg": "JPEG", ".jpeg": "JPEG", ".png": "PNG", ".webp": "WEBP"}
 MAX_FILE_SIZE = 5 * 1024 * 1024
 MAX_PIXELS = 20_000_000
 Image.MAX_IMAGE_PIXELS = MAX_PIXELS
-_decode_slots = BoundedSemaphore(2)
+MAX_IMAGE_EDGE = 2048
 
 
 class InvalidImageError(ValueError):
@@ -21,15 +22,18 @@ class InvalidImageError(ValueError):
 
 def _validated_image(extension: str, content: bytes) -> bytes:
     try:
-        with _decode_slots, warnings.catch_warnings():
+        with HEAVY_WORK_SLOT, warnings.catch_warnings():
             warnings.simplefilter("error", Image.DecompressionBombWarning)
             with Image.open(BytesIO(content)) as original:
                 if original.format != ALLOWED_EXTENSIONS[extension]:
                     raise InvalidImageError("El contenido no coincide con el formato de la imagen.")
                 if original.width * original.height > MAX_PIXELS:
                     raise InvalidImageError("La imagen supera 20 megapíxeles.")
+                # thumbnail utiliza draft para JPEG antes de decodificar.
+                original.thumbnail((MAX_IMAGE_EDGE, MAX_IMAGE_EDGE), Image.Resampling.LANCZOS)
                 original.load()
-                image = original.convert("RGB" if extension in {".jpg", ".jpeg"} else "RGBA")
+                oriented = ImageOps.exif_transpose(original)
+                image = oriented.convert("RGB" if extension in {".jpg", ".jpeg"} else "RGBA")
                 # Crear otro objeto sin info/EXIF del original.
                 clean = Image.new(image.mode, image.size)
                 clean.paste(image)

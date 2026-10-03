@@ -77,3 +77,32 @@ def test_subidas_concurrentes_no_superan_tres(cuentas, payload_publicacion, imag
     assert len({image["orden"] for image in images}) == 3
     assert sum(image["es_principal"] for image in images) == 1
     assert len(list((UPLOAD_ROOT / str(publication["id"])).glob("*"))) == 3
+
+
+def test_fotografia_grande_se_normaliza_sin_perder_formato(cuentas, payload_publicacion):
+    a, _ = cuentas
+    publication = a["client"].post("/publicaciones", json=payload_publicacion).json()
+    output = BytesIO()
+    Image.new("RGB", (4000, 3000), "#615599").save(output, format="PNG")
+    response = _upload(a["client"], publication["id"], output.getvalue())
+    assert response.status_code == 201
+    downloaded = a["client"].get(response.json()["imagen_url"])
+    image = Image.open(BytesIO(downloaded.content))
+    image.load()
+    assert image.size == (2048, 1536)
+    assert image.format == "PNG"
+
+
+def test_orientacion_de_camara_se_conserva_al_retirar_exif(cuentas, payload_publicacion):
+    a, _ = cuentas
+    publication = a["client"].post("/publicaciones", json=payload_publicacion).json()
+    output = BytesIO()
+    exif = Image.Exif()
+    exif[274] = 6
+    Image.new("RGB", (100, 60), "#615599").save(output, format="JPEG", exif=exif)
+    response = _upload(a["client"], publication["id"], output.getvalue(), "camara.jpg")
+    assert response.status_code == 201
+    downloaded = a["client"].get(response.json()["imagen_url"])
+    image = Image.open(BytesIO(downloaded.content))
+    assert image.size == (60, 100)
+    assert not image.getexif()

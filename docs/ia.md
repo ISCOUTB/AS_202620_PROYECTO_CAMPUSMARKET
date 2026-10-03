@@ -387,3 +387,22 @@ por tabla y de imports. No se alteraron ADR aceptados.
   Continúa usando DocumentsUI, URI real, lectura del archivo y subida HTTP.
 
 - **Corregido:** dump escribía /data/local/tmp mientras cat aún leía /sdcard. Se unifica la ruta en una constante; ese error del arnés impedía observar y operar DocumentsUI.
+
+- **Verificado:** flujo completo aprobado en los tres jobs del run 37139056153,
+  hash 30e109137c26634bb77add3ff07a71ab0ea08f50; 19 capturas por plataforma,
+  diez intentos ajenos rechazados en cada una, galerías y logout reales.
+
+### Presupuesto del laboratorio y coherencia de migración
+
+- **Aceptado:** ADR-0016 conserva scrypt y los límites de entrada de imágenes,
+  serializa trabajo intensivo y normaliza a 2048 px para la cuota oficial de
+  512 MB por equipo. Sin dependencias nuevas.
+- **Aceptado:** orientación de cámara antes de retirar EXIF, cuerpos acotados
+  también sin Content-Length, no-store privado y request IDs UUID.
+- **Aceptado:** ADR-0017 coordina inicialización/migración con GET_LOCK de MySQL,
+  porque DDL confirma implícitamente y un Lock de Python no coordina procesos.
+- **Rechazado:** reducir scrypt para ocultar exceso de memoria; declarar una
+  imagen bien orientada solo porque se retiró metadata; dar por atómica una
+  secuencia DDL/DML sin coordinación entre inicializadores.
+- **Verificación pendiente:** pruebas con MySQL, OpenAPI y cuatro mutaciones
+  nuevas; medición posterior del Compose bajo los límites reales.

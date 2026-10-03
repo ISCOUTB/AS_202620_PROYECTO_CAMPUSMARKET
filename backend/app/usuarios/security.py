@@ -3,16 +3,16 @@
 import hashlib
 import hmac
 import secrets
-from threading import BoundedSemaphore
+from backend.app.resource_limits import HEAVY_WORK_SLOT
 
 SCRYPT_N = 2**17
 SCRYPT_R = 8
 SCRYPT_P = 1
-_hash_slots = BoundedSemaphore(2)
+
 
 
 def _derive(password: str, salt: bytes) -> bytes:
-    with _hash_slots:
+    with HEAVY_WORK_SLOT:
         return hashlib.scrypt(
             password.encode("utf-8"), salt=salt, n=SCRYPT_N, r=SCRYPT_R,
             p=SCRYPT_P, maxmem=256 * 1024 * 1024, dklen=32,

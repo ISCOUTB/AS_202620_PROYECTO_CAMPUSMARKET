@@ -26,6 +26,9 @@ def initialize_database() -> None:
         connection = _connect()
 
         with connection.cursor() as cursor:
+            cursor.execute("SELECT GET_LOCK(CONCAT('cm:pub:', LEFT(SHA2(DATABASE(), 256), 40)), 5) AS acquired")
+            if cursor.fetchone()["acquired"] != 1:
+                raise PersistenceUnavailableError("La inicialización de Publicaciones está temporalmente ocupada.")
             cursor.execute(
                 """
                 CREATE TABLE IF NOT EXISTS publicaciones (

@@ -16,6 +16,7 @@ from backend.app.observability import (
     log_http_request,
 )
 from backend.app.publicaciones.router import router as publicaciones_router
+from backend.app.resource_limits import RequestBodyLimitMiddleware
 from backend.app.usuarios.router import router as usuarios_router
 
 
@@ -27,6 +28,15 @@ class HealthResponse(BaseModel):
 app = FastAPI(
     title="CampusMarket API",
     version="2.0.0",
+    responses={
+        413: {
+            "description": "La solicitud supera el límite permitido.",
+            "content": {"application/json": {"schema": {
+                "type": "object", "properties": {"detail": {"type": "string"}},
+                "required": ["detail"],
+            }}},
+        },
+    },
     description=(
         "API HTTP/JSON de CampusMarket para crear y consultar publicaciones. "
         "El contrato versionado es contracts/openapi-v2.json."
@@ -39,6 +49,7 @@ app = FastAPI(
     ],
 )
 
+app.add_middleware(RequestBodyLimitMiddleware)
 app.middleware("http")(log_http_request)
 
 

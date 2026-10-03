@@ -1,7 +1,12 @@
 # Bloque 05 — ejecución real en Web y Android
 
 Base: d94cc62c783184c492cbfd70e058ff58c7d6a7e2.
-Estado: prueba implementada y pendiente de ejecutar.
+Estado: aprobado en Web y Android para 30e109137c26634bb77add3ff07a71ab0ea08f50.
+Ejecución: [Actions 37139056153](https://github.com/Nnigarp/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/37139056153).
+Chrome 1440×1000, Chrome móvil 390×844 y Android API 35 (411,43×731,43).
+Cada job pasó las nueve comprobaciones completas y produjo 19 capturas.
+EC-02 rechazó 10/10 modificaciones ajenas por plataforma, con datos intactos
+después de cada intento. Artefactos resultado.json e imágenes identifican este hash.
 
 Se ejecuta el mismo flujo en Chrome 1440×1000, Chrome 390×844 y Android API 35.
 Cada runner contiene MySQL 8.4, backend de este hash y cuentas sintéticas propias.

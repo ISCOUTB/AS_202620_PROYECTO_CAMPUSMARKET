@@ -33,6 +33,24 @@
                 }
               }
             }
+          },
+          "413": {
+            "description": "La solicitud supera el límite permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
           }
         }
       },
@@ -59,6 +77,24 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Publicacion"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "La solicitud supera el límite permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
                 }
               }
             }
@@ -109,6 +145,24 @@
                   },
                   "type": "array",
                   "title": "Response Listarmispublicaciones"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "La solicitud supera el límite permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
                 }
               }
             }
@@ -175,6 +229,24 @@
               }
             }
           },
+          "413": {
+            "description": "La solicitud supera el límite permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -229,6 +301,24 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "La solicitud supera el límite permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
                 }
               }
             }
@@ -306,6 +396,24 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "La solicitud supera el límite permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
                 }
               }
             }
@@ -397,6 +505,24 @@
               }
             }
           },
+          "413": {
+            "description": "La solicitud supera el límite permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -456,6 +582,24 @@
           "204": {
             "description": "Successful Response"
           },
+          "413": {
+            "description": "La solicitud supera el límite permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -512,6 +656,24 @@
                     "$ref": "#/components/schemas/PublicacionImagen"
                   },
                   "title": "Response Elegirimagenprincipal"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "La solicitud supera el límite permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
                 }
               }
             }
@@ -645,6 +807,24 @@
               }
             }
           },
+          "413": {
+            "description": "La solicitud supera el límite permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -683,6 +863,24 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PublicacionCatalogo"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "La solicitud supera el límite permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
                 }
               }
             }
@@ -728,6 +926,24 @@
               }
             }
           },
+          "413": {
+            "description": "La solicitud supera el límite permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -769,6 +985,24 @@
               }
             }
           },
+          "413": {
+            "description": "La solicitud supera el límite permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -796,6 +1030,24 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Usuario"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "La solicitud supera el límite permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
                 }
               }
             }
@@ -834,6 +1086,24 @@
               }
             }
           },
+          "413": {
+            "description": "La solicitud supera el límite permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -862,6 +1132,24 @@
         "responses": {
           "204": {
             "description": "Successful Response"
+          },
+          "413": {
+            "description": "La solicitud supera el límite permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
           }
         },
         "security": [
@@ -889,6 +1177,24 @@
                   },
                   "type": "array",
                   "title": "Response Listarreportespendientes"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "La solicitud supera el límite permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
                 }
               }
             }
@@ -923,6 +1229,24 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Reporte"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "La solicitud supera el límite permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
                 }
               }
             }
@@ -989,6 +1313,24 @@
               }
             }
           },
+          "413": {
+            "description": "La solicitud supera el límite permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -1013,6 +1355,24 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "La solicitud supera el límite permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
                 }
               }
             }
