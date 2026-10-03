@@ -134,8 +134,20 @@ else:
 
     while time.monotonic() < deadline:
         try:
-            # No dependemos de ResumedActivity: los diálogos de sistema pueden cubrir
-            # DocumentsUI y hacer que esa señal deje de ser fiable en runners lentos.
+            activities = subprocess.check_output(
+                ["adb", "shell", "dumpsys", "activity", "activities"],
+                text=True, timeout=4,
+            )
+            app_resumed = any(
+                "com.example.campusmarket" in line
+                for line in activities.splitlines() if "ResumedActivity" in line
+            )
+            if app_resumed:
+                selected = False
+                time.sleep(0.25)
+                continue
+            # Pausar en CampusMarket evita activar semántica durante el test.
+            # En la UI nativa conservamos el manejo de DocumentsUI y ANR del launcher.
             subprocess.run(
                 ["adb", "shell", "uiautomator", "dump", "--compressed", ui_xml],
                 check=True,

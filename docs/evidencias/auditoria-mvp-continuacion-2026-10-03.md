@@ -101,7 +101,54 @@ una ejecución aprobada. El asistente invocaba UiAutomation continuamente inclus
 con CampusMarket en primer plano. Se limita la lectura nativa a DocumentsUI y el
 test exige recuperar el número inicial de handles antes de finalizar. El relleno
 de campos reutiliza la espera de control alcanzable para evitar taps durante un
-cambio de teclado/layout. La nueva ejecución de esa corrección queda pendiente.
+cambio de teclado/layout.
+
+Corrección validada: `094eaaa97bd0984af012a219c6b2ccad1e23e1c2`.
+Los cuatro workflows y seis jobs finalizaron aprobados. Android completa los
+nueve checks y 19 capturas; el driver registra `semantics_handles_restored=true`
+y Flutter informa `All tests passed`. Web escritorio/móvil también pasan con el
+helper corregido. Las verificaciones finales de Flutter permanecen activas.
+
+| Bloque de 094eaaa | Prueba realmente ejecutada | Evidencia |
+|---|---|---|
+| Backend | Ruff backend/scripts; 73+4 tests; 10/10 mutaciones detectadas | [Run 37151076285](https://github.com/Nnigarp/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/37151076285) |
+| Flutter | analyze sin incidencias; 6 tests; 2 mutaciones; Web y APK debug compilados | [Run 37151076275](https://github.com/Nnigarp/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/37151076275) |
+| Flujo funcional | Chrome escritorio/móvil y Android API 35; 9 checks y 19 capturas por plataforma; handles Android restaurados | [Run 37151076247](https://github.com/Nnigarp/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/37151076247) |
+| Compose | 8 checks; EC-02 10/10 intacto; EC-01 10/10, 252,77–298,51 ms; recreación 12.995,02 ms | [Run 37151076227](https://github.com/Nnigarp/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/37151076227) |
+
+Compose conserva 256 MiB por contenedor, API uid 10001, sin OOM ni reinicios
+inesperados. Pico API 180.269.056 bytes; MySQL 188.833.792 bytes. Pillow y las
+dependencias runtime separadas construyen y ejecutan la imagen real correctamente.
+
+UX inspeccionada en capturas descargadas del checkpoint y Web de 266a08d con los
+textos nuevos; las tres plataformas de 094eaaa repiten la comprobación de ausencia
+de excepciones de layout/imagen en cada captura. Los logs y JSON emitidos por el
+driver acreditan el flujo y hash; el resultado se exige junto al job aprobado.
+El traslado local de los ZIP nuevos no completó y el entorno terminó desconectado
+(409 environment_offline). Los artefactos permanecen disponibles en el run citado.
+No se atribuye revisión visual local a archivos que no pudieron descargarse.
+
+Los cuatro cambios documentales que estaban preparados localmente se reconstruyen
+desde los archivos exactos de 094eaaa y se guardan mediante GitHub. El cierre añade
+al workflow backend la misma auditoría Gitleaks 8.30.1 ya ejecutada en esta fase:
+descarga oficial con SHA-256 fijado, historial desde la base y checkout completo,
+informes redactados fuera del repositorio. No es dependencia del producto.
+También exige checkout CI limpio después de pruebas/mutaciones y registra su SHA.
+Ese resultado debe distinguirse del scratch desconectado y del PC Windows inaccesible.
+
+Restricciones/estrategia conservan su contexto histórico explícito; glosario y
+C4 L1 incorporan Web/Android, estados reales, sesiones, propiedad y moderación.
+El commit de cierre modifica documentación, verificaciones CI y asistencia nativa
+del test, sin cambiar runtime del producto. Sus checks deben consultarse por SHA;
+094eaaa no sustituye al CI final.
+
+Se conserva el commit remoto adicional `7c73279` (selector con ANR del launcher,
+confirmaciones localizadas y celda de imagen única). Como volvía a consultar
+UiAutomation con la app activa, el cierre pausa ese asistente cuando CampusMarket
+es la actividad resumida y mantiene el manejo de las pantallas nativas. La aserción
+de handles restaurados se conserva y la implementación combinada debe superar el
+flujo Android del nuevo HEAD; la ejecución de 094eaaa no valida esta combinación.
+
 
 Fuente primaria del mecanismo de UiAutomation/semántica:
 [flutter/flutter #129231](https://github.com/flutter/flutter/issues/129231),
@@ -123,6 +170,7 @@ al repositorio oficial/PR y al análisis para poder cerrar ese criterio.
 - Android se verifica en emulador y APK debug; prueba en teléfono físico del usuario no se ejecuta aquí.
 - No hay medición pública del MVP ni despliegue del nuevo SHA. HTTPS y almacenamiento durable se validarán en el siguiente bloque.
 
-Solo se declarará cierre completo cuando CI y SonarCloud correspondan al HEAD de
-continuación y el working tree esté limpio. La fase siguiente será despliegue,
+La validación del checkout final y CI se acredita por SHA en GitHub. El scratch
+quedó inaccesible tras la desconexión y su status posterior no pudo consultarse.
+Solo se declarará cierre completo cuando SonarCloud también acredite ese HEAD. La fase siguiente será despliegue,
 con autorización independiente; esta auditoría no lo ejecuta.

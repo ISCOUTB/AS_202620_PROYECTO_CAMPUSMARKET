@@ -102,6 +102,11 @@ semestre.
 Durante S8 esta restricción se materializa mediante Flutter Web publicado en
 GitHub Pages.
 
+Ese despliegue pertenece a la revisión S8. El MVP de esta rama conserva Web y
+también implementa Android, verificados por CI; aún no se despliega públicamente.
+Las evidencias por revisión están en la
+[auditoría MVP](../evidencias/auditoria-mvp-continuacion-2026-10-03.md).
+
 ---
 
 ## R-07. Persistencia sin nueva infraestructura durante el primer corte
