@@ -30,6 +30,7 @@ void main() {
     final title = 'Libro de campus $nonce';
     final editedTitle = 'Libro actualizado $nonce';
     var screenNumber = 0;
+    var surfaceConverted = false;
 
     Future<void> until(bool Function() condition, String description) async {
       final deadline = DateTime.now().add(const Duration(seconds: 45));
@@ -56,16 +57,13 @@ void main() {
     Future<void> screenshot(String name) async {
       FocusManager.instance.primaryFocus?.unfocus();
       await tester.pump(const Duration(milliseconds: 350));
-      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android && !surfaceConverted) {
         await binding.convertFlutterSurfaceToImage();
+        surfaceConverted = true;
         await tester.pump();
       }
       screenNumber++;
       await binding.takeScreenshot('$platform-$screenNumber-$name');
-      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-        await binding.revertFlutterImage();
-        await tester.pump();
-      }
       expect(tester.takeException(), isNull, reason: 'Sin excepciones de layout ni imágenes');
     }
 
@@ -110,7 +108,9 @@ void main() {
         await tester.pump(const Duration(milliseconds: 250));
         final own = await ownPublication();
         if ((own['imagenes'] as List).length == count &&
-            find.byType(LinearProgressIndicator).evaluate().isEmpty) return;
+            find.byType(LinearProgressIndicator).evaluate().isEmpty) {
+          return;
+        }
       }
       fail('La galería no alcanzó la cantidad esperada.');
     }
@@ -230,6 +230,14 @@ void main() {
     expect(find.text('Eliminar'), findsNothing);
     await screenshot('detalle-B');
 
+    Future<void> spoofedRequest(String method, String path, {Object? body}) async {
+      final request = http.Request(method, Uri.parse('$defaultApiBaseUrl$path?propietario_id=$ownerA'));
+      request.headers.addAll(session.authorizedHeaders);
+      if (body != null) request.body = jsonEncode(body);
+      final response = await http.Response.fromStream(await request.send());
+      expect(response.statusCode, 404);
+      throw const ApiException('Publicación ajena rechazada.', statusCode: 404);
+    }
     final attacks = <Future<void> Function()>[
       () async { await api.editarPublicacion(publicacionId: id, titulo: 'Cambio ajeno', descripcion: 'Intento válido de edición ajena', precio: 1, modalidad: 'venta', estado: 'nuevo'); },
       () => api.eliminarPublicacion(id),
@@ -237,7 +245,12 @@ void main() {
       () => api.elegirPrincipal(id, remainingImages.first['id'] as int),
       () => api.eliminarImagen(id, remainingImages.first['id'] as int),
       () async { await api.subirImagen(publicacionId: id, imagen: ImagenPublicacion(nombre: 'ajena.png', bytes: fixture.bodyBytes)); },
+      () => spoofedRequest('DELETE', '/publicaciones/$id'),
+      () => spoofedRequest('PUT', '/publicaciones/$id', body: {'titulo': 'Cambio ajeno', 'descripcion': 'Intento de suplantación', 'precio': 1, 'modalidad': 'venta', 'estado': 'nuevo'}),
+      () => spoofedRequest('PATCH', '/publicaciones/$id/estado', body: {'estado_publicacion': 'vendido'}),
+      () => spoofedRequest('PUT', "/publicaciones/$id/imagenes/${remainingImages.first['id']}/principal"),
     ];
+    expect(attacks, hasLength(10));
     for (final attack in attacks) {
       await expectLater(attack(), throwsA(isA<ApiException>().having((error) => error.statusCode, 'statusCode', 404)));
       final response = await http.get(Uri.parse('$defaultApiBaseUrl/catalogo/$id'));
@@ -245,14 +258,13 @@ void main() {
       final data = jsonDecode(response.body) as Map<String, dynamic>;
       expect(data['propietario_id'], ownerA);
       expect(data['titulo'], editedTitle);
+      expect(data['precio'], 65000.5);
       expect(data['estado_publicacion'], 'reservado');
       expect(data['imagenes'], hasLength(2));
     }
-    final spoofed = await http.delete(Uri.parse('$defaultApiBaseUrl/publicaciones/$id?propietario_id=$ownerA'), headers: session.authorizedHeaders);
-    expect(spoofed.statusCode, 404);
     final adminAccess = await http.get(Uri.parse('$defaultApiBaseUrl/administracion/reportes'), headers: session.authorizedHeaders);
     expect(adminAccess.statusCode, 403);
-    checks.add('EC-02: seis modificaciones ajenas y spoofing rechazados; datos intactos tras cada ataque');
+    checks.add('EC-02: 10/10 modificaciones ajenas rechazadas; datos intactos tras cada ataque');
 
     await click(find.byKey(const Key('reportar-publicacion')));
     await fill('reporte-motivo', 'Revisar descripción en esta prueba funcional controlada.');

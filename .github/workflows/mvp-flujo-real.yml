@@ -115,13 +115,7 @@ jobs:
           profile: pixel_2
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
-          script: |
-            adb push artifacts/e2e/campusmarket-e2e.png /sdcard/Download/campusmarket-e2e.png
-            python3 scripts/asistir_selector_e2e.py android > artifacts/e2e/selector.log 2>&1 &
-            picker_pid=$!
-            trap 'kill "$picker_pid" 2>/dev/null || true' EXIT
-            cd frontend/campusmarket
-            flutter drive --driver=test_driver/mvp_driver.dart --target=integration_test/mvp_flow_test.dart -d emulator-5554 --dart-define=CAMPUSMARKET_API_BASE_URL=http://10.0.2.2:8000
+          script: bash scripts/ejecutar_android_e2e.sh
       - name: Registrar hash, SDK y configuración generada
         if: always()
         run: |
