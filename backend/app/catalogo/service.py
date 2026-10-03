@@ -1,5 +1,6 @@
 from backend.app.publicaciones.service import (
     listar_imagenes_publicacion,
+    listar_imagenes_publicaciones,
     listar_publicaciones,
 )
 
@@ -51,9 +52,14 @@ def buscar_publicaciones(
         if precio_max is not None and precio > precio_max:
             continue
 
-        resultado.append(_con_imagenes(publicacion))
+        resultado.append(publicacion)
 
-    return resultado
+    ids = [int(publicacion["id"]) for publicacion in resultado]
+    imagenes_por_publicacion = listar_imagenes_publicaciones(ids)
+    return [
+        {**publicacion, "imagenes": imagenes_por_publicacion.get(int(publicacion["id"]), [])}
+        for publicacion in resultado
+    ]
 
 
 def obtener_publicacion(publicacion_id: int) -> dict | None:

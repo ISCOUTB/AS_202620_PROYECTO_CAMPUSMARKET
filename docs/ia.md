@@ -438,3 +438,18 @@ por tabla y de imports. No se alteraron ADR aceptados.
   la búsqueda de headers sin distinción de mayúsculas. Health respondía pero
   la comparación del hash fallaba. Se conserva HTTPMessage y se repite toda
   la ejecución; no se relaja la comprobación de revisión.
+
+### Corrección de rendimiento bajo cuota
+
+- **Corregido:** Compose d473b1f superó 60 s en la primera búsqueda de 1000
+  filas. La consulta de imágenes repetía inicialización/conexiones por fila.
+  ADR-0019 incorpora lectura en lote mediante servicio de Publicaciones.
+- **Aceptado:** prueba MySQL con dos galerías/propietarios y 52 filas visibles,
+  sin mezclas ni filas ocultas/heredadas y conexiones constantes. Una mutación
+  reincorpora N consultas; debe ser detectada.
+- **Corregido:** el verificador de rendimiento envía q (nombre del contrato),
+  en lugar de texto. Los filtros de modalidad/estado/precios siguen activos.
+- **Rechazado:** aumentar cuotas del laboratorio, importar un repository ajeno
+  o retirar el objetivo de dos segundos para conseguir un resultado verde.
+- **Verificación pendiente:** diez muestras reales tras la corrección,
+  recreación de contenedores y detección de la nueva mutación.

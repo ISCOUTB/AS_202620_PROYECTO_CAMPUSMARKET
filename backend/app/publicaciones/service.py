@@ -7,6 +7,7 @@ from .repository import (
     get_publication,
     hide_publication,
     list_publication_images,
+    list_publication_images_batch,
     list_publications,
     list_publications_by_owner,
     publication_exists,
@@ -230,3 +231,13 @@ def ocultar_publicacion(publicacion_id: int) -> bool:
         return hide_publication(publicacion_id)
     except PersistenceUnavailableError as error:
         raise PublicationPersistenceUnavailableError("Persistencia temporalmente no disponible.") from error
+
+
+def listar_imagenes_publicaciones(publicacion_ids: list[int]) -> dict[int, list[dict]]:
+    """Interfaz interna de lectura en lote para Catálogo, sin acceso a repository."""
+    try:
+        return list_publication_images_batch(publicacion_ids)
+    except PersistenceUnavailableError as error:
+        raise PublicationPersistenceUnavailableError(
+            "No es posible consultar las imágenes temporalmente."
+        ) from error

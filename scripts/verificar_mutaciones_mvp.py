@@ -10,6 +10,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 MUTATIONS = [
     (
+        "catalogo-consulta-imagenes-una-por-una",
+        "backend/app/catalogo/service.py",
+        "imagenes_por_publicacion = listar_imagenes_publicaciones(ids)",
+        "imagenes_por_publicacion = {id: listar_imagenes_publicaciones([id]).get(id, []) for id in ids}",
+        "backend/tests/test_catalogo.py::test_catalogo_real_no_repite_conexiones_por_publicacion",
+    ),
+    (
         "inicializacion-ignora-lock-mysql",
         "backend/app/publicaciones/repository.py",
         "SELECT GET_LOCK(CONCAT('cm:pub:', LEFT(SHA2(DATABASE(), 256), 40)), 5) AS acquired",

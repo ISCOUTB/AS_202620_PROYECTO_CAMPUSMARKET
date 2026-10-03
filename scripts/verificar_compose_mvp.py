@@ -249,7 +249,7 @@ with transaction() as cursor:
     samples = []
     for index in range(10):
         start = time.perf_counter()
-        status, rows, _ = request("GET", "/catalogo?texto=Rendimiento&modalidad=venta&estado=usado&precio_min=1000&precio_max=1999")
+        status, rows, _ = request("GET", "/catalogo?q=Rendimiento&modalidad=venta&estado=usado&precio_min=1000&precio_max=1999")
         duration_ms = round((time.perf_counter() - start) * 1000, 2)
         require(status == 200 and len(rows) == 1000, "Medición no leyó 1000 filas reales.")
         samples.append(duration_ms)

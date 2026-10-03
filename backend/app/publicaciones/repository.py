@@ -564,3 +564,34 @@ def set_primary_image(publication_id: int, owner_id: int, image_id: int) -> bool
             return False
         cursor.execute("UPDATE publicacion_imagenes SET es_principal = (id = %s) WHERE publicacion_id = %s", (image_id, publication_id))
         return True
+
+
+def list_publication_images_batch(publication_ids: list[int]) -> dict[int, list[dict]]:
+    """Lectura de imágenes en lote; Publicaciones conserva SQL y sus datos."""
+    ids = tuple(dict.fromkeys(publication_ids))
+    if not ids:
+        return {}
+    initialize_database()
+    connection = None
+    grouped = {publication_id: [] for publication_id in ids}
+    try:
+        connection = _connect()
+        with connection.cursor() as cursor:
+            placeholders = ", ".join(["%s"] * len(ids))
+            cursor.execute(
+                f"""
+                SELECT id, publicacion_id, imagen_url, orden, es_principal
+                FROM publicacion_imagenes
+                WHERE publicacion_id IN ({placeholders})
+                ORDER BY publicacion_id, orden ASC
+                """,
+                ids,
+            )
+            for image in cursor.fetchall():
+                grouped[image["publicacion_id"]].append(image)
+        return grouped
+    except pymysql.MySQLError as error:
+        raise PersistenceUnavailableError("La persistencia está temporalmente no disponible.") from error
+    finally:
+        if connection:
+            connection.close()
