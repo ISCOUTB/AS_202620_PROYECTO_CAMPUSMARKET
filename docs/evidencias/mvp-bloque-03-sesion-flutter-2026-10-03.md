@@ -1,5 +1,9 @@
 # Bloque 03 — integración de sesión en Flutter
 
+> Registro histórico del bloque. Los pendientes y cifras de este registro
+> corresponden a su hash/fecha; el estado acumulado de continuación se encuentra
+> en [auditoría MVP](auditoria-mvp-continuacion-2026-10-03.md).
+
 Base: ecab64bd5bea13a9c074229789e73b29f3eac821.
 Estado: analyze, 6 pruebas del cliente y builds Web/Android aprobados en CI.
 Hash validado: 1aefd4526ee5221e92f520969d34c86cb2c64a24.

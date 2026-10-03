@@ -453,3 +453,13 @@ por tabla y de imports. No se alteraron ADR aceptados.
   o retirar el objetivo de dos segundos para conseguir un resultado verde.
 - **Verificación pendiente:** diez muestras reales tras la corrección,
   recreación de contenedores y detección de la nueva mutación.
+
+
+## 2026-10-03 — continuación desde checkpoint fda3897
+
+- **Herramienta:** ChatGPT/Codex; ejecución directa sobre el fork, sin acceso al clon Windows.
+- **Aceptado:** verificar SHA/working tree, repetir backend del mismo SHA en MySQL CI, comparar artefactos/capturas y sincronizar C4, arc42 y aspectos con cuatro contextos, identidad real y OpenAPI v2.
+- **Aceptado:** separar pytest/httpx existentes a requirements-dev; conservar runtime y Pillow 12.3.0, sin nuevas dependencias del producto. Textos de Inicio orientados a búsqueda/detalles/gestión.
+- **Corregido:** Ruff ampliado a backend/scripts detectó espaciado de imports histórico y la ausencia de check=False explícito en subprocess del verificador Flutter. Se corrigieron y CI incorpora ese alcance.
+- **Rechazado:** rehacer autenticación o catálogo sin defecto demostrado, atribuir resultados de otro SHA al HEAD actual, presentar un 403 de acceso a SonarCloud como gate aprobado, cambiar ADR aceptados o efectuar despliegue en esta fase.
+- **Verificación:** backend fda3897 relanzado: Ruff, 73+4 pruebas y diez mutaciones aprobadas; contrato/modularidad/erosión/propiedad ejecutados aquí con 15 pruebas aprobadas. MySQL local no arrancó por restricción de socket; no se sustituyó por mocks/SQLite. Gitleaks escanea historial de fase y working tree. Validación del nuevo HEAD se registra en docs/evidencias/auditoria-mvp-continuacion-2026-10-03.md.

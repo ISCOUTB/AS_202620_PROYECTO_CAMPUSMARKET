@@ -120,13 +120,14 @@ propietario deben ser rechazados.
 
 **Prioridad:** Alta.
 
-**Estado:** Parcialmente materializado.
+**Estado:** Materializado y verificado al nivel MVP.
 
-El backend dispone de operaciones de edición, cambio de estado y eliminación
-acotadas por `propietario_id`. Sin embargo, la identidad utilizada actualmente
-es un mecanismo temporal y CampusMarket todavía no implementa autenticación real
-de usuarios. Por tanto, la condición del escenario basada en dos usuarios
-autenticados diferentes todavía no se considera completamente verificada.
+Usuarios registra/autentica A y B mediante sesiones reales. Publicaciones usa el
+ID del token en predicados SQL; no acepta propietario de entrada. Diez ataques
+de B (edición, estado, borrado y galería) son rechazados y el dato de A se comprueba
+tras cada intento. Web de escritorio, Web móvil y Android ejecutan el mismo flujo.
+Pruebas: `test_ec02_autorizacion.py`, `test_imagenes_seguras.py` y mutación del
+predicado de propietario. [Evidencia por hash](../evidencias/auditoria-mvp-continuacion-2026-10-03.md).
 
 ---
 
@@ -375,7 +376,7 @@ el conjunto completo debe volver a verde.
 
 **Contrato:**
 
-[`contracts/openapi-v1.json`](../../contracts/openapi-v1.json)
+[`contracts/openapi-v2.json`](../../contracts/openapi-v2.json); v1 se conserva como historia S7.
 
 **Prueba:**
 
@@ -392,7 +393,7 @@ el conjunto completo debe volver a verde.
 | Escenario | Estado                                                    |
 | --------- | --------------------------------------------------------- |
 | EC-01     | Materializado y verificado en S9                          |
-| EC-02     | Parcialmente materializado; autenticación real pendiente  |
+| EC-02     | MVP: dos cuentas reales, 10/10 denegaciones y datos intactos |
 | EC-03     | Materializado y utilizado para verificar mantenibilidad   |
 | EC-04     | Materializado mediante recuperación del prototipo         |
 | EC-05     | Verificado históricamente en S5 con SQLite                |

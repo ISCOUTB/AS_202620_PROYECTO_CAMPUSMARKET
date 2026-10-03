@@ -62,7 +62,7 @@ Los detalles internos se documentan en niveles posteriores del modelo C4.
 - **Estudiante → CampusMarket:** publica, consulta y busca productos mediante
   un navegador web.
 - **Administrador → CampusMarket:** supervisa publicaciones y contenido
-  mediante un navegador web.
+  mediante Flutter Web o Android.
 
 Durante el desarrollo local del prototipo la comunicación utiliza HTTP.
 
@@ -103,7 +103,7 @@ Frontend Web
 Backend API
     ↓ PyMySQL / SQL
 MySQL
-````
+```
 
 Los contenedores vigentes son:
 

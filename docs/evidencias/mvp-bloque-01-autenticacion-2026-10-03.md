@@ -1,5 +1,9 @@
 # Bloque 1 — Autenticación y propiedad real
 
+> Registro histórico del bloque. Los pendientes y cifras de este registro
+> corresponden a su hash/fecha; el estado acumulado de continuación se encuentra
+> en [auditoría MVP](auditoria-mvp-continuacion-2026-10-03.md).
+
 Base: `bfe3222`. Rama: `mvp-autenticacion-producto`. Fecha: 2026-10-03.
 
 | Requisito | Implementación | Ejecución / prueba | Evidencia / estado |

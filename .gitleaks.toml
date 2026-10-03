@@ -1,0 +1,11 @@
+title = "CampusMarket: reglas por defecto y un identificador público documentado"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Project Key público de SonarCloud en la evidencia histórica S7; no es un token"
+targetRules = ["generic-api-key"]
+condition = "AND"
+paths = ['''(^|/)docs/evidencias/evidencia-s7-2026-09-15\.md$''']
+regexes = ['''^ISCOUTB_AS_202620_PROYECTO_CAMPUSMARKET$''']

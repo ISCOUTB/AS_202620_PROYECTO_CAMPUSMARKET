@@ -46,3 +46,17 @@ pubspec.lock; no se añaden paquetes externos para sesiones, estado ni automatiz
 No se incorpora pytest-cov. No se incorporan Pillow para estética, proveedores
 OAuth, JWT, almacenamiento de token en navegador, una biblioteca adicional de
 estado, Patrol, Selenium Python ni Playwright.
+
+
+## Separación producto / desarrollo en la continuación
+
+`backend/requirements.txt` conserva las versiones runtime existentes y Pillow.
+`backend/requirements-dev.txt` incluye runtime más pytest 9.1.1 y httpx 0.28.1
+para pytest/TestClient. El job backend instala dev; Dockerfile instala solo runtime.
+Las herramientas de verificación Compose/E2E usan urllib y Pillow, sin necesitar
+pytest/httpx dentro del producto. No se añade ninguna dependencia ni se cambia
+una versión aceptada. pytest-cov continúa ausente.
+
+Se verificaron los metadatos PyPI de Pillow 12.3.0: Python >=3.10, licencia
+MIT-CMU y wheels cp312 para manylinux x86_64 y Windows amd64. La instalación real
+Linux/3.12 y `pip check` pasaron. CI Compose vuelve a comprobar la imagen runtime.

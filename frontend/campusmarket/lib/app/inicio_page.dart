@@ -476,20 +476,20 @@ class _BeneficiosInicio extends StatelessWidget {
             _BeneficioCard(
               width: itemWidth,
               icono: Icons.storefront_outlined,
-              titulo: 'Catálogo real',
-              descripcion: 'Búsqueda y filtros sobre publicaciones persistidas.',
+              titulo: 'Encuentra lo que necesitas',
+              descripcion: 'Busca por nombre y filtra por precio, estado o modalidad.',
             ),
             _BeneficioCard(
               width: itemWidth,
               icono: Icons.photo_library_outlined,
-              titulo: 'Productos con fotos',
-              descripcion: 'Hasta tres imágenes por publicación y galería de detalle.',
+              titulo: 'Mira todos los detalles',
+              descripcion: 'Revisa las fotos y la información de cada publicación.',
             ),
             _BeneficioCard(
               width: itemWidth,
-              icono: Icons.devices_outlined,
-              titulo: 'Experiencia responsive',
-              descripcion: 'Interfaz adaptada para escritorio, tablet y móvil.',
+              icono: Icons.inventory_2_outlined,
+              titulo: 'Gestiona tus productos',
+              descripcion: 'Actualiza tus publicaciones y su disponibilidad desde tu cuenta.',
             ),
           ],
         );

@@ -1,5 +1,9 @@
 # Bloque 06 — recursos, fotografías de cámara y migración segura
 
+> Registro histórico del bloque. Los pendientes y cifras de este registro
+> corresponden a su hash/fecha; el estado acumulado de continuación se encuentra
+> en [auditoría MVP](auditoria-mvp-continuacion-2026-10-03.md).
+
 Estado: pruebas de código aprobadas en 0eba3f423775a5fce716119bf336231441ba2729.
 Ruff y 76 pruebas (72 funcionales/arquitectura + 4 contrato), nueve mutaciones
 detectadas: [backend](https://github.com/Nnigarp/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/37140687982).

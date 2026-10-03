@@ -1,5 +1,9 @@
 # Bloque 05 — ejecución real en Web y Android
 
+> Registro histórico del bloque. Los pendientes y cifras de este registro
+> corresponden a su hash/fecha; el estado acumulado de continuación se encuentra
+> en [auditoría MVP](auditoria-mvp-continuacion-2026-10-03.md).
+
 Base: d94cc62c783184c492cbfd70e058ff58c7d6a7e2.
 Estado: aprobado en Web y Android para 30e109137c26634bb77add3ff07a71ab0ea08f50.
 Ejecución: [Actions 37139056153](https://github.com/Nnigarp/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/37139056153).

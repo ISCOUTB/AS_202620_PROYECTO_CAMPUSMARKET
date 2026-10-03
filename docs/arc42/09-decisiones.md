@@ -19,6 +19,14 @@ Las decisiones históricas se conservan; una evolución posterior no reescribe e
 | [ADR-0009](../adr/0009-materializar-catalogo-sin-romper-fronteras.md) | Aceptado | Materializar Catálogo mediante capacidad explícita de lectura de Publicaciones. | Modularidad / EC-01 |
 | [ADR-0010](../adr/0010-no-incorporar-componente-generativo-en-campusmarket.md) | Aceptado | No incorporar actualmente un componente generativo dentro del producto. | IA en runtime |
 | [ADR-0011](../adr/0011-gestionar-imagenes-de-publicaciones.md) | Aceptado | Gestionar hasta tres imágenes por publicación separando metadatos relacionales y archivo físico. | Publicaciones / imágenes |
+| [ADR-0012](../adr/0012-autenticar-con-sesiones-opacas-revocables.md) | Aceptado | Sesiones opacas revocables e identidad real. | Usuarios / EC-02 |
+| [ADR-0013](../adr/0013-materializar-reportes-y-moderacion-minima.md) | Aceptado; habilitación de moderadores sustituida por ADR-0014 | Reportes y moderación mínima. | Administración |
+| [ADR-0014](../adr/0014-habilitar-moderadores-por-identificador-interno.md) | Aceptado | Moderadores por ID de cuenta comprobada. | Autorización |
+| [ADR-0015](../adr/0015-validar-y-reencodificar-imagenes-con-pillow.md) | Aceptado | Decodificar y sanitizar contenido real con Pillow. | Seguridad de imágenes |
+| [ADR-0016](../adr/0016-ajustar-recursos-a-la-cuota-del-laboratorio.md) | Aceptado | Acotar memoria, concurrencia y cuerpos HTTP. | Recursos |
+| [ADR-0017](../adr/0017-serializar-inicializacion-y-migracion-de-identidad.md) | Aceptado | Lock MySQL y migración de identidad única. | Persistencia |
+| [ADR-0018](../adr/0018-ejecutar-el-monolito-en-dokploy-con-volumenes.md) | Aceptado para preparación; despliegue pendiente | Compose con volúmenes para la próxima fase. | Operación |
+| [ADR-0019](../adr/0019-consultar-imagenes-en-lote-a-traves-de-publicaciones.md) | Aceptado | Lectura de imágenes en lote por el service propietario. | Catálogo / rendimiento |
 
 ## Composición vigente
 
@@ -41,11 +49,17 @@ ADR-0004  MySQL
 
 La materialización de Catálogo sigue ADR-0009: `catalogo` no accede directamente a `publicaciones.repository`, no usa PyMySQL y no escribe los datos cuyo propietario es Gestión de Publicaciones.
 
-La gestión de imágenes sigue ADR-0011. MySQL conserva metadatos y referencias; el filesystem local bajo `backend/uploads/` se utiliza para desarrollo y verificación local, no se presenta como almacenamiento durable de producción en Azure.
+La gestión de imágenes sigue ADR-0011/0015/0016. MySQL conserva metadatos;
+Compose usa un volumen nombrado (ADR-0018). Azure requiere almacenamiento durable.
+Usuarios y Administración persisten sus tablas en sus repositories; Catálogo
+consume el service de Publicaciones. Los cuatro contextos están materializados.
 
 ## Estado de identidad
 
-Las operaciones de publicaciones propias utilizan actualmente `propietario_id = 1` como mecanismo temporal del prototipo. Esto no equivale a autenticación real. Por tanto, EC-02 permanece parcialmente materializado y Gestión de Usuarios continúa pendiente de materialización funcional completa.
+Usuarios resuelve sesiones opacas revocables; Publicaciones usa el ID autenticado
+en los predicados SQL. EC-02 se verifica con dos cuentas y 10/10 ataques rechazados.
+Registro/perfil no conceden moderación: se habilita externamente por ID comprobado.
+Véase la [auditoría de continuación](../evidencias/auditoria-mvp-continuacion-2026-10-03.md).
 
 ## Decisiones históricas
 

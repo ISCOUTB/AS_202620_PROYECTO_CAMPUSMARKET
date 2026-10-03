@@ -32,7 +32,7 @@ def main():
             path.write_text(content.replace(original, defect, 1))
             result = subprocess.run(
                 ["flutter", "test", "test/session_authorization_test.dart", "--plain-name", test],
-                cwd=FRONTEND, capture_output=True, text=True, timeout=120,
+                cwd=FRONTEND, capture_output=True, text=True, timeout=120, check=False,
             )
             output = result.stdout + result.stderr
             if result.returncode != 1 or "Expected:" not in output or "Actual:" not in output:

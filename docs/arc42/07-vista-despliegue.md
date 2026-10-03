@@ -1,5 +1,15 @@
 # 7. Vista de despliegue - CampusMarket
 
+## 7.0 Estado de la rama MVP antes del despliegue
+
+Esta continuación no opera Dokploy ni Azure. La línea S8 descrita después es
+histórica y corresponde a otro hash. ADR-0018 prepara Compose con API única y
+MySQL, 256 MiB/0,5 CPU cada uno, un worker y volúmenes nombrados para SQL/fotos.
+El override local publica solo loopback. CI verifica cuatro contextos, EC-02,
+rendimiento loopback y persistencia de sesión/datos/fotos tras recreación.
+[Resultados por hash](../evidencias/mvp-bloque-07-compose-2026-10-03.md).
+El despliegue público y su validación serán un bloque posterior.
+
 ## 7.1 Estado desplegado en S8
 
 Durante S8 CampusMarket se despliega en un entorno público y verificable.

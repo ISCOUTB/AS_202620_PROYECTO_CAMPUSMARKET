@@ -1,5 +1,9 @@
 # Bloque 04 — producto, fotografías y reportes
 
+> Registro histórico del bloque. Los pendientes y cifras de este registro
+> corresponden a su hash/fecha; el estado acumulado de continuación se encuentra
+> en [auditoría MVP](auditoria-mvp-continuacion-2026-10-03.md).
+
 Base: 1aefd4526ee5221e92f520969d34c86cb2c64a24.
 Estado: validaciones de código y builds aprobadas; flujo real en bloque 05.
 Hash: d94cc62c783184c492cbfd70e058ff58c7d6a7e2.

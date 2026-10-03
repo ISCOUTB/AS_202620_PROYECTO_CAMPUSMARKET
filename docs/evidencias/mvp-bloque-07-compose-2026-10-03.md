@@ -1,6 +1,15 @@
 # Bloque 07 — Compose reproducible y persistencia
 
-Estado: preparado; ejecución y mediciones pendientes.
+Estado: ejecutado y aprobado en fda38976882fd5abcca8486b4b114efd28ca2b1c.
+[Run 37141901649](https://github.com/Nnigarp/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/37141901649).
+Artefacto `compose-verificado-fda38976882fd5abcca8486b4b114efd28ca2b1c`, resultado.json.
+Ocho comprobaciones aprobadas, EC-02 10/10 con datos intactos; sesión/publicación/foto
+sobreviven a recreación (12.510,98 ms). Sin OOM ni reinicios inesperados.
+Peak API 195.084.288 bytes, DB 190.177.280 bytes: ambos bajo 268.435.456 bytes.
+Diez búsquedas HTTP de 1000 filas: 192,56; 152,70; 194,67; 196,23; 194,42;
+198,04; 193,84; 194,41; 195,28; 196,04 ms. 10/10 bajo 2 s; no acredita red pública.
+La continuación y sus nuevas ejecuciones se registran en
+[auditoría MVP](auditoria-mvp-continuacion-2026-10-03.md).
 
 | Requisito | Implementación | Prueba real | Evidencia |
 |---|---|---|---|
