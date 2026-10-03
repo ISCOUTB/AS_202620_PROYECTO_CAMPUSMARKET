@@ -1,0 +1,52 @@
+name: Validación Flutter MVP
+
+on:
+  push:
+    branches: [master, mvp-autenticacion-producto]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: frontend/campusmarket
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Flutter oficial con versión fijada
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: "3.47.3"
+          channel: stable
+          cache: true
+      - name: Resolver dependencias existentes
+        run: flutter pub get
+      - name: Analizar Flutter
+        run: flutter analyze
+      - name: Pruebas de sesión, autorización y formularios
+        run: flutter test
+      - name: Compilar Web para verificación
+        run: flutter build web --dart-define=CAMPUSMARKET_API_BASE_URL=http://127.0.0.1:8000
+      - name: Compilar Android para verificación
+        run: flutter build apk --debug
+      - name: Registrar versión y hash verificados
+        run: |
+          git rev-parse HEAD > build/verificacion-hash.txt
+          flutter --version >> build/verificacion-hash.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: flutter-verificado-${{ github.sha }}
+          path: |
+            frontend/campusmarket/build/verificacion-hash.txt
+            frontend/campusmarket/build/web/
+            frontend/campusmarket/build/app/outputs/flutter-apk/app-debug.apk

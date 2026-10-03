@@ -2,17 +2,15 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+import '../shared/api_configuration.dart';
+import '../shared/api_error.dart';
 import 'publicacion_catalogo.dart';
 
 class CatalogoApi {
-  const CatalogoApi({String? baseUrl}) : baseUrl = baseUrl ?? _configuredBaseUrl;
+  const CatalogoApi({String? baseUrl}) : _baseUrl = baseUrl;
 
-  static const _configuredBaseUrl = String.fromEnvironment(
-    'CAMPUSMARKET_API_BASE_URL',
-    defaultValue: 'http://localhost:8000',
-  );
-
-  final String baseUrl;
+  final String? _baseUrl;
+  String get baseUrl => _baseUrl ?? defaultApiBaseUrl;
 
   Future<List<PublicacionCatalogo>> buscar({
     String? texto,
@@ -47,12 +45,10 @@ class CatalogoApi {
       '$baseUrl/catalogo',
     ).replace(queryParameters: query.isEmpty ? null : query);
 
-    final response = await http.get(uri);
+    final response = await http.get(uri).timeout(const Duration(seconds: 20));
 
     if (response.statusCode != 200) {
-      throw Exception(
-        'No se pudo consultar el catálogo (${response.statusCode}).',
-      );
+      throw ApiException(responseMessage(response), statusCode: response.statusCode);
     }
 
     final data = jsonDecode(response.body) as List<dynamic>;
@@ -68,16 +64,14 @@ class CatalogoApi {
   }
 
   Future<PublicacionCatalogo> obtenerDetalle(int id) async {
-    final response = await http.get(Uri.parse('$baseUrl/catalogo/$id'));
+    final response = await http.get(Uri.parse('$baseUrl/catalogo/$id')).timeout(const Duration(seconds: 20));
 
     if (response.statusCode == 404) {
-      throw Exception('La publicación no existe.');
+      throw const ApiException('Esta publicación ya no está disponible.', statusCode: 404);
     }
 
     if (response.statusCode != 200) {
-      throw Exception(
-        'No se pudo consultar la publicación (${response.statusCode}).',
-      );
+      throw ApiException(responseMessage(response), statusCode: response.statusCode);
     }
 
     return PublicacionCatalogo.fromJson(

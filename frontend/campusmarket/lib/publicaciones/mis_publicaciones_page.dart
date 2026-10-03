@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'publicaciones_api.dart';
 
 class MisPublicacionesPage extends StatefulWidget {
-  const MisPublicacionesPage({super.key});
+  const MisPublicacionesPage({super.key, this.onChanged});
+
+  final VoidCallback? onChanged;
 
   @override
   State<MisPublicacionesPage> createState() => _MisPublicacionesPageState();
@@ -62,6 +64,7 @@ class _MisPublicacionesPageState extends State<MisPublicacionesPage> {
       );
       await _cargar();
       if (!mounted) return;
+      widget.onChanged?.call();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Estado actualizado correctamente.')),
       );
@@ -100,6 +103,7 @@ class _MisPublicacionesPageState extends State<MisPublicacionesPage> {
       await _api.eliminarPublicacion(publicacion['id'] as int);
       await _cargar();
       if (!mounted) return;
+      widget.onChanged?.call();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Publicación eliminada.')),
       );
@@ -130,6 +134,7 @@ class _MisPublicacionesPageState extends State<MisPublicacionesPage> {
       );
       await _cargar();
       if (!mounted) return;
+      widget.onChanged?.call();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Publicación actualizada.')),
       );

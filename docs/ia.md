@@ -278,3 +278,31 @@ contraseñas ni hashes reales en documentación.
 Verificación: 66 pruebas pasan sobre MySQL real; imágenes decodificadas,
 metadatos retirados, autorización y concurrencia; pruebas AST de propiedad
 por tabla y de imports. No se alteraron ADR aceptados.
+
+## MVP — sesión real en Flutter (2026-10-03)
+
+- **Aceptado:** controlador de sesión con token opaco exclusivamente en memoria,
+  registro, login, consulta de usuario, edición de nombre y logout contra la API.
+  Se aplica ADR-0012; no se agrega ninguna dependencia de ejecución.
+- **Corregido:** el cliente enviaba propietario fijo y lo incluía en parámetros de
+  gestión. Ahora obtiene autorización de la sesión y no suministra propietario.
+- **Corregido:** cambiar de cuenta conserva potencialmente vistas privadas en
+  IndexedStack. La navegación descarta las vistas de la identidad anterior y
+  construye pantallas privadas únicamente con sesión autenticada.
+- **Corregido:** reintentar una subida fallida creaba otra publicación; se conserva
+  el identificador ya creado y el progreso de las imágenes confirmadas.
+- **Corregido:** precio con coma pasaba validación pero fallaba al guardarse. Se
+  normaliza la coma y se respetan precio finito, máximo y dos decimales.
+- **Rechazado:** guardar tokens en localStorage, añadir shared_preferences o un
+  gestor global adicional. La memoria y ChangeNotifier del SDK cubren el MVP.
+- **Rechazado:** afirmar Web/Android funcional por revisión de código. Se agrega
+  workflow de análisis, pruebas y compilación; la ejecución del flujo real se
+  documentará cuando exista.
+- **Verificación pendiente:** las pruebas Flutter y los builds se ejecutan en CI
+  porque el entorno local perdió transporte de terminal y la ejecución anterior
+  de Flutter recibió rechazo automático por una solicitud inesperada a metadata.
+  No se reintenta ese acceso local.
+- **Herramientas de CI:** flutter-action mantenido por subosito, referencia v2
+  verificada y fijada a 1a449444c387b1966244ae4d4f8c696479add0b2, SDK oficial
+  3.47.3. actions/setup-java y upload-artifact pertenecen a GitHub. Estas
+  herramientas preparan/verifican el entorno; no incorporan paquetes al producto.
