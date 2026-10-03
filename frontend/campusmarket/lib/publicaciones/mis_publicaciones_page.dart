@@ -281,7 +281,7 @@ class _MisPublicacionesPageState extends State<MisPublicacionesPage> {
               padding: const EdgeInsets.fromLTRB(24, 4, 24, 40),
               sliver: SliverList.separated(
                 itemCount: _filtradas.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 14),
+                separatorBuilder: (_, _) => const SizedBox(height: 14),
                 itemBuilder: (context, index) {
                   final publicacion = _filtradas[index];
                   return Center(
