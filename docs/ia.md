@@ -261,3 +261,20 @@ contrato v2 y mutaciones en copias temporales. Las tres mutaciones (autoría SQL
 contraseña ignorada y acceso a repository ajeno) hacen fallar una aserción;
 no se consideran detectadas por errores de colección. No se exponen tokens,
 contraseñas ni hashes reales en documentación.
+
+## 2026-10-03 — MVP bloque 2: imágenes y administración
+
+| Propuesta IA | Decisión | Motivo / verificación |
+|---|---|---|
+| Validar imágenes solo por extensión o firma manual | Rechazado | No asegura decodificación ni retiro de metadatos |
+| Pillow 12.3.0 como única dependencia nueva del backend | Aceptado | PyPI oficial: Python >=3.10, CPython 3.12 Linux/Windows, licencia MIT-CMU, código python-pillow; ADR-0015 |
+| pytest-cov como dependencia del proyecto | Rechazado | No es necesario para este bloque; pruebas reales y mutaciones verifican el defecto |
+| Reportes reales y moderación por ID de cuenta comprobada | Aceptado | ADR-0013 y 0014; registro/perfil no pueden conceder capacidad |
+| Panel de métricas o botones ficticios | Rechazado | No hay requisito ni contrato ejecutable que justifique esa interfaz |
+| Resolver reportes sin exclusión mutua | Corregido | Mantener la fila de reporte bloqueada durante la revisión; ocultado de publicación idempotente por servicio |
+| Elegir principal y retirar fotos desde el router/SQL ajeno | Rechazado | Router→service→repository; único escritor y propiedad comprobados |
+| Limitar imágenes solo desde Flutter | Rechazado | Límite tres bajo lock en MySQL; cuatro subidas concurrentes producen 3×201 + 1×400 |
+
+Verificación: 66 pruebas pasan sobre MySQL real; imágenes decodificadas,
+metadatos retirados, autorización y concurrencia; pruebas AST de propiedad
+por tabla y de imports. No se alteraron ADR aceptados.

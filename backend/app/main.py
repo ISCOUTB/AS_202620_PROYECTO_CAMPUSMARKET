@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+from backend.app.administracion.router import router as administracion_router
 from backend.app.catalogo.router import router as catalogo_router
 from backend.app.db import PersistenceUnavailableError, database_is_available
 from backend.app.observability import (
@@ -68,7 +69,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-uploads_dir = Path("backend/uploads")
+uploads_dir = Path(os.getenv("CAMPUSMARKET_UPLOAD_DIR", "backend/uploads"))
 uploads_dir.mkdir(
     parents=True,
     exist_ok=True,
@@ -83,6 +84,7 @@ app.mount(
 app.include_router(publicaciones_router)
 app.include_router(catalogo_router)
 app.include_router(usuarios_router)
+app.include_router(administracion_router)
 
 
 @app.get(

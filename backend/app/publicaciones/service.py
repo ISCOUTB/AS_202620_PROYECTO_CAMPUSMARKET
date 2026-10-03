@@ -5,10 +5,13 @@ from .repository import (
     create_publication_image,
     delete_publication,
     get_publication,
+    hide_publication,
     list_publication_images,
     list_publications,
     list_publications_by_owner,
     publication_exists,
+    remove_publication_image,
+    set_primary_image,
     update_publication,
     update_publication_status,
 )
@@ -200,3 +203,30 @@ def subir_imagen_publicacion(publicacion_id: int, propietario_id: int, nombre: s
     except Exception:
         delete_publication_image(imagen_url)
         raise
+
+
+def eliminar_imagen_publicacion(publicacion_id: int, propietario_id: int, imagen_id: int) -> None:
+    try:
+        url = remove_publication_image(publicacion_id, propietario_id, imagen_id)
+        if url is None:
+            raise PublicationNotFoundError("La imagen no existe o no te pertenece.")
+        delete_publication_image(url)
+    except PersistenceUnavailableError as error:
+        raise PublicationPersistenceUnavailableError("Persistencia temporalmente no disponible.") from error
+
+
+def elegir_imagen_principal(publicacion_id: int, propietario_id: int, imagen_id: int) -> list[dict]:
+    try:
+        if not set_primary_image(publicacion_id, propietario_id, imagen_id):
+            raise PublicationNotFoundError("La imagen no existe o no te pertenece.")
+        return list_publication_images(publicacion_id)
+    except PersistenceUnavailableError as error:
+        raise PublicationPersistenceUnavailableError("Persistencia temporalmente no disponible.") from error
+
+
+def ocultar_publicacion(publicacion_id: int) -> bool:
+    """Interfaz interna para administración; no cambia propiedad ni borra datos."""
+    try:
+        return hide_publication(publicacion_id)
+    except PersistenceUnavailableError as error:
+        raise PublicationPersistenceUnavailableError("Persistencia temporalmente no disponible.") from error

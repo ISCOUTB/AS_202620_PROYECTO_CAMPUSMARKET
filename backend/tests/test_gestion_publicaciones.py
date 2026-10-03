@@ -12,10 +12,10 @@ def test_mis_publicaciones_solo_lista_las_del_propietario(cuentas, payload_publi
     assert response.json() == [{**propia, "imagenes": []}]
 
 
-def test_mis_publicaciones_incluye_imagen_principal(cuentas, payload_publicacion):
+def test_mis_publicaciones_incluye_imagen_principal(cuentas, payload_publicacion, imagen_png):
     a, _ = cuentas
     propia = a["client"].post("/publicaciones", json=payload_publicacion).json()
-    upload = a["client"].post(f"/publicaciones/{propia['id']}/imagenes", files={"archivo": ("foto.jpg", b"contenido-imagen-prueba", "image/jpeg")})
+    upload = a["client"].post(f"/publicaciones/{propia['id']}/imagenes", files={"archivo": ("foto.png", imagen_png, "image/png")})
     assert upload.status_code == 201
     images = a["client"].get("/publicaciones/mias").json()[0]["imagenes"]
     assert len(images) == 1

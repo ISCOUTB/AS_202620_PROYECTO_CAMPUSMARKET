@@ -10,6 +10,20 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 MUTATIONS = [
     (
+        "imagen-disfrazada-sin-decodificacion",
+        "backend/app/publicaciones/image_storage.py",
+        "validated = _validated_image(extension, content)",
+        "validated = content",
+        "backend/tests/test_imagenes_seguras.py::test_contenido_no_puede_disfrazarse_con_otra_extension",
+    ),
+    (
+        "moderacion-sin-capacidad",
+        "backend/app/usuarios/dependencies.py",
+        "if not user[\"es_admin\"]:",
+        "if False:",
+        "backend/tests/test_administracion.py::test_registro_y_perfil_no_autorizan_moderacion",
+    ),
+    (
         "EC02-escritura-sin-propietario",
         "backend/app/publicaciones/repository.py",
         "                  AND propietario_id = %s",

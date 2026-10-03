@@ -420,6 +420,115 @@
         }
       }
     },
+    "/publicaciones/{publication_id}/imagenes/{image_id}": {
+      "delete": {
+        "tags": [
+          "publicaciones"
+        ],
+        "summary": "Eliminar Imagen",
+        "operationId": "eliminarImagenPublicacion",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "publication_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Publication Id"
+            }
+          },
+          {
+            "name": "image_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Image Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/publicaciones/{publication_id}/imagenes/{image_id}/principal": {
+      "put": {
+        "tags": [
+          "publicaciones"
+        ],
+        "summary": "Principal",
+        "operationId": "elegirImagenPrincipal",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "publication_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Publication Id"
+            }
+          },
+          {
+            "name": "image_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Image Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PublicacionImagen"
+                  },
+                  "title": "Response Elegirimagenprincipal"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/catalogo": {
       "get": {
         "tags": [
@@ -760,6 +869,137 @@
             "HTTPBearer": []
           }
         ]
+      }
+    },
+    "/administracion/reportes": {
+      "get": {
+        "tags": [
+          "administracion"
+        ],
+        "summary": "Reportes",
+        "operationId": "listarReportesPendientes",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Reporte"
+                  },
+                  "type": "array",
+                  "title": "Response Listarreportespendientes"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "administracion"
+        ],
+        "summary": "Nuevo Reporte",
+        "operationId": "reportarPublicacion",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReporteCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reporte"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/administracion/reportes/{report_id}": {
+      "patch": {
+        "tags": [
+          "administracion"
+        ],
+        "summary": "Resolve",
+        "operationId": "resolverReporte",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Report Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReporteResolve"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reporte"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/health": {
@@ -1312,6 +1552,145 @@
           "nombre"
         ],
         "title": "Registro"
+      },
+      "Reporte": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "publicacion_id": {
+            "type": "integer",
+            "title": "Publicacion Id"
+          },
+          "reportado_por": {
+            "type": "integer",
+            "title": "Reportado Por"
+          },
+          "motivo": {
+            "type": "string",
+            "title": "Motivo"
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "pendiente",
+              "ocultado",
+              "descartado"
+            ],
+            "title": "Estado"
+          },
+          "resuelto_por": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resuelto Por"
+          },
+          "nota": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nota"
+          },
+          "creado_en": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Creado En"
+          },
+          "resuelto_en": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resuelto En"
+          },
+          "titulo_publicacion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Titulo Publicacion"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "publicacion_id",
+          "reportado_por",
+          "motivo",
+          "estado",
+          "resuelto_por",
+          "nota",
+          "creado_en",
+          "resuelto_en"
+        ],
+        "title": "Reporte"
+      },
+      "ReporteCreate": {
+        "properties": {
+          "publicacion_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Publicacion Id"
+          },
+          "motivo": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 10,
+            "title": "Motivo"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "publicacion_id",
+          "motivo"
+        ],
+        "title": "ReporteCreate"
+      },
+      "ReporteResolve": {
+        "properties": {
+          "decision": {
+            "type": "string",
+            "enum": [
+              "ocultado",
+              "descartado"
+            ],
+            "title": "Decision"
+          },
+          "nota": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 5,
+            "title": "Nota"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "decision",
+          "nota"
+        ],
+        "title": "ReporteResolve"
       },
       "Sesion": {
         "properties": {

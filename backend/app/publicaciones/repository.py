@@ -1,6 +1,6 @@
 import pymysql
 
-from backend.app.db import PersistenceUnavailableError
+from backend.app.db import PersistenceUnavailableError, transaction
 from backend.app.db import connect as _connect
 
 
@@ -522,3 +522,42 @@ def database_is_available() -> bool:
     finally:
         if connection:
             connection.close()
+
+
+def hide_publication(publication_id: int) -> bool:
+    with transaction() as cursor:
+        cursor.execute("SELECT id FROM publicaciones WHERE id = %s FOR UPDATE", (publication_id,))
+        if cursor.fetchone() is None:
+            return False
+        cursor.execute("UPDATE publicaciones SET visible = FALSE WHERE id = %s", (publication_id,))
+        return True
+
+
+def _lock_owner(cursor, publication_id: int, owner_id: int) -> bool:
+    cursor.execute("SELECT id FROM publicaciones WHERE id = %s AND propietario_id = %s FOR UPDATE", (publication_id, owner_id))
+    return cursor.fetchone() is not None
+
+
+def remove_publication_image(publication_id: int, owner_id: int, image_id: int) -> str | None:
+    with transaction() as cursor:
+        if not _lock_owner(cursor, publication_id, owner_id):
+            return None
+        cursor.execute("SELECT imagen_url, es_principal FROM publicacion_imagenes WHERE id = %s AND publicacion_id = %s", (image_id, publication_id))
+        image = cursor.fetchone()
+        if not image:
+            return None
+        cursor.execute("DELETE FROM publicacion_imagenes WHERE id = %s", (image_id,))
+        if image["es_principal"]:
+            cursor.execute("UPDATE publicacion_imagenes SET es_principal = TRUE WHERE publicacion_id = %s ORDER BY orden LIMIT 1", (publication_id,))
+        return image["imagen_url"]
+
+
+def set_primary_image(publication_id: int, owner_id: int, image_id: int) -> bool:
+    with transaction() as cursor:
+        if not _lock_owner(cursor, publication_id, owner_id):
+            return False
+        cursor.execute("SELECT id FROM publicacion_imagenes WHERE id = %s AND publicacion_id = %s", (image_id, publication_id))
+        if cursor.fetchone() is None:
+            return False
+        cursor.execute("UPDATE publicacion_imagenes SET es_principal = (id = %s) WHERE publicacion_id = %s", (image_id, publication_id))
+        return True

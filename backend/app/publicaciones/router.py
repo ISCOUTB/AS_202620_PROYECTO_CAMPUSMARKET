@@ -19,6 +19,8 @@ from .service import (
     cambiar_estado_publicacion,
     crear_publicacion,
     editar_publicacion,
+    elegir_imagen_principal,
+    eliminar_imagen_publicacion,
     eliminar_publicacion,
     listar_publicaciones,
     listar_publicaciones_propietario,
@@ -285,3 +287,24 @@ async def subir_imagen(
         raise _service_unavailable(error) from error
     finally:
         await archivo.close()
+
+
+@router.delete("/{publication_id}/imagenes/{image_id}", status_code=204, operation_id="eliminarImagenPublicacion")
+def eliminar_imagen(publication_id: int, image_id: int, user: UsuarioActual):
+    try:
+        eliminar_imagen_publicacion(publication_id, user["id"], image_id)
+        return Response(status_code=204)
+    except PublicationNotFoundError as error:
+        raise HTTPException(404, str(error)) from error
+    except PublicationPersistenceUnavailableError as error:
+        raise _service_unavailable(error) from error
+
+
+@router.put("/{publication_id}/imagenes/{image_id}/principal", response_model=list[PublicacionImagen], operation_id="elegirImagenPrincipal")
+def principal(publication_id: int, image_id: int, user: UsuarioActual):
+    try:
+        return elegir_imagen_principal(publication_id, user["id"], image_id)
+    except PublicationNotFoundError as error:
+        raise HTTPException(404, str(error)) from error
+    except PublicationPersistenceUnavailableError as error:
+        raise _service_unavailable(error) from error

@@ -1,10 +1,15 @@
 import os
 import secrets
+from io import BytesIO
 from uuid import uuid4
 
 import pytest
 from fastapi.testclient import TestClient
+from PIL import Image
 
+from backend.app.administracion.repository import (
+    initialize_database as init_administracion,
+)
 from backend.app.db import transaction
 from backend.app.main import app
 from backend.app.publicaciones.repository import (
@@ -19,7 +24,9 @@ def db_limpia():
         pytest.fail("Estas pruebas borran fixtures: requieren una base cuyo nombre termine en _test.")
     init_usuarios()
     init_publicaciones()
+    init_administracion()
     with transaction() as cursor:
+        cursor.execute("DELETE FROM reportes_publicacion")
         cursor.execute("DELETE FROM publicaciones")
         cursor.execute("DELETE FROM sesiones_usuario")
         cursor.execute("DELETE FROM usuarios")
@@ -51,3 +58,10 @@ def cuentas(cuenta_factory):
 @pytest.fixture
 def payload_publicacion():
     return {"titulo": "Calculadora científica", "descripcion": "Para cursos de ingeniería, en buen estado.", "precio": 65000, "modalidad": "venta", "estado": "usado"}
+
+
+@pytest.fixture
+def imagen_png():
+    output = BytesIO()
+    Image.new("RGB", (32, 24), color="#5B4CF0").save(output, format="PNG")
+    return output.getvalue()
