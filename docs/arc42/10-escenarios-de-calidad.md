@@ -86,7 +86,16 @@ coinciden con los criterios seleccionados.
 
 **Prioridad:** Alta.
 
-**Estado:** Definido, todavía no materializado completamente.
+**Estado:** Materializado y verificado en S9.
+
+La medición documentada de EC-01 utilizó 1.000 publicaciones controladas y 10
+búsquedas consecutivas. Las 10 ejecuciones quedaron por debajo del umbral de
+2 segundos. La evidencia se conserva en
+[`docs/evidencias/evidencia-ec01-catalogo-s9-2026-10-01.md`](../evidencias/evidencia-ec01-catalogo-s9-2026-10-01.md).
+
+La medición corresponde al routing HTTP, lógica de búsqueda y serialización
+sobre carga controlada; no se presenta como medición extremo a extremo de red
+de producción.
 
 ---
 
@@ -111,7 +120,13 @@ propietario deben ser rechazados.
 
 **Prioridad:** Alta.
 
-**Estado:** Definido, todavía no materializado completamente.
+**Estado:** Parcialmente materializado.
+
+El backend dispone de operaciones de edición, cambio de estado y eliminación
+acotadas por `propietario_id`. Sin embargo, la identidad utilizada actualmente
+es un mecanismo temporal y CampusMarket todavía no implementa autenticación real
+de usuarios. Por tanto, la condición del escenario basada en dos usuarios
+autenticados diferentes todavía no se considera completamente verificada.
 
 ---
 
@@ -260,7 +275,7 @@ FastAPI
 Gestión de Publicaciones
    ↓
 SQLite
-````
+```
 
 Esta arquitectura **no representa la persistencia vigente**.
 
@@ -376,8 +391,8 @@ el conjunto completo debe volver a verde.
 
 | Escenario | Estado                                                    |
 | --------- | --------------------------------------------------------- |
-| EC-01     | Definido; todavía no completamente materializado          |
-| EC-02     | Definido; todavía no completamente materializado          |
+| EC-01     | Materializado y verificado en S9                          |
+| EC-02     | Parcialmente materializado; autenticación real pendiente  |
 | EC-03     | Materializado y utilizado para verificar mantenibilidad   |
 | EC-04     | Materializado mediante recuperación del prototipo         |
 | EC-05     | Verificado históricamente en S5 con SQLite                |
