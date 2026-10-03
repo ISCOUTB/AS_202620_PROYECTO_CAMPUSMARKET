@@ -6,7 +6,6 @@ from backend.app.publicaciones.repository import (
     initialize_database,
 )
 
-
 client = TestClient(app)
 
 
