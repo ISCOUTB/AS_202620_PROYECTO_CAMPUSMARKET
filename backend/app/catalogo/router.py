@@ -1,7 +1,7 @@
 from typing import Literal
 
 from fastapi import APIRouter, HTTPException, Query, status
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from backend.app.publicaciones.service import (
     PublicationPersistenceUnavailableError,
@@ -12,6 +12,14 @@ from .service import buscar_publicaciones, obtener_publicacion
 router = APIRouter(prefix="/catalogo", tags=["catalogo"])
 
 
+class ImagenCatalogo(BaseModel):
+    id: int
+    publicacion_id: int
+    imagen_url: str
+    orden: int
+    es_principal: bool
+
+
 class PublicacionCatalogo(BaseModel):
     id: int
     titulo: str
@@ -19,6 +27,7 @@ class PublicacionCatalogo(BaseModel):
     precio: float
     modalidad: Literal["venta", "alquiler"]
     estado: Literal["nuevo", "usado", "reacondicionado"]
+    imagenes: list[ImagenCatalogo] = Field(default_factory=list)
 
 
 @router.get(

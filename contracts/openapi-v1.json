@@ -86,6 +86,362 @@
         }
       }
     },
+    "/publicaciones/mias": {
+      "get": {
+        "tags": [
+          "publicaciones"
+        ],
+        "summary": "Listar publicaciones de un propietario",
+        "operationId": "listarMisPublicaciones",
+        "parameters": [
+          {
+            "name": "propietario_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1,
+              "title": "Propietario Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PublicacionGestion"
+                  },
+                  "title": "Response Listarmispublicaciones"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/publicaciones/{publication_id}": {
+      "put": {
+        "tags": [
+          "publicaciones"
+        ],
+        "summary": "Editar una publicación propia",
+        "operationId": "editarPublicacion",
+        "parameters": [
+          {
+            "name": "publication_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Publication Id"
+            }
+          },
+          {
+            "name": "propietario_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1,
+              "title": "Propietario Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublicacionUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Publicacion"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Publicación no encontrada para el propietario",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Persistencia temporalmente no disponible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "publicaciones"
+        ],
+        "summary": "Eliminar una publicación propia",
+        "operationId": "eliminarPublicacion",
+        "parameters": [
+          {
+            "name": "publication_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Publication Id"
+            }
+          },
+          {
+            "name": "propietario_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1,
+              "title": "Propietario Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Publicación no encontrada para el propietario",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Persistencia temporalmente no disponible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/publicaciones/{publication_id}/estado": {
+      "patch": {
+        "tags": [
+          "publicaciones"
+        ],
+        "summary": "Cambiar disponibilidad de una publicación propia",
+        "operationId": "cambiarEstadoPublicacion",
+        "parameters": [
+          {
+            "name": "publication_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Publication Id"
+            }
+          },
+          {
+            "name": "propietario_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1,
+              "title": "Propietario Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EstadoPublicacionUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Publicacion"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Publicación no encontrada para el propietario",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Persistencia temporalmente no disponible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/publicaciones/{publication_id}/imagenes": {
+      "post": {
+        "tags": [
+          "publicaciones"
+        ],
+        "summary": "Subir una imagen de una publicación",
+        "operationId": "subirImagenPublicacion",
+        "parameters": [
+          {
+            "name": "publication_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Publication Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_subirImagenPublicacion"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicacionImagen"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Imagen inválida o máximo alcanzado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Publicación no encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Persistencia temporalmente no disponible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/catalogo": {
       "get": {
         "tags": [
@@ -278,6 +634,20 @@
   },
   "components": {
     "schemas": {
+      "Body_subirImagenPublicacion": {
+        "properties": {
+          "archivo": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "Archivo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "archivo"
+        ],
+        "title": "Body_subirImagenPublicacion"
+      },
       "ErrorResponse": {
         "properties": {
           "detail": {
@@ -290,6 +660,24 @@
           "detail"
         ],
         "title": "ErrorResponse"
+      },
+      "EstadoPublicacionUpdate": {
+        "properties": {
+          "estado_publicacion": {
+            "type": "string",
+            "enum": [
+              "disponible",
+              "reservado",
+              "vendido"
+            ],
+            "title": "Estado Publicacion"
+          }
+        },
+        "type": "object",
+        "required": [
+          "estado_publicacion"
+        ],
+        "title": "EstadoPublicacionUpdate"
       },
       "HTTPValidationError": {
         "properties": {
@@ -321,6 +709,39 @@
           "service"
         ],
         "title": "HealthResponse"
+      },
+      "ImagenCatalogo": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "publicacion_id": {
+            "type": "integer",
+            "title": "Publicacion Id"
+          },
+          "imagen_url": {
+            "type": "string",
+            "title": "Imagen Url"
+          },
+          "orden": {
+            "type": "integer",
+            "title": "Orden"
+          },
+          "es_principal": {
+            "type": "boolean",
+            "title": "Es Principal"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "publicacion_id",
+          "imagen_url",
+          "orden",
+          "es_principal"
+        ],
+        "title": "ImagenCatalogo"
       },
       "Publicacion": {
         "properties": {
@@ -357,6 +778,22 @@
               "reacondicionado"
             ],
             "title": "Estado"
+          },
+          "propietario_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Propietario Id",
+            "default": 1
+          },
+          "estado_publicacion": {
+            "type": "string",
+            "enum": [
+              "disponible",
+              "reservado",
+              "vendido"
+            ],
+            "title": "Estado Publicacion",
+            "default": "disponible"
           },
           "id": {
             "type": "integer",
@@ -408,6 +845,13 @@
               "reacondicionado"
             ],
             "title": "Estado"
+          },
+          "imagenes": {
+            "items": {
+              "$ref": "#/components/schemas/ImagenCatalogo"
+            },
+            "type": "array",
+            "title": "Imagenes"
           }
         },
         "type": "object",
@@ -456,6 +900,22 @@
               "reacondicionado"
             ],
             "title": "Estado"
+          },
+          "propietario_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Propietario Id",
+            "default": 1
+          },
+          "estado_publicacion": {
+            "type": "string",
+            "enum": [
+              "disponible",
+              "reservado",
+              "vendido"
+            ],
+            "title": "Estado Publicacion",
+            "default": "disponible"
           }
         },
         "type": "object",
@@ -467,6 +927,161 @@
           "estado"
         ],
         "title": "PublicacionCreate"
+      },
+      "PublicacionGestion": {
+        "properties": {
+          "titulo": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 3,
+            "title": "Titulo"
+          },
+          "descripcion": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 3,
+            "title": "Descripcion"
+          },
+          "precio": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Precio"
+          },
+          "modalidad": {
+            "type": "string",
+            "enum": [
+              "venta",
+              "alquiler"
+            ],
+            "title": "Modalidad"
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "nuevo",
+              "usado",
+              "reacondicionado"
+            ],
+            "title": "Estado"
+          },
+          "propietario_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Propietario Id",
+            "default": 1
+          },
+          "estado_publicacion": {
+            "type": "string",
+            "enum": [
+              "disponible",
+              "reservado",
+              "vendido"
+            ],
+            "title": "Estado Publicacion",
+            "default": "disponible"
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "imagenes": {
+            "items": {
+              "$ref": "#/components/schemas/PublicacionImagen"
+            },
+            "type": "array",
+            "title": "Imagenes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "titulo",
+          "descripcion",
+          "precio",
+          "modalidad",
+          "estado",
+          "id"
+        ],
+        "title": "PublicacionGestion"
+      },
+      "PublicacionImagen": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "publicacion_id": {
+            "type": "integer",
+            "title": "Publicacion Id"
+          },
+          "imagen_url": {
+            "type": "string",
+            "title": "Imagen Url"
+          },
+          "orden": {
+            "type": "integer",
+            "title": "Orden"
+          },
+          "es_principal": {
+            "type": "boolean",
+            "title": "Es Principal"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "publicacion_id",
+          "imagen_url",
+          "orden",
+          "es_principal"
+        ],
+        "title": "PublicacionImagen"
+      },
+      "PublicacionUpdate": {
+        "properties": {
+          "titulo": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 3,
+            "title": "Titulo"
+          },
+          "descripcion": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 3,
+            "title": "Descripcion"
+          },
+          "precio": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Precio"
+          },
+          "modalidad": {
+            "type": "string",
+            "enum": [
+              "venta",
+              "alquiler"
+            ],
+            "title": "Modalidad"
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "nuevo",
+              "usado",
+              "reacondicionado"
+            ],
+            "title": "Estado"
+          }
+        },
+        "type": "object",
+        "required": [
+          "titulo",
+          "descripcion",
+          "precio",
+          "modalidad",
+          "estado"
+        ],
+        "title": "PublicacionUpdate"
       },
       "ValidationError": {
         "properties": {

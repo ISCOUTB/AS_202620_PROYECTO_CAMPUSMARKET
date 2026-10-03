@@ -1,6 +1,9 @@
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from backend.app.catalogo.router import router as catalogo_router
@@ -39,11 +42,25 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://127.0.0.1:3000",
+        "http://localhost:8080",
+        "http://127.0.0.1:8080",
         "https://nnigarp.github.io",
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+)
+
+uploads_dir = Path("backend/uploads")
+uploads_dir.mkdir(
+    parents=True,
+    exist_ok=True,
+)
+
+app.mount(
+    "/uploads",
+    StaticFiles(directory=uploads_dir),
+    name="uploads",
 )
 
 app.include_router(publicaciones_router)

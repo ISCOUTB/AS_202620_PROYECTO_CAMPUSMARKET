@@ -36,6 +36,11 @@ def test_ec01_consulta_catalogo_1000_publicaciones(monkeypatch):
         "listar_publicaciones",
         lambda: PUBLICACIONES_EC01,
     )
+    monkeypatch.setattr(
+        catalogo_service,
+        "listar_imagenes_publicacion",
+        lambda _publicacion_id: [],
+    )
 
     tiempos = []
 
