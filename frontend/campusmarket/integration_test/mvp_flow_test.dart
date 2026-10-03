@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:campusmarket/app/campus_market_app.dart';
 import 'package:campusmarket/publicaciones/publicaciones_api.dart';
+import 'package:campusmarket/publicaciones/mis_publicaciones_page.dart';
 import 'package:campusmarket/shared/api_configuration.dart';
 import 'package:campusmarket/shared/api_error.dart';
 import 'package:campusmarket/usuarios/session_controller.dart';
@@ -67,6 +68,18 @@ void main() {
       expect(tester.takeException(), isNull, reason: 'Sin excepciones de layout ni imágenes');
     }
 
+    Future<void> catalogResult(String text, String description) async {
+      final results = find.byKey(const Key('catalogo-resultados'));
+      await until(() => results.evaluate().isNotEmpty, 'Sección de resultados');
+      await tester.ensureVisible(results);
+      await tester.pump(const Duration(milliseconds: 250));
+      await until(() => find.text(text).evaluate().isNotEmpty, description);
+    }
+
+    binding.reportData ??= <String, dynamic>{};
+    binding.reportData!['checks'] = checks;
+    binding.reportData!['platform'] = platform;
+
     Future<void> enterAccount(String name, String email, String pass, {bool register = false}) async {
       await click(find.byKey(const Key('cuenta')));
       if (register) {
@@ -115,9 +128,17 @@ void main() {
       fail('La galería no alcanzó la cantidad esperada.');
     }
 
+    try {
     await tester.pumpWidget(const CampusMarketApp());
     await until(() => find.byType(CircularProgressIndicator).evaluate().isEmpty, 'Inicio cargado');
     await screenshot('inicio-vacio');
+    final logicalSize = tester.view.physicalSize / tester.view.devicePixelRatio;
+    binding.reportData!['viewport'] = {'width': logicalSize.width, 'height': logicalSize.height};
+    if (platform == 'web-mobile') {
+      expect(logicalSize.width, lessThanOrEqualTo(600), reason: 'Viewport móvil real');
+    } else if (platform == 'web-desktop') {
+      expect(logicalSize.width, greaterThanOrEqualTo(1100), reason: 'Viewport escritorio real');
+    }
     await enterAccount('Estudiante A', emailA, passwordA, register: true);
     final ownerA = session.usuario!.id;
     checks.add('Registro, login y usuario actual A');
@@ -131,7 +152,9 @@ void main() {
     await until(() => find.text('1/3').evaluate().isNotEmpty, 'Selector nativo/Web devuelve imagen real');
     await screenshot('publicar');
     await click(find.byKey(const Key('publicacion-guardar')));
-    await until(() => find.text(title).evaluate().isNotEmpty, 'Publicación creada aparece en Mis publicaciones');
+    await until(() => find.byType(MisPublicacionesPage).evaluate().isNotEmpty &&
+        find.text(title).evaluate().isNotEmpty && find.byType(CircularProgressIndicator).evaluate().isEmpty,
+        'Guardado e imágenes terminados; publicación cargada en Mis publicaciones');
     var own = await ownPublication();
     final id = own['id'] as int;
     expect(own['propietario_id'], ownerA);
@@ -175,28 +198,28 @@ void main() {
     await until(() => find.text(title).evaluate().isNotEmpty, 'Portada usa publicación existente');
     await screenshot('inicio-con-producto');
     await click(find.byKey(const Key('nav-catalogo')));
-    await until(() => find.text(title).evaluate().isNotEmpty, 'Producto visible en catálogo');
+    await catalogResult(title, 'Producto visible en catálogo');
     await screenshot('catalogo');
     await fill('catalogo-busqueda', 'inexistente-$nonce');
     await click(find.byTooltip('Buscar'));
-    await until(() => find.text('No encontramos publicaciones').evaluate().isNotEmpty, 'Búsqueda real sin resultados');
+    await catalogResult('No encontramos publicaciones', 'Búsqueda real sin resultados');
     await fill('catalogo-busqueda', 'LIBRO DE CAMPUS');
     await click(find.byTooltip('Buscar'));
-    await until(() => find.text(title).evaluate().isNotEmpty, 'Búsqueda real sin distinguir mayúsculas');
+    await catalogResult(title, 'Búsqueda real sin distinguir mayúsculas');
     await click(find.text('Limpiar'));
-    await until(() => find.text(title).evaluate().isNotEmpty, 'Limpiar restaura catálogo');
+    await catalogResult(title, 'Limpiar restaura catálogo');
     await fill('catalogo-precio-min', '70000');
     await click(find.text('Aplicar filtros'));
-    await until(() => find.text('No encontramos publicaciones').evaluate().isNotEmpty, 'Precio mínimo filtra publicación real');
+    await catalogResult('No encontramos publicaciones', 'Precio mínimo filtra publicación real');
     await fill('catalogo-precio-min', '60000');
     await fill('catalogo-precio-max', '65000,50');
     await click(find.text('Aplicar filtros'));
-    await until(() => find.text(title).evaluate().isNotEmpty, 'Rango incluye precio exacto con coma');
+    await catalogResult(title, 'Rango incluye precio exacto con coma');
     await fill('catalogo-precio-min', '70000');
     await click(find.text('Aplicar filtros'));
-    await until(() => find.text('El precio mínimo no puede superar al máximo.').evaluate().isNotEmpty, 'Error de rango visible');
+    await catalogResult('El precio mínimo no puede superar al máximo.', 'Error de rango visible');
     await click(find.text('Limpiar'));
-    await until(() => find.text(title).evaluate().isNotEmpty, 'Filtros restaurados');
+    await catalogResult(title, 'Filtros restaurados');
     checks.add('Búsqueda, precios, error de rango, estado vacío y limpieza de filtros reales');
     await click(find.text(title));
     await until(() => find.text('Descripción').evaluate().isNotEmpty, 'Detalle actual consultado');
@@ -223,7 +246,7 @@ void main() {
     await enterAccount('Estudiante B', emailB, passwordB, register: true);
     expect(session.usuario!.id, isNot(ownerA));
     await click(find.byKey(const Key('nav-catalogo')));
-    await until(() => find.text(editedTitle).evaluate().isNotEmpty, 'B ve publicación de A');
+    await catalogResult(editedTitle, 'B ve publicación de A');
     await click(find.text(editedTitle));
     await until(() => find.byKey(const Key('reportar-publicacion')).evaluate().isNotEmpty, 'B puede reportar, sin controles de edición ajena');
     expect(find.text('Editar'), findsNothing);
@@ -319,6 +342,18 @@ void main() {
     binding.reportData ??= <String, dynamic>{};
     binding.reportData!['checks'] = checks;
     binding.reportData!['platform'] = platform;
-    api.dispose();
+    } catch (_) {
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.pump(const Duration(milliseconds: 350));
+      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android && !surfaceConverted) {
+        await binding.convertFlutterSurfaceToImage();
+        surfaceConverted = true;
+        await tester.pump();
+      }
+      await binding.takeScreenshot('$platform-fallo');
+      rethrow;
+    } finally {
+      api.dispose();
+    }
   });
 }

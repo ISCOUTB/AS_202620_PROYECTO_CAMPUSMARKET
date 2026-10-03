@@ -339,3 +339,19 @@ por tabla y de imports. No se alteraron ADR aceptados.
   file_picker por un mock que evitaría demostrar lectura/subida de archivos.
 - **Verificación pendiente:** los resultados y capturas del flujo se registrarán
   después de ejecutar el workflow, sin anticipar que está aprobado.
+
+### Correcciones del arnés tras su primera ejecución real
+
+- **Corregido:** esperar el título del campo de edición adelantaba la consulta de
+  Mis publicaciones. Ahora se exige la pantalla propia cargada tras guardar y subir.
+- **Corregido:** el redimensionado externo de Chrome podía ser sobrescrito por el
+  driver del SDK. Se usa browser-dimension oficial y se comprueba el ancho real.
+- **Corregido:** las tarjetas del grid se crean al entrar al viewport. La prueba
+  desplaza la sección de resultados antes de comprobar su contenido.
+- **Corregido:** Android API 35 rechazó la copia directa a Download. La imagen
+  sintética se escribe por MediaStore y se verifica byte a byte antes del selector.
+  Fuente: Android 15 Content.java (insert/query/write/read), sin nuevos paquetes.
+- **Rechazado:** aceptar capturas de escritorio como evidencia de Web móvil o
+  relajar las aserciones de persistencia por una carrera de sincronización.
+- **Verificación pendiente:** repetir los tres flujos; los fallos anteriores y su
+  hash permanecen disponibles en Actions 37134391642.

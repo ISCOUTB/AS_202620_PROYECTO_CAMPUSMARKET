@@ -99,7 +99,7 @@ jobs:
           python3 ../../scripts/asistir_selector_e2e.py web --width ${{ matrix.width }} --height ${{ matrix.height }} > ../../artifacts/e2e/selector.log 2>&1 &
           picker_pid=$!
           trap 'kill "$picker_pid" 2>/dev/null || true' EXIT
-          flutter drive --driver=test_driver/mvp_driver.dart --target=integration_test/mvp_flow_test.dart -d web-server --web-port=7357 --web-hostname=127.0.0.1 --browser-name=chrome --dart-define=CAMPUSMARKET_API_BASE_URL=http://127.0.0.1:8000 --dart-define=CAMPUSMARKET_VIEWPORT=${{ matrix.platform }}
+          flutter drive --driver=test_driver/mvp_driver.dart --target=integration_test/mvp_flow_test.dart -d web-server --web-port=7357 --web-hostname=127.0.0.1 --browser-name=chrome --browser-dimension=${{ matrix.width }}x${{ matrix.height }}@1 --dart-define=CAMPUSMARKET_API_BASE_URL=http://127.0.0.1:8000 --dart-define=CAMPUSMARKET_VIEWPORT=${{ matrix.platform }}
       - name: Preparar PNG y KVM de Android
         if: matrix.platform == 'android'
         run: |

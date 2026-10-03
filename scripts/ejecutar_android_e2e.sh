@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 task_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-adb push "$task_root/artifacts/e2e/campusmarket-e2e.png" /sdcard/Download/campusmarket-e2e.png
+python3 "$task_root/scripts/preparar_fixture_android.py"
 python3 "$task_root/scripts/asistir_selector_e2e.py" android > "$task_root/artifacts/e2e/selector.log" 2>&1 &
 picker_pid=$!
 trap 'kill "$picker_pid" 2>/dev/null || true' EXIT

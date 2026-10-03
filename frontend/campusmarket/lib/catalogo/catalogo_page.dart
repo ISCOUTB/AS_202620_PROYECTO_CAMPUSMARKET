@@ -168,6 +168,7 @@ class _CatalogoPageState extends State<CatalogoPage> {
                           );
 
                           final resultados = _ResultadosCatalogo(
+                            key: const Key('catalogo-resultados'),
                             publicaciones: _publicaciones,
                             cargando: _cargando,
                             error: _error,
@@ -578,6 +579,7 @@ class _PanelFiltros extends StatelessWidget {
 
 class _ResultadosCatalogo extends StatelessWidget {
   const _ResultadosCatalogo({
+    super.key,
     required this.publicaciones,
     required this.cargando,
     required this.error,

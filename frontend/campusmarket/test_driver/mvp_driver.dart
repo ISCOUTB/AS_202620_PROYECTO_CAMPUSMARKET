@@ -17,6 +17,7 @@ Future<void> main() async {
           'hash': Platform.environment['GITHUB_SHA'],
           'checks': data?['checks'],
           'platform': data?['platform'],
+          'viewport': data?['viewport'],
           'screenshots': (data?['screenshots'] as List?)
               ?.map((item) => item['screenshotName']).toList(),
         }));

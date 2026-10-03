@@ -39,7 +39,6 @@ if args.platform == "web":
             sid = sessions[0]["id"]
             prefix = "/session/" + sid
             if sid not in prepared_sessions:
-                chrome("POST", prefix + "/window/rect", {"width": args.width, "height": args.height})
                 prepared_sessions.add(sid)
             value = chrome("POST", prefix + "/execute/sync", {
                 "script": """
@@ -81,7 +80,7 @@ else:
     while time.monotonic() < deadline:
         try:
             subprocess.run(
-                ["adb", "shell", "uiautomator", "dump", "/sdcard/campusmarket-window.xml"],
+                ["adb", "shell", "uiautomator", "dump", "/data/local/tmp/campusmarket-window.xml"],
                 check=True, capture_output=True, timeout=8,
             )
             xml = subprocess.check_output(["adb", "shell", "cat", "/sdcard/campusmarket-window.xml"], timeout=4)
