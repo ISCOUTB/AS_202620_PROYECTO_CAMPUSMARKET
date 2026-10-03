@@ -88,11 +88,31 @@ los documentos actualizados se comprueban tras incorporar esta auditoría.
 
 ## Cierre del HEAD de continuación
 
-Estado: comprobaciones del checkpoint aprobadas; cambios preparados para commit.
-CI completo del nuevo HEAD y SonarCloud aún pendientes en esta versión del registro.
+Continuación publicada: `266a08d36e1770bfb7922103eedcf778ecdcf8f1`.
+Backend: Ruff y 73+4 pruebas aprobadas; diez mutaciones detectadas. Flutter:
+analyze, seis tests, dos mutaciones, build Web y APK debug aprobados. Flujos Web
+escritorio/móvil: nueve comprobaciones y 19 capturas por plataforma, aprobados.
+Compose: ocho comprobaciones, EC-02 10/10 con datos intactos, persistencia tras
+recreación y EC-01 10/10 (290,26–299,59 ms).
+
+Android en ese SHA terminó rojo: aunque completó las nueve comprobaciones,
+Flutter detectó un SemanticsHandle activo al cerrar el test. Ese JSON no acredita
+una ejecución aprobada. El asistente invocaba UiAutomation continuamente incluso
+con CampusMarket en primer plano. Se limita la lectura nativa a DocumentsUI y el
+test exige recuperar el número inicial de handles antes de finalizar. El relleno
+de campos reutiliza la espera de control alcanzable para evitar taps durante un
+cambio de teclado/layout. La nueva ejecución de esa corrección queda pendiente.
+
+Fuente primaria del mecanismo de UiAutomation/semántica:
+[flutter/flutter #129231](https://github.com/flutter/flutter/issues/129231),
+contrastada con `SemanticsBinding` y `WidgetTester` de Flutter 3.47.3.
+
+SonarCloud permanece pendiente. Crear el PR oficial con el conector devolvió
+HTTP 403, `Resource not accessible by integration`; no se creó ningún PR ni merge.
 La consulta directa al proyecto SonarCloud desde este entorno devuelve CloudFront
 403; ese resultado no es un fallo del Quality Gate ni acredita un gate verde.
-Se verificará el análisis asociado al PR/HEAD actual en GitHub.
+El fork no registra un análisis Sonar del nuevo HEAD. Se requiere acceso autorizado
+al repositorio oficial/PR y al análisis para poder cerrar ese criterio.
 
 ## Límites explícitos del MVP
 

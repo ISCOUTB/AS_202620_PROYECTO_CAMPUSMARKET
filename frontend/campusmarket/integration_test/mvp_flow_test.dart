@@ -32,6 +32,7 @@ void main() {
     final editedTitle = 'Libro actualizado $nonce';
     var screenNumber = 0;
     var surfaceConverted = false;
+    final initialSemanticsHandles = binding.debugOutstandingSemanticsHandles;
 
     Future<void> until(bool Function() condition, String description) async {
       final deadline = DateTime.now().add(const Duration(seconds: 45));
@@ -54,10 +55,7 @@ void main() {
 
     Future<void> fill(String key, String text) async {
       final finder = find.byKey(Key(key));
-      await tester.ensureVisible(finder);
-      await tester.pump(const Duration(milliseconds: 200));
-      await tester.tap(finder);
-      await tester.pump(const Duration(milliseconds: 200));
+      await click(finder);
       await tester.enterText(finder, text);
       await tester.pump(const Duration(milliseconds: 200));
       final editable = tester.widget<EditableText>(
@@ -354,6 +352,13 @@ void main() {
     binding.reportData ??= <String, dynamic>{};
     binding.reportData!['checks'] = checks;
     binding.reportData!['platform'] = platform;
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      await until(
+        () => binding.debugOutstandingSemanticsHandles == initialSemanticsHandles,
+        'UiAutomation libera la semántica nativa antes de cerrar el flujo',
+      );
+      binding.reportData!['semantics_handles_restored'] = true;
+    }
     } catch (_) {
       FocusManager.instance.primaryFocus?.unfocus();
       await tester.pump(const Duration(milliseconds: 350));

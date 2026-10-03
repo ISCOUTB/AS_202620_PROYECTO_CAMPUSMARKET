@@ -81,6 +81,20 @@ else:
     previous_controls = None
     while time.monotonic() < deadline:
         try:
+            activities = subprocess.check_output(
+                ["adb", "shell", "dumpsys", "activity", "activities"],
+                text=True, timeout=4,
+            )
+            picker_resumed = any(
+                "documentsui" in line.lower()
+                for line in activities.splitlines() if "ResumedActivity" in line
+            )
+            if not picker_resumed:
+                selected = False
+                time.sleep(0.25)
+                continue
+            # UiAutomation activa accesibilidad. Consultar solo DocumentsUI
+            # evita dejar un SemanticsHandle nativo activo en la app bajo prueba.
             subprocess.run(
                 ["adb", "shell", "uiautomator", "dump", ui_xml],
                 check=True, capture_output=True, timeout=8,

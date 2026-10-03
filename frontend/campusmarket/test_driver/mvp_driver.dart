@@ -18,6 +18,8 @@ Future<void> main() async {
           'checks': data?['checks'],
           'platform': data?['platform'],
           'viewport': data?['viewport'],
+          if (data?['semantics_handles_restored'] != null)
+            'semantics_handles_restored': data!['semantics_handles_restored'],
           'screenshots': (data?['screenshots'] as List?)
               ?.map((item) => item['screenshotName']).toList(),
         };
