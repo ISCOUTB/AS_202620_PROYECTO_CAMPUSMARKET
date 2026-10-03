@@ -1,41 +1,7 @@
-import os
-import ssl
-
 import pymysql
-from pymysql.cursors import DictCursor
 
-
-class PersistenceUnavailableError(RuntimeError):
-    """La persistencia no está disponible temporalmente."""
-
-
-def _connect():
-    try:
-        connection_options = {
-            "host": os.getenv("CAMPUSMARKET_DB_HOST", "localhost"),
-            "port": int(os.getenv("CAMPUSMARKET_DB_PORT", "3306")),
-            "user": os.getenv("CAMPUSMARKET_DB_USER", "campusmarket_app"),
-            "password": os.getenv("CAMPUSMARKET_DB_PASSWORD", ""),
-            "database": os.getenv("CAMPUSMARKET_DB_NAME", "campusmarket"),
-            "cursorclass": DictCursor,
-            "autocommit": False,
-            "connect_timeout": 2,
-        }
-
-        use_ssl = os.getenv(
-            "CAMPUSMARKET_DB_SSL",
-            "false",
-        ).strip().lower() in {"1", "true", "yes", "on"}
-
-        if use_ssl:
-            connection_options["ssl"] = ssl.create_default_context()
-
-        return pymysql.connect(**connection_options)
-
-    except pymysql.MySQLError as error:
-        raise PersistenceUnavailableError(
-            "La persistencia está temporalmente no disponible."
-        ) from error
+from backend.app.db import PersistenceUnavailableError
+from backend.app.db import connect as _connect
 
 
 def _column_exists(cursor, table_name: str, column_name: str) -> bool:
@@ -73,7 +39,8 @@ def initialize_database() -> None:
                         'usado',
                         'reacondicionado'
                     ) NOT NULL,
-                    propietario_id BIGINT UNSIGNED NOT NULL DEFAULT 1,
+                    propietario_id BIGINT UNSIGNED NULL,
+                    visible BOOLEAN NOT NULL DEFAULT TRUE,
                     estado_publicacion ENUM(
                         'disponible',
                         'reservado',
@@ -87,13 +54,22 @@ def initialize_database() -> None:
             )
 
             if not _column_exists(cursor, "publicaciones", "propietario_id"):
-                cursor.execute(
-                    """
-                    ALTER TABLE publicaciones
-                    ADD COLUMN propietario_id BIGINT UNSIGNED
-                        NOT NULL DEFAULT 1
-                    """
-                )
+                cursor.execute("ALTER TABLE publicaciones ADD COLUMN propietario_id BIGINT UNSIGNED NULL")
+            cursor.execute("""
+                SELECT COLUMN_DEFAULT FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'publicaciones'
+                  AND COLUMN_NAME = 'propietario_id'
+            """)
+            # Solo el esquema heredado tenía DEFAULT 1. Nunca conceder esas filas
+            # a la primera cuenta registrada. MySQL DDL tiene commit implícito:
+            # vaciar identidad bajo el esquema anterior ANTES de retirar el default.
+            if str(cursor.fetchone()["COLUMN_DEFAULT"]) == "1":
+                cursor.execute("ALTER TABLE publicaciones MODIFY propietario_id BIGINT UNSIGNED NULL DEFAULT 1")
+                cursor.execute("UPDATE publicaciones SET propietario_id = NULL")
+                connection.commit()
+                cursor.execute("ALTER TABLE publicaciones MODIFY propietario_id BIGINT UNSIGNED NULL")
+            if not _column_exists(cursor, "publicaciones", "visible"):
+                cursor.execute("ALTER TABLE publicaciones ADD COLUMN visible BOOLEAN NOT NULL DEFAULT TRUE")
 
             if not _column_exists(
                 cursor,
@@ -156,7 +132,8 @@ def _select_publication_fields() -> str:
         modalidad,
         estado,
         propietario_id,
-        estado_publicacion
+        estado_publicacion,
+        visible
     """
 
 
@@ -197,9 +174,9 @@ def create_publication(data: dict) -> dict:
                 f"""
                 SELECT {_select_publication_fields()}
                 FROM publicaciones
-                WHERE id = %s
+                WHERE id = %s AND propietario_id = %s
                 """,
-                (publication_id,),
+                (publication_id, data["propietario_id"]),
             )
             row = cursor.fetchone()
 
@@ -228,6 +205,7 @@ def list_publications() -> list[dict]:
                 f"""
                 SELECT {_select_publication_fields()}
                 FROM publicaciones
+                WHERE visible = TRUE AND propietario_id IS NOT NULL
                 ORDER BY id DESC
                 """
             )
@@ -329,17 +307,13 @@ def update_publication(
                 ),
             )
 
-            if cursor.rowcount == 0:
-                connection.rollback()
-                return None
-
             cursor.execute(
                 f"""
                 SELECT {_select_publication_fields()}
                 FROM publicaciones
-                WHERE id = %s
+                WHERE id = %s AND propietario_id = %s
                 """,
-                (publication_id,),
+                (publication_id, propietario_id),
             )
             row = cursor.fetchone()
 
@@ -381,17 +355,13 @@ def update_publication_status(
                 ),
             )
 
-            if cursor.rowcount == 0:
-                connection.rollback()
-                return None
-
             cursor.execute(
                 f"""
                 SELECT {_select_publication_fields()}
                 FROM publicaciones
-                WHERE id = %s
+                WHERE id = %s AND propietario_id = %s
                 """,
-                (publication_id,),
+                (publication_id, propietario_id),
             )
             row = cursor.fetchone()
 
@@ -475,6 +445,7 @@ def count_publication_images(publication_id: int) -> int:
 
 def create_publication_image(
     publication_id: int,
+    propietario_id: int,
     imagen_url: str,
 ) -> dict:
     initialize_database()
@@ -483,24 +454,16 @@ def create_publication_image(
     try:
         connection = _connect()
         with connection.cursor() as cursor:
-            cursor.execute(
-                """
-                SELECT COUNT(*) AS total
-                FROM publicacion_imagenes
-                WHERE publicacion_id = %s
-                """,
-                (publication_id,),
-            )
-            row = cursor.fetchone()
-            total = int(row["total"])
-
-            if total >= 3:
-                raise ValueError(
-                    "La publicación ya tiene el máximo de 3 imágenes."
-                )
-
-            orden = total + 1
-            es_principal = total == 0
+            cursor.execute("SELECT id FROM publicaciones WHERE id = %s AND propietario_id = %s FOR UPDATE", (publication_id, propietario_id))
+            if cursor.fetchone() is None:
+                raise LookupError("La publicación no existe o no te pertenece.")
+            cursor.execute("SELECT orden, es_principal FROM publicacion_imagenes WHERE publicacion_id = %s", (publication_id,))
+            images = cursor.fetchall()
+            if len(images) >= 3:
+                raise ValueError("La publicación ya tiene el máximo de 3 imágenes.")
+            used = {int(image["orden"]) for image in images}
+            orden = next(value for value in range(1, 4) if value not in used)
+            es_principal = not images
             cursor.execute(
                 """
                 INSERT INTO publicacion_imagenes (
@@ -531,7 +494,7 @@ def create_publication_image(
 
         connection.commit()
         return image
-    except ValueError:
+    except (ValueError, LookupError):
         if connection:
             connection.rollback()
         raise

@@ -1,4 +1,4 @@
-from .image_storage import delete_publication_image
+from .image_storage import delete_publication_image, save_publication_image
 from .repository import (
     PersistenceUnavailableError,
     create_publication,
@@ -32,10 +32,10 @@ def _normalizar_publicacion(data: dict) -> dict:
     }
 
 
-def crear_publicacion(data: dict) -> dict:
+def crear_publicacion(data: dict, propietario_id: int) -> dict:
     normalized = {
         **_normalizar_publicacion(data),
-        "propietario_id": int(data.get("propietario_id", 1)),
+        "propietario_id": propietario_id,
         "estado_publicacion": data.get(
             "estado_publicacion",
             "disponible",
@@ -173,11 +173,30 @@ def existe_publicacion(publicacion_id: int) -> bool:
 
 def registrar_imagen_publicacion(
     publicacion_id: int,
+    propietario_id: int,
     imagen_url: str,
 ) -> dict:
     try:
-        return create_publication_image(publicacion_id, imagen_url)
+        return create_publication_image(publicacion_id, propietario_id, imagen_url)
+    except LookupError as error:
+        raise PublicationNotFoundError(str(error)) from error
     except PersistenceUnavailableError as error:
         raise PublicationPersistenceUnavailableError(
             "No es posible registrar la imagen temporalmente."
         ) from error
+
+
+def verificar_propietario(publicacion_id: int, propietario_id: int) -> None:
+    publicacion = obtener_publicacion(publicacion_id)
+    if publicacion is None or publicacion["propietario_id"] != propietario_id:
+        raise PublicationNotFoundError("La publicación no existe o no te pertenece.")
+
+
+def subir_imagen_publicacion(publicacion_id: int, propietario_id: int, nombre: str, contenido: bytes) -> dict:
+    verificar_propietario(publicacion_id, propietario_id)
+    imagen_url = save_publication_image(publicacion_id, nombre, contenido)
+    try:
+        return registrar_imagen_publicacion(publicacion_id, propietario_id, imagen_url)
+    except Exception:
+        delete_publication_image(imagen_url)
+        raise

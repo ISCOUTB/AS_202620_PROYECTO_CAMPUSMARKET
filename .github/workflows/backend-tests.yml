@@ -10,6 +10,7 @@ on:
       - S7-ajustes-finales-contrato
       - S7-api-mysql-c4
       - S8-despliegue-operacion
+      - mvp-autenticacion-producto
 
   pull_request:
     branches:
@@ -25,7 +26,7 @@ jobs:
 
         env:
           MYSQL_ROOT_PASSWORD: root_ci
-          MYSQL_DATABASE: campusmarket
+          MYSQL_DATABASE: campusmarket_test
           MYSQL_USER: campusmarket_app
           MYSQL_PASSWORD: campusmarket_ci
 
@@ -43,7 +44,7 @@ jobs:
       CAMPUSMARKET_DB_PORT: 3306
       CAMPUSMARKET_DB_USER: campusmarket_app
       CAMPUSMARKET_DB_PASSWORD: campusmarket_ci
-      CAMPUSMARKET_DB_NAME: campusmarket
+      CAMPUSMARKET_DB_NAME: campusmarket_test
 
     steps:
       - name: Obtener repositorio
@@ -97,3 +98,6 @@ jobs:
 
       - name: Ejecutar prueba de contrato OpenAPI
         run: python -m pytest backend/tests/test_contrato_openapi.py -q
+
+      - name: Verificar que las pruebas detectan defectos de seguridad y erosión
+        run: python scripts/verificar_mutaciones_mvp.py

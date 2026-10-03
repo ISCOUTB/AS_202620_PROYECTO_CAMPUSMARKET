@@ -1,18 +1,21 @@
+import os
 from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from backend.app.catalogo.router import router as catalogo_router
+from backend.app.db import PersistenceUnavailableError, database_is_available
 from backend.app.observability import (
     get_ec01_metric,
     log_http_request,
 )
-from backend.app.publicaciones.repository import database_is_available
 from backend.app.publicaciones.router import router as publicaciones_router
+from backend.app.usuarios.router import router as usuarios_router
 
 
 class HealthResponse(BaseModel):
@@ -22,10 +25,10 @@ class HealthResponse(BaseModel):
 
 app = FastAPI(
     title="CampusMarket API",
-    version="1.0.0",
+    version="2.0.0",
     description=(
         "API HTTP/JSON de CampusMarket para crear y consultar publicaciones. "
-        "El contrato versionado es contracts/openapi-v1.json."
+        "El contrato versionado es contracts/openapi-v2.json."
     ),
     servers=[
         {
@@ -37,6 +40,18 @@ app = FastAPI(
 
 app.middleware("http")(log_http_request)
 
+
+@app.exception_handler(PersistenceUnavailableError)
+async def persistence_error(request, error):
+    return JSONResponse(status_code=503, content={"detail": "La persistencia está temporalmente no disponible. Intenta nuevamente."})
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_error(request, error):
+    # FastAPI normalmente incluye input: nunca reflejar una contraseña inválida.
+    safe_errors = [{"loc": item["loc"], "msg": item["msg"], "type": item["type"]} for item in error.errors()]
+    return JSONResponse(status_code=422, content={"detail": safe_errors})
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -45,6 +60,8 @@ app.add_middleware(
         "http://localhost:8080",
         "http://127.0.0.1:8080",
         "https://nnigarp.github.io",
+        "https://campusmarket.iscoutb.dev",
+        *[origin.strip() for origin in os.getenv("CAMPUSMARKET_CORS_ORIGINS", "").split(",") if origin.strip()],
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -65,6 +82,7 @@ app.mount(
 
 app.include_router(publicaciones_router)
 app.include_router(catalogo_router)
+app.include_router(usuarios_router)
 
 
 @app.get(

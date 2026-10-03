@@ -243,3 +243,21 @@ El equipo mantiene la responsabilidad de:
 - tomar y defender las decisiones arquitectónicas finales.
 
 Las propuestas generadas por IA no se consideran evidencia por sí mismas. La evidencia utilizada por el proyecto corresponde a resultados verificables del repositorio, pruebas ejecutadas, mediciones, documentación trazable y decisiones revisadas por el equipo.
+## 2026-10-03 — MVP bloque 1: identidad real y propiedad
+
+| Propuesta IA | Decisión del equipo | Motivo / verificación |
+|---|---|---|
+| Sesión opaca revocable, scrypt estándar | Aceptado | ADR-0012; prueba real de registro/login, expiración y reutilización tras logout |
+| Derivar propietario de sesión; no aceptar ID en body | Aceptado | Dos cuentas reales, EC-02 10/10; datos revisados después de cada intento |
+| Allowlist de moderadores por correo sin verificar | Rechazado y corregido | Permite registrar un correo privilegiado; ADR-0014 usa IDs de cuentas comprobadas fuera del flujo público |
+| Asignar datos heredados al primer usuario | Rechazado | Propiedad no demostrada; preservar filas en cuarentena sin propietario |
+| Considerar rowcount=0 como falta de permiso | Corregido | MySQL cuenta filas cambiadas: PUT/PATCH idénticos son válidos; comprobar lectura acotada por propietario |
+| Repetir contraseña en error de validación | Rechazado | Respuesta de validación solo contiene loc/msg/type; nunca input |
+| Añadir JWT, OAuth, recuperación o roles amplios | Rechazado | No necesarios para el MVP; no se añadieron dependencias de producto |
+| Instalar httpx2 para eliminar aviso de deprecación | Rechazado en este bloque | httpx existente pasa las pruebas; aviso documentado, sin añadir dependencia por estética |
+
+Herramienta: Codex. Revisado con Ruff, pruebas sobre MySQL 8.0.46 aislado,
+contrato v2 y mutaciones en copias temporales. Las tres mutaciones (autoría SQL,
+contraseña ignorada y acceso a repository ajeno) hacen fallar una aserción;
+no se consideran detectadas por errores de colección. No se exponen tokens,
+contraseñas ni hashes reales en documentación.

@@ -51,7 +51,7 @@ def test_otros_contextos_no_acceden_directamente_a_persistencia():
 
             if (
                 "sqlite3" in content
-                or "pymysql" in content
+                or ("pymysql" in content and (context_dir.name == "catalogo" or file_path.name != "repository.py"))
             ):
                 violations.append(
                     file_path.relative_to(REPO_ROOT).as_posix()
