@@ -478,3 +478,29 @@ por tabla y de imports. No se alteraron ADR aceptados.
 - **Corregido:** frontend Pages todavía apuntaba a Azure; se recompiló con API https://campusmarket.iscoutb.dev.
 - **Rechazado:** usar terminal para evadir permiso Docker denegado, eliminar volúmenes, declarar persistencia por un redeploy que no recrea contenedores, presentar diez muestras internas como EC-01 extremo a extremo o equiparar Quality Gate automático con scanner CI.
 - **Verificación:** [evidencia pública](./evidencias/despliegue-publico-mvp-2026-10-04.md) cita SHA, cuatro runs CI, publicación Pages, respuestas HTTP, guía y límites. Persistencia pública, administración pública y scanner permanecen pendientes. No se alteraron ADR existentes.
+
+## S9 — criterio y verificacion del catalogo
+
+Fecha de revisión documental: 3 de octubre de 2026, America/Bogota.
+Herramienta: ChatGPT/Codex. Propósito: hacer navegable la evidencia S9 y contrastar
+el alcance literal de la ficha con el estado oficial `7856416795bb4accdf9d05e01adb470654875e56`.
+
+| Propuesta revisada | Resultado | Motivo técnico / destino comprobable |
+|---|---|---|
+| Centrar la entrega S9 en Catálogo y composición de imágenes | Aceptada | Porción real del periodo; [cadena y matriz](./evidencias/evidencia-s9-2026-10-01.md) |
+| Presentar despliegue como demostración suficiente de S9 | Rechazada | No prueba erosión, criterio sobre IA ni detección del defecto |
+| Reducir ADR fusionando archivos ya aceptados | Rechazada | CONTRATO §4 y hallazgo previo; [índice agrupado](./arc42/09-decisiones.md) conserva registros |
+| Reutilizar ASP-10 para identidad y operación | Corregida | ASP-10 queda operación; ASP-12 identifica sesiones de manera consistente |
+| «Sin nuevas dependencias» para todo S9 | Corregida | Era cierto solo en Catálogo inicial; [auditoría ampliada](./evidencias/auditoria-s9-dependencias-secretos-2026-10-01.md) verifica cuatro incorporaciones del periodo |
+| Marcar EC-01 público cerrado por CI loopback | Rechazada | Clientes, dataset y red diferentes; se preserva el contraste y límite |
+| Declarar todo verde por cuatro workflows success | Rechazada | CONTRATO §8 también exige scanner CI y Quality Gate asociado; falta scanner |
+| Atribuir las cifras de fda3897 al último commit | Rechazada | Cada medición pertenece a su SHA; CI actual acredita el gate y guarda sus propias muestras |
+| Cambiar código funcional para ampliar texto | Rechazada | No hay defecto nuevo demostrado; esta rama corrige documentación y enlaces |
+
+Se releen y conservan las decisiones técnicas ya registradas: lectura de
+Publicaciones por su service aceptada; N+1 corregido a lote; SQL/repository ajeno,
+aumentar la cuota y retirar el umbral rechazados por modularidad y rendimiento.
+La verificación del 4 de octubre a las 03:27 UTC confirma recreación API y foto
+persistente; no acredita recreación pública de MySQL ni moderación pública.
+El equipo debe revisar y entender este complemento antes de integrarlo;
+la asistencia de IA no constituye aceptación automática por todos sus miembros.
