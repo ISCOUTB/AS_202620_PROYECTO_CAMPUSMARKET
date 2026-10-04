@@ -439,3 +439,198 @@ a cambiar retroactivamente aquel informe.
 5. Contrastar las diez muestras con dos segundos, indicando loopback/MySQL/cuota.
 6. Mostrar una propuesta de IA rechazada y explicar el motivo técnico.
 7. Declarar límites: medición pública, scanner y hallazgos históricos permanecen visibles.
+
+
+## 17. Complemento final de auditoria S9 — 4 de octubre de 2026
+
+Este complemento prevalece sobre los estados de preparación de la sección 16.
+Conserva los resultados anteriores como historia, sin atribuirlos a otro hash.
+
+### Revision auditada y estado de entrega
+
+- Master auditado: **b5f10a2c93836cad539a9a195f6a0911d4b3ca91**.
+- Fecha del commit: 2026-10-03T23:04:41-05:00 / 2026-10-04T04:04:41Z.
+- Auditoría: 4 de octubre de 2026, America/Bogota.
+- PR #51 integrado en 7856416795bb4accdf9d05e01adb470654875e56;
+  [PR #52](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/pull/52)
+  integrado en el master auditado.
+- El presente complemento es un cambio documental posterior a ese commit.
+  Sus runs NO quedan acreditados por los runs del padre: se debe verificar el
+  head del nuevo PR y, tras integrarlo, el commit de merge por separado.
+- El hash calificado será el último master anterior o igual al cierre del aula,
+  2026-10-04T23:55:00-05:00. Mientras ese cierre sea futuro no se declara un hash
+  definitivo ni cumplimiento transversal completo.
+
+### CI y evidencia por hash
+
+Todos los runs de esta tabla corresponden exclusivamente a
+b5f10a2c93836cad539a9a195f6a0911d4b3ca91, con conclusión success:
+
+| Workflow | Run | Resultado leído |
+|---|---|---|
+| Pruebas del backend | [37175935045](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/37175935045) | 73 pruebas funcionales/arquitectónicas y 4 contractuales aprobadas; diez mutaciones detectadas; checkout limpio |
+| Compose y persistencia del MVP | [37175935055](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/37175935055) | Ocho comprobaciones aprobadas; cuota, persistencia tras recreación y EC-01 |
+| Validación Flutter MVP | [37175935048](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/37175935048) | Workflow completado success |
+| Flujo real Web y Android | [37175935053](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/37175935053) | Jobs Web escritorio, Web móvil y Android success |
+
+El check SonarCloud Code Analysis **111358484244**, asociado al mismo hash,
+concluyó success con título **Quality Gate passed**. URL:
+https://sonarcloud.io/dashboard?id=ISCOUTB_AS_202620_PROYECTO_CAMPUSMARKET&branch=master.
+No equivale a un scanner CI: .sonarcloud.properties configura el análisis
+existente, pero ninguno de los cinco workflows invoca el scanner.
+CONTRATO §8 permanece No cumple hasta disponer de configuración/invocación,
+run exitoso del scanner y gate correspondiente a la revisión entregada.
+La API pública de Sonar devolvió 403 durante la auditoría; ese error no cambia
+el resultado del check ni permite atribuir otro análisis.
+
+### Mutaciones, erosion y medicion
+
+[verificar_mutaciones_mvp.py](../../scripts/verificar_mutaciones_mvp.py) crea
+copias temporales y exige exit code 1 más `1 failed` para aceptar detección;
+los errores de colección no cuentan. El run backend de este hash informa diez
+mutaciones detectadas, incluidas N+1 e import de repository ajeno desde Catálogo.
+El workflow termina verde precisamente porque las copias defectuosas fallan.
+
+Se repitieron sobre el checkout auditado las once comprobaciones estáticas de
+[test_erosion_s9.py](../../backend/tests/test_erosion_s9.py),
+[test_propiedad_datos.py](../../backend/tests/test_propiedad_datos.py) y
+[test_modularidad_s6.py](../../backend/tests/test_modularidad_s6.py): todas pasan.
+No hay imports de repository ajeno ni escritores fuera del propietario.
+PyMySQL queda limitado a db.py y repositories, sin acceso en router/service.
+
+EC-01 del run Compose de este hash: HTTP loopback + MySQL real, 1000 filas,
+cuota total 512 MiB. Diez muestras en ms:
+
+`299.32, 295.08, 295.33, 296.76, 255.65, 299.07, 295.41, 294.13, 292.89, 295.38`.
+
+Resultado: **10/10 <=2000 ms**, requerido >=9/10. El verificador informa
+`public_network_verified=false`. La medición cumple el criterio S9 de medir y
+contrastar el escenario; NO cierra EC-01 desde navegador público con 1000 filas.
+
+### Despliegue observado y equivalencia de codigo
+
+| Pieza | URL / resultado | Revision observada |
+|---|---|---|
+| Frontend Flutter Web | https://nnigarp.github.io/AS_202620_PROYECTO_CAMPUSMARKET/ — HTTP 200 | source-revision.txt: c38e0cf36a30dddec39f169b7618b7c6127e0a71 |
+| API Dokploy health | https://campusmarket.iscoutb.dev/health — HTTP 200, status ok | X-CampusMarket-Revision: 7856416795bb4accdf9d05e01adb470654875e56 |
+| API Dokploy OpenAPI | https://campusmarket.iscoutb.dev/docs — HTTP 200 | Misma revisión API |
+| Consumo API desde Pages | main.dart.js HTTP 200 contiene https://campusmarket.iscoutb.dev y no la URL API Azure anterior | Build Pages publicado |
+
+La raíz del dominio API no aloja Flutter. Pages es el frontend; no hay requisito
+literal observado que exija cambiar esta topología.
+El diff de backend, frontend, contracts y deploy desde c38e0cf o 7856416 hasta
+el master auditado está vacío. Son revisiones distintas con código relevante
+idéntico; no se atribuyen sus ejecuciones al commit documental.
+El registro operativo anterior acredita recreación pública solo de API con
+publicación e imagen conservadas; MySQL permaneció running/healthy.
+Recreación de ambos contenedores queda acreditada únicamente por CI.
+Esta fase no modifica despliegue, secretos, volúmenes ni código de producto.
+
+### Dependencias y barrido final
+
+Se comprobó de nuevo el diff S8 784d788 → master auditado: incorpora
+python-multipart 0.0.20, Pillow 12.3.0, file_picker 13.1.0 e integration_test
+del SDK Flutter 3.47.3. Los registros oficiales/versiones devuelven HTTP 200
+con nombre y proyecto mantenedor concordantes; fuentes en la
+[auditoría ampliada](./auditoria-s9-dependencias-secretos-2026-10-01.md#ampliacion-al-periodo-s9-completo).
+pytest/httpx ya existían y se trasladaron a requirements-dev.
+
+Gitleaks 8.30.1, binario con SHA-256 verificado, ejecutado sobre checkout
+completo y todo el historial alcanzable desde el master auditado:
+checkout exit 0, cero hallazgos; historial exit 1, cinco alertas en 292 commits
+con cambios examinados. Se revisaron los archivos originales: las cinco son
+identificadores públicos de proyectos Sonar, no credenciales:
+
+| Commit | Archivo:linea | Clasificacion |
+|---|---|---|
+| 3ca45352cae4be926521164dc83078ea1ddb81f1 | README.md:361,395,613 | Project key público ISCOUTB |
+| 43c5ba1a59feff70418a89fe0f9c3c4957a17b7b | sonar-project.properties:2 | sonar.projectKey público Nnigarp |
+| ba7690cabbd05a78331f5a6238b9deaeedfe99bb | README.md:782 | Project key público ISCOUTB |
+
+El patrón amplio del contrato produce referencias a variables y datos de prueba;
+se revisaron sin publicar valores sensibles. No hay .env versionado ni resultados
+en git log -S'BEGIN PRIVATE KEY'. No se silenció el scanner ni se cambió su
+configuración. Resultado: sin credenciales productivas detectadas, con falsos
+positivos históricos explicados. Este barrido pertenece al SHA auditado, no al
+futuro head/merge documental.
+
+### Matriz propia S9 vigente
+
+| Criterio | Estado | Evidencia |
+|---|---|---|
+| Porción real construida con IA | Cumple | Catálogo, commits 1febc85/fda3897, service y registro IA |
+| Cadena navegable | Cumple | ASP-01 → EC-01 → C4 L3 → ADR-0009/0019 → código → pruebas → mutación → medición → evidencia |
+| Decisión argumentada por el equipo | Cumple | ADR-0009/0019; propiedad, alternativas y cuota |
+| Prueba que falla ante el defecto | Cumple | Diez mutaciones detectadas en run backend del hash auditado |
+| Medición y contraste con umbral | Cumple, alcance CI/Compose | Diez muestras HTTP/MySQL/1000 filas; no navegador público |
+| IA aceptada/corregida/rechazada con motivo | Cumple | docs/ia.md, extracto S9; comprensión pendiente de sustentación |
+| Auditoría de erosión | Cumple | Once comprobaciones estáticas repetidas; N+1 corregido |
+| Dependencias verificadas | Cumple | Registros/versiones oficiales y resolución CI |
+| Sin credenciales en código/ejemplos/docs | Cumple | Checkout completo y clasificación de referencias |
+| Componente generativo o ADR de no incorporación | Cumple | ADR-0010 explícito; no proveedor generativo en runtime |
+
+**S9 propia: 10/10** para el master auditado, dentro de los límites declarados.
+No es promesa de nota ni acreditación automática del futuro merge.
+
+### Matriz transversal vigente y acciones restantes
+
+| Criterio CONTRATO | Estado | Evidencia / limite |
+|---|---|---|
+| Repositorio oficial, nombre y público | Cumple | API anónima: private=false, default_branch=master |
+| Estructura mínima | Cumple | README, arc42, ADR, C4, aspectos e IA presentes |
+| Estado calificado identificable | No verificado al cierre | SHA/fecha actuales registrados; cierre futuro y PR documental por integrar |
+| Nombres ADR | Cumple | 0001–0019, sin nombres inválidos |
+| ADR aceptados no reescritos | No cumple histórico no corregible por este cierre | 0002/0003/0005 fueron modificados después de aceptación; no se reescribe historial ni ADR |
+| IA actualizada | Cumple | Actualización 1199958 y ejemplos con motivos |
+| Pipeline + scanner Sonar + Quality Gate | No cumple; configuración/ejecución pendiente | Cuatro workflows y gate automático aprobados; faltan scanner y run CI |
+| Sin credenciales también en historial | Cumple tras revisión | Barrido completo y cinco identificadores públicos clasificados |
+| Contribución de todos los integrantes | No cumple; hallazgo conocido fuera de tarea activa | La auditoría previa no evidenció código de Camilo; no fabricar participación |
+
+**Contrato: 5/9** acreditados para el estado auditado. Sonar y el hash definitivo
+son pendientes operativos; la reescritura histórica de ADR es el incumplimiento
+histórico no corregible de esta fase. La contribución queda registrada sin tarea
+correctiva activa, por instrucción del equipo.
+
+Para Sonar CI: se requiere SONAR_TOKEN con permiso Execute Analysis del proyecto
+en Actions del repositorio oficial y un workflow que invoque el scanner y espere
+el gate. Los PR de fork no reciben esos secretos: el análisis previo a merge
+requiere una rama dentro del repositorio oficial o una vía CI autorizada que
+analice el hash propuesto. No usar pull_request_target para ejecutar código del
+fork con secretos. La transición de Automatic Analysis a CI debe configurarse
+por un administrador del proyecto Sonar; no se declara hecha.
+
+Moodle: enlace al repositorio oficial o al commit que resulte vigente al cierre;
+PDF de una página opcional. Los runs del nuevo PR y del merge deberán citar sus
+propios hashes al verificarse. Ningún badge sustituye esas comprobaciones.
+
+### Aclaración para la revisión docente: Sonar CI no acreditado
+
+El 4 de octubre de 2026, a las 01:18 (America/Bogota), se observó en la
+interfaz del repositorio oficial la confirmación "Secret updated" para
+SONAR_TOKEN. No se leyó, publicó ni incorporó el valor del secreto al repositorio.
+Las capturas posteriores de la sesión nilver-garcia no muestran Administration
+ni en el proyecto ni en la organización isco-utb. Esto indica una limitación
+administrativa visible; no demuestra por sí solo la ausencia de Execute Analysis.
+El permiso efectivo del token nuevo no se ha probado mediante un scanner.
+
+El cierre mantiene **NO CUMPLE** para el criterio transversal de pipeline +
+scanner + Quality Gate: en el estado auditado no hay workflow que invoque el
+scanner ni run CI exitoso acreditado. Actualizar el secreto y observar un
+Quality Gate automático aprobado no sustituyen esas dos evidencias. La
+transición del método de análisis, si Automatic Analysis está habilitado,
+requiere intervención administrativa; no se ha realizado ni se declara cumplida.
+Se conserva esta limitación explícita para que el revisor distinga el análisis
+automático existente de la ejecución CI pendiente. No se ha cambiado producto,
+arquitectura, despliegue ni ADR aceptados para intentar sortearla.
+
+Existe antecedente documental en
+[la evidencia S7, sección "Estado transversal pendiente de saneamiento"](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/blob/b5f10a2c93836cad539a9a195f6a0911d4b3ca91/docs/evidencias/evidencia-s7-2026-09-15.md#estado-transversal-pendiente-de-saneamiento):
+allí se declaró pendiente el scanner CI y se registró un intento temporal
+rechazado por autorización. Se cita ese antecedente como registro histórico,
+sin trasladar sus ejecuciones a S9 ni afirmar que el token nuevo haya sufrido
+el mismo rechazo. Haber documentado la limitación en entregas anteriores no
+exime del contrato ni convierte este criterio en Cumple.
+
+El alcance propio S9 permanece en **10/10** para el hash auditado y sus límites.
+El contrato transversal conserva **5/9** acreditados en esa auditoría; el SHA
+definitivo entregado y los runs del PR/merge se verificarán por separado.

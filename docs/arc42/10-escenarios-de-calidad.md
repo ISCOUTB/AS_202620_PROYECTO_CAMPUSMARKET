@@ -86,16 +86,17 @@ coinciden con los criterios seleccionados.
 
 **Prioridad:** Alta.
 
-**Estado:** Materializado y verificado en S9.
+**Estado:** Materializado; medición CI/Compose verificada. El escenario completo
+con resultados mostrados en navegador público y 1000 filas no está verificado.
 
-La medición documentada de EC-01 utilizó 1.000 publicaciones controladas y 10
-búsquedas consecutivas. Las 10 ejecuciones quedaron por debajo del umbral de
-2 segundos. La evidencia se conserva en
-[`docs/evidencias/evidencia-ec01-catalogo-s9-2026-10-01.md`](../evidencias/evidencia-ec01-catalogo-s9-2026-10-01.md).
-
-La medición corresponde al routing HTTP, lógica de búsqueda y serialización
-sobre carga controlada; no se presenta como medición extremo a extremo de red
-de producción.
+La primera [medición S9](../evidencias/evidencia-ec01-catalogo-s9-2026-10-01.md)
+utiliza publicaciones controladas y no incluye MySQL/red pública.
+La medición posterior del commit b5f10a2c93836cad539a9a195f6a0911d4b3ca91
+usa 1000 filas MySQL reales, HTTP loopback y Compose bajo cuota:
+[run 37175935055](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/37175935055),
+10/10 en <=2000 ms (umbral exigido >=9/10), rango 255,65–299,32 ms.
+Las muestras y límites están en el [complemento final S9](../evidencias/evidencia-s9-2026-10-01.md#17-complemento-final-de-auditoria-s9--4-de-octubre-de-2026).
+No se atribuyen a este SHA valores históricos ni latencia de navegador público.
 
 ---
 
