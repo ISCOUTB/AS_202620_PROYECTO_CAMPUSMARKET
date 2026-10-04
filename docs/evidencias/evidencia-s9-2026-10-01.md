@@ -602,3 +602,35 @@ por un administrador del proyecto Sonar; no se declara hecha.
 Moodle: enlace al repositorio oficial o al commit que resulte vigente al cierre;
 PDF de una página opcional. Los runs del nuevo PR y del merge deberán citar sus
 propios hashes al verificarse. Ningún badge sustituye esas comprobaciones.
+
+### Aclaración para la revisión docente: Sonar CI no acreditado
+
+El 4 de octubre de 2026, a las 01:18 (America/Bogota), se observó en la
+interfaz del repositorio oficial la confirmación "Secret updated" para
+SONAR_TOKEN. No se leyó, publicó ni incorporó el valor del secreto al repositorio.
+Las capturas posteriores de la sesión nilver-garcia no muestran Administration
+ni en el proyecto ni en la organización isco-utb. Esto indica una limitación
+administrativa visible; no demuestra por sí solo la ausencia de Execute Analysis.
+El permiso efectivo del token nuevo no se ha probado mediante un scanner.
+
+El cierre mantiene **NO CUMPLE** para el criterio transversal de pipeline +
+scanner + Quality Gate: en el estado auditado no hay workflow que invoque el
+scanner ni run CI exitoso acreditado. Actualizar el secreto y observar un
+Quality Gate automático aprobado no sustituyen esas dos evidencias. La
+transición del método de análisis, si Automatic Analysis está habilitado,
+requiere intervención administrativa; no se ha realizado ni se declara cumplida.
+Se conserva esta limitación explícita para que el revisor distinga el análisis
+automático existente de la ejecución CI pendiente. No se ha cambiado producto,
+arquitectura, despliegue ni ADR aceptados para intentar sortearla.
+
+Existe antecedente documental en
+[la evidencia S7, sección "Estado transversal pendiente de saneamiento"](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/blob/b5f10a2c93836cad539a9a195f6a0911d4b3ca91/docs/evidencias/evidencia-s7-2026-09-15.md#estado-transversal-pendiente-de-saneamiento):
+allí se declaró pendiente el scanner CI y se registró un intento temporal
+rechazado por autorización. Se cita ese antecedente como registro histórico,
+sin trasladar sus ejecuciones a S9 ni afirmar que el token nuevo haya sufrido
+el mismo rechazo. Haber documentado la limitación en entregas anteriores no
+exime del contrato ni convierte este criterio en Cumple.
+
+El alcance propio S9 permanece en **10/10** para el hash auditado y sus límites.
+El contrato transversal conserva **5/9** acreditados en esa auditoría; el SHA
+definitivo entregado y los runs del PR/merge se verificarán por separado.
