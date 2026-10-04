@@ -49,19 +49,32 @@ Así se conserva la historia del proyecto sin duplicar en el README el contenido
 
 ## Despliegue público del MVP — 2026-10-04
 
-Código fuente publicado: `c38e0cf36a30dddec39f169b7618b7c6127e0a71`.
+Revisión del repositorio auditada para S9: `b5f10a2c93836cad539a9a195f6a0911d4b3ca91`.
+Frontend publicado desde `c38e0cf36a30dddec39f169b7618b7c6127e0a71`;
+API observada con revisión `7856416795bb4accdf9d05e01adb470654875e56`.
+El diff de backend, frontend, contracts y deploy entre esas revisiones y el
+commit auditado está vacío. Son hashes distintos con código relevante idéntico;
+no se atribuye el despliegue al commit documental.
 
 - Frontend: https://nnigarp.github.io/AS_202620_PROYECTO_CAMPUSMARKET/
 - API: https://campusmarket.iscoutb.dev
 - Salud: https://campusmarket.iscoutb.dev/health
+- OpenAPI interactivo: https://campusmarket.iscoutb.dev/docs
 - Métrica: https://campusmarket.iscoutb.dev/ops/metrics/ec01
 - [Evidencia pública y pendientes](docs/evidencias/despliegue-publico-mvp-2026-10-04.md)
 
-API: 23 comprobaciones HTTP aprobadas. Frontend republicado desde el mismo SHA,
-con análisis y tests aprobados; Inicio y detalle comprobados en navegador público.
-Persistencia después de recreación pública, moderación pública, logs runtime
-y flujo autenticado en navegador aún pendientes. El contrato transversal también
-requiere evidencia del scanner Sonar en CI. Este apartado no declara cierre integral.
+El registro público inicial conserva 23 comprobaciones HTTP y observación de
+Inicio/detalle. La revisión del 4 de octubre de 2026 volvió a comprobar /health
+y /docs con HTTP 200 y el bundle Pages con la URL API Dokploy, sin la URL Azure
+antigua. La raíz del dominio API no aloja Flutter; el frontend está en Pages.
+
+La recreación pública registrada corresponde solo a API, con publicación e
+imagen conservadas; MySQL no se recreó. Recreación de API/MySQL y EC-01 con
+1000 filas se verifican separadamente en CI/Compose. EC-01 extremo a extremo
+público, moderación pública y flujo autenticado en navegador siguen fuera de
+ese alcance. El scanner Sonar en CI está pendiente de configuración/ejecución;
+el Quality Gate automático no basta para cerrar CONTRATO §8.
+Véase el [complemento final S9](docs/evidencias/evidencia-s9-2026-10-01.md#17-complemento-final-de-auditoria-s9--4-de-octubre-de-2026).
 
 
 ---

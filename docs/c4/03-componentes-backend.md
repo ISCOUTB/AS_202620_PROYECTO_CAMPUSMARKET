@@ -49,8 +49,17 @@ compensación y reconciliación de huérfanos siguen ADR-0015.
 
 El directorio se configura con `CAMPUSMARKET_UPLOAD_DIR`. Compose conserva el
 directorio en un volumen nombrado (ADR-0018), probado tras recrear contenedores.
-El MVP aún no está desplegado; Azure debe disponer de almacenamiento durable
-antes de habilitar esta capacidad.
+El MVP público usa Flutter Web en GitHub Pages y API FastAPI en Dokploy,
+https://campusmarket.iscoutb.dev, con /health y /docs operativos (HTTP 200).
+El bundle Pages consume esa API. Dokploy conserva fotos en publication_images
+y MySQL en mysql_data. El registro público acredita recreación de API con la
+muestra intacta; la recreación de MySQL está verificada únicamente en CI.
+
+Backend observado, commit 7856416795bb4accdf9d05e01adb470654875e56; frontend fuente:
+c38e0cf36a30dddec39f169b7618b7c6127e0a71; master auditado:
+b5f10a2c93836cad539a9a195f6a0911d4b3ca91. El código relevante es idéntico,
+pero cada ejecución conserva su hash en el [complemento S9](../evidencias/evidencia-s9-2026-10-01.md#17-complemento-final-de-auditoria-s9--4-de-octubre-de-2026).
+Azure corresponde a la línea base histórica S8.
 
 ## Contrato y verificación
 
