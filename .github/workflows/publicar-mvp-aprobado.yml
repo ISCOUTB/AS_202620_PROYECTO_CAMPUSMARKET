@@ -1,0 +1,60 @@
+name: Publicar MVP aprobado en GitHub Pages
+
+on:
+  push:
+    branches: [deploy-pages-mvp-2026-10-04]
+    paths: [.github/workflows/publicar-mvp-aprobado.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: campusmarket-pages
+  cancel-in-progress: false
+
+jobs:
+  publicar:
+    if: github.repository == 'Nnigarp/AS_202620_PROYECTO_CAMPUSMARKET'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SOURCE_SHA: c38e0cf36a30dddec39f169b7618b7c6127e0a71
+    steps:
+      - name: Obtener la revision que paso los cuatro pipelines
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          repository: ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET
+          ref: c38e0cf36a30dddec39f169b7618b7c6127e0a71
+          path: source
+          persist-credentials: false
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: "3.47.3"
+          channel: stable
+          cache: true
+      - name: Analizar, probar y compilar con la API publica
+        working-directory: source/frontend/campusmarket
+        run: |
+          flutter pub get
+          flutter analyze
+          flutter test
+          flutter build web --release --base-href "/AS_202620_PROYECTO_CAMPUSMARKET/" --dart-define=CAMPUSMARKET_API_BASE_URL=https://campusmarket.iscoutb.dev
+          printf '%s\n' "$SOURCE_SHA" > build/web/source-revision.txt
+          touch build/web/.nojekyll
+      - name: Preparar rama de publicacion existente
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          ref: gh-pages
+          path: publication
+      - name: Publicar conservando el historial de gh-pages
+        run: |
+          rsync -a --delete --exclude=.git source/frontend/campusmarket/build/web/ publication/
+          cd publication
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "Deploy MVP $SOURCE_SHA to Pages with Dokploy API"
+            git push origin HEAD:gh-pages
+          fi
