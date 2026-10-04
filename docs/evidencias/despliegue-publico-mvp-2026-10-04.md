@@ -445,3 +445,12 @@ Respuesta de la métrica:
   ]
 }
 ```
+
+
+## Integración documental preparada
+
+Rama del fork Nnigarp: deploy-pages-mvp-2026-10-04. Incluye evidencia, README con URLs vigentes, fila ASP-10 de ocho columnas, vista de despliegue vigente y registro IA, además del workflow de publicación Pages. Comparación con c38e0cf confirma cero archivos docs/adr/ modificados. Las decisiones aceptadas se conservan íntegramente.
+
+El intento de crear PR hacia ISCOUTB/master fue rechazado por GitHub: HTTP 403 Resource not accessible by integration. No se hizo merge y estas actualizaciones todavía no están en la rama oficial evaluada. Hace falta abrir/integrar el PR desde una cuenta autorizada. No se considera la documentación integrada por existir en el fork.
+
+Comparación: https://github.com/Nnigarp/AS_202620_PROYECTO_CAMPUSMARKET/compare/c38e0cf36a30dddec39f169b7618b7c6127e0a71...deploy-pages-mvp-2026-10-04
