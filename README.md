@@ -47,6 +47,25 @@ Así se conserva la historia del proyecto sin duplicar en el README el contenido
 
 ---
 
+## Despliegue público del MVP — 2026-10-04
+
+Código fuente publicado: `c38e0cf36a30dddec39f169b7618b7c6127e0a71`.
+
+- Frontend: https://nnigarp.github.io/AS_202620_PROYECTO_CAMPUSMARKET/
+- API: https://campusmarket.iscoutb.dev
+- Salud: https://campusmarket.iscoutb.dev/health
+- Métrica: https://campusmarket.iscoutb.dev/ops/metrics/ec01
+- [Evidencia pública y pendientes](docs/evidencias/despliegue-publico-mvp-2026-10-04.md)
+
+API: 23 comprobaciones HTTP aprobadas. Frontend republicado desde el mismo SHA,
+con análisis y tests aprobados; Inicio y detalle comprobados en navegador público.
+Persistencia después de recreación pública, moderación pública, logs runtime
+y flujo autenticado en navegador aún pendientes. El contrato transversal también
+requiere evidencia del scanner Sonar en CI. Este apartado no declara cierre integral.
+
+
+---
+
 # Estado arquitectónico vigente
 
 CampusMarket utiliza un **monolito modular** en el backend.

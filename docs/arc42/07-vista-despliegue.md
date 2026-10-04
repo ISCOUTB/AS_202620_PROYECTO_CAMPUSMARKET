@@ -1,14 +1,49 @@
 # 7. Vista de despliegue - CampusMarket
 
-## 7.0 Estado de la rama MVP antes del despliegue
+## 7.0 Despliegue público MVP — 2026-10-04
 
-Esta continuación no opera Dokploy ni Azure. La línea S8 descrita después es
-histórica y corresponde a otro hash. ADR-0018 prepara Compose con API única y
-MySQL, 256 MiB/0,5 CPU cada uno, un worker y volúmenes nombrados para SQL/fotos.
-El override local publica solo loopback. CI verifica cuatro contextos, EC-02,
-rendimiento loopback y persistencia de sesión/datos/fotos tras recreación.
-[Resultados por hash](../evidencias/mvp-bloque-07-compose-2026-10-03.md).
-El despliegue público y su validación serán un bloque posterior.
+Fuente publicada: `c38e0cf36a30dddec39f169b7618b7c6127e0a71`.
+La línea S8 de las secciones posteriores conserva su significado histórico.
+
+| Pieza | Entorno vigente | Evidencia y límite |
+|---|---|---|
+| Sitio Flutter Web | GitHub Pages del fork Nnigarp | Build release con API Dokploy, marcador source-revision.txt y prueba de Inicio/detalle |
+| API modular FastAPI | Dokploy, servicio sistema/api, 256M y 0.50 CPU | HTTPS https://campusmarket.iscoutb.dev, /health 200 y 23 checks HTTP |
+| Base de datos MySQL 8.4 | servicio db del mismo Compose, 256M y 0.50 CPU | Host interno db:3306; volumen mysql_data; sin puerto público |
+| Archivos | volumen publication_images montado en /app/backend/uploads | PNG creado/descargado; persistencia tras recreación pública pendiente |
+| Trabajos programados | Ninguno requerido por el MVP actual | No se despliega servicio adicional |
+| Pipeline | Cuatro workflows oficiales + publicación Pages desde SHA aprobado | Runs citados en evidencia; scanner Sonar CI aún pendiente según contrato |
+
+```mermaid
+flowchart TD
+  U["Navegador"] --> W["Flutter Web · GitHub Pages"]
+  W -->|"HTTPS / JSON"| A["FastAPI · Dokploy api"]
+  A -->|"SQL interno"| D["MySQL · db"]
+  A --> F["Volumen de imágenes"]
+  D --> V["Volumen de datos"]
+```
+
+El proxy Traefik termina HTTPS. CORS acepta https://nnigarp.github.io.
+El Compose versionado no añade redes externas; Dokploy genera la red y labels
+del servicio. Mantener Isolated Deployment. No hay bind mounts, puertos publicados,
+Docker socket ni privilegios en el archivo del proyecto.
+
+[ADR-0016](../adr/0016-ajustar-recursos-a-la-cuota-del-laboratorio.md) y
+[ADR-0018](../adr/0018-ejecutar-el-monolito-en-dokploy-con-volumenes.md) conservan
+sus versiones aceptadas. Este despliegue ejecuta la elección ya documentada.
+[Resultados y pendientes públicos](../evidencias/despliegue-publico-mvp-2026-10-04.md).
+
+Reproducción: desplegar el SHA citado mediante sistema, Provider GitHub,
+Compose Path ./deploy/compose.lab.yaml, secretos en Environment, dominio
+campusmarket.iscoutb.dev hacia api:8000 y HTTPS. Pages se compila en Actions,
+fuera del laboratorio, mediante publicar-mvp-aprobado.yml del fork.
+No usar Fresh Volumes para reconstruir.
+
+El rollback de aplicación usa una revisión anterior compatible con los datos,
+sin eliminar volúmenes. No se ejecutó un rollback público.
+La guía no garantiza backups. Reinicio público fue rechazado por permisos Docker;
+redeploy normal conservó la muestra, pero no recreó contenedores.
+CI sí demuestra recreación/persistencia en su entorno, por separado.
 
 ## 7.1 Estado desplegado en S8
 
