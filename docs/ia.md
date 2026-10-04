@@ -468,3 +468,13 @@ por tabla y de imports. No se alteraron ADR aceptados.
 - **Verificado:** 094eaaa aprobó cuatro workflows/seis jobs: Ruff backend/scripts, 73+4 pruebas, diez mutaciones backend, analyze, seis tests Flutter, dos mutaciones cliente y builds Web/APK debug. Chrome escritorio/móvil y Android API 35 completan nueve checks/19 capturas; Android registra semantics_handles_restored=true. Compose pasa persistencia, cuotas, EC-02 10/10 y EC-01 10/10.
 - **Persistencia ante interrupción:** el entorno devolvió 409 environment_offline al descargar artefactos. Los cambios de cierre se reconstruyen contra 094eaaa mediante GitHub y se añade Gitleaks fijado por checksum y comprobación de checkout CI limpio. El status del scratch desconectado no se presenta como verificado.
 - **Integración de trabajo remoto:** se conserva 7c73279 y sus mejoras del selector. Se pausa UiAutomation cuando CampusMarket es la actividad resumida para conservar la liberación demostrada en 094eaaa, sin retirar el manejo nativo de DocumentsUI/ANR. El flujo combinado requiere CI del HEAD final.
+
+
+## 2026-10-04 — verificación y publicación pública con Codex
+
+- **Herramienta:** ChatGPT/Codex, GitHub Actions y navegador público.
+- **Propósito:** terminar despliegue y contrastar evidencia con guía oficial y contrato.
+- **Aceptado:** reutilizar ADR-0016/0018 sin modificar archivos ADR; publicar Flutter en Pages desde c38e0cf, con API Dokploy y marcador de revisión; registrar 23 pruebas HTTP y observación de Inicio/detalle.
+- **Corregido:** frontend Pages todavía apuntaba a Azure; se recompiló con API https://campusmarket.iscoutb.dev.
+- **Rechazado:** usar terminal para evadir permiso Docker denegado, eliminar volúmenes, declarar persistencia por un redeploy que no recrea contenedores, presentar diez muestras internas como EC-01 extremo a extremo o equiparar Quality Gate automático con scanner CI.
+- **Verificación:** [evidencia pública](./evidencias/despliegue-publico-mvp-2026-10-04.md) cita SHA, cuatro runs CI, publicación Pages, respuestas HTTP, guía y límites. Persistencia pública, administración pública y scanner permanecen pendientes. No se alteraron ADR existentes.
