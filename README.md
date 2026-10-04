@@ -50,11 +50,12 @@ Así se conserva la historia del proyecto sin duplicar en el README el contenido
 ## Despliegue público del MVP — 2026-10-04
 
 Revisión del repositorio auditada para S9: `b5f10a2c93836cad539a9a195f6a0911d4b3ca91`.
-Frontend publicado desde `c38e0cf36a30dddec39f169b7618b7c6127e0a71`;
+
+Frontend publicado desde `c38e0cf36a30dddec39f169b7618b7c6127e0a71`.
+
 API observada con revisión `7856416795bb4accdf9d05e01adb470654875e56`.
-El diff de backend, frontend, contracts y deploy entre esas revisiones y el
-commit auditado está vacío. Son hashes distintos con código relevante idéntico;
-no se atribuye el despliegue al commit documental.
+
+El diff de `backend`, `frontend`, `contracts` y `deploy` entre esas revisiones y el commit auditado está vacío. Son hashes distintos con código relevante idéntico; no se atribuye el despliegue al commit documental.
 
 - Frontend: https://nnigarp.github.io/AS_202620_PROYECTO_CAMPUSMARKET/
 - API: https://campusmarket.iscoutb.dev
@@ -63,19 +64,11 @@ no se atribuye el despliegue al commit documental.
 - Métrica: https://campusmarket.iscoutb.dev/ops/metrics/ec01
 - [Evidencia pública y pendientes](docs/evidencias/despliegue-publico-mvp-2026-10-04.md)
 
-El registro público inicial conserva 23 comprobaciones HTTP y observación de
-Inicio/detalle. La revisión del 4 de octubre de 2026 volvió a comprobar /health
-y /docs con HTTP 200 y el bundle Pages con la URL API Dokploy, sin la URL Azure
-antigua. La raíz del dominio API no aloja Flutter; el frontend está en Pages.
+El registro público inicial conserva 23 comprobaciones HTTP y observación de Inicio/detalle. La revisión del 4 de octubre de 2026 volvió a comprobar `/health` y `/docs` con HTTP 200 y el bundle Pages con la URL API Dokploy, sin la URL Azure antigua. La raíz del dominio API no aloja Flutter; el frontend está en Pages.
 
-La recreación pública registrada corresponde solo a API, con publicación e
-imagen conservadas; MySQL no se recreó. Recreación de API/MySQL y EC-01 con
-1000 filas se verifican separadamente en CI/Compose. EC-01 extremo a extremo
-público, moderación pública y flujo autenticado en navegador siguen fuera de
-ese alcance. El scanner Sonar en CI está pendiente de configuración/ejecución;
-el Quality Gate automático no basta para cerrar CONTRATO §8.
+La recreación pública registrada corresponde solo a API, con publicación e imagen conservadas; MySQL no se recreó. Recreación de API/MySQL y EC-01 con 1000 filas se verifican separadamente en CI/Compose. EC-01 extremo a extremo público, moderación pública y flujo autenticado en navegador siguen fuera de ese alcance. El scanner Sonar en CI está pendiente de configuración/ejecución; el Quality Gate automático no basta para cerrar CONTRATO §8.
+
 Véase el [complemento final S9](docs/evidencias/evidencia-s9-2026-10-01.md#17-complemento-final-de-auditoria-s9--4-de-octubre-de-2026).
-
 
 ---
 
@@ -94,14 +87,17 @@ Contextos delimitados:
 - `catalogo`;
 - `administracion`.
 
-La persistencia vigente es **MySQL**. Usuarios, Publicaciones y Administración
-escriben únicamente sus tablas mediante sus repositories y PyMySQL; Catálogo
-consume lectura del servicio de Publicaciones. `db.py` comparte infraestructura.
+La persistencia vigente es **MySQL**. Usuarios, Publicaciones y Administración escriben únicamente sus tablas mediante sus repositories y PyMySQL; Catálogo consume lectura del servicio de Publicaciones. `db.py` comparte infraestructura.
 
-La dirección por contexto es `router → service → repository → MySQL`.
-Usuarios materializa identidad/sesiones; Publicaciones, gestión y galería;
-Catálogo, búsqueda/detalle; Administración, reportes y revisión. FastAPI registra
-los cuatro routers en una sola aplicación. Véase [C4 Nivel 3](docs/c4/03-componentes-backend.md).
+La dirección por contexto es:
+
+```text
+router → service → repository → MySQL
+```
+
+Usuarios materializa identidad/sesiones; Publicaciones, gestión y galería; Catálogo, búsqueda/detalle; Administración, reportes y revisión. FastAPI registra los cuatro routers en una sola aplicación.
+
+Véase [C4 Nivel 3](docs/c4/03-componentes-backend.md).
 
 Reglas de frontera verificadas:
 
@@ -145,15 +141,13 @@ El flujo fue verificado tanto en Flutter Web como en Android.
 
 ## Identidad y alcance MVP
 
-Registro, login, logout, usuario actual y perfil usan sesiones opacas revocables
-(ADR-0012). El propietario procede del token y se restringe en SQL. EC-02 se ejecuta
-con dos usuarios reales: 10/10 mutaciones ajenas rechazadas y datos intactos.
+Registro, login, logout, usuario actual y perfil usan sesiones opacas revocables (ADR-0012). El propietario procede del token y se restringe en SQL. EC-02 se ejecuta con dos usuarios reales: 10/10 mutaciones ajenas rechazadas y datos intactos.
+
 Reporte/moderación requieren sesión/capacidad; registro/perfil no conceden privilegios.
 
 El token vive en memoria: recargar Web o reiniciar Android requiere login.
-El MVP no verifica correo/afiliación ni incluye recuperación de contraseña,
-chat, pagos o logística. Las limitaciones y comprobaciones se detallan en la
-[auditoría de continuación](docs/evidencias/auditoria-mvp-continuacion-2026-10-03.md).
+
+El MVP no verifica correo/afiliación ni incluye recuperación de contraseña, chat, pagos o logística. Las limitaciones y comprobaciones se detallan en la [auditoría de continuación](docs/evidencias/auditoria-mvp-continuacion-2026-10-03.md).
 
 ---
 
@@ -164,6 +158,7 @@ El aspecto **ASP-01 - Consulta y búsqueda de productos** fue materializado dura
 Decisión:
 
 - [ADR-0009 - Materializar catálogo sin romper fronteras](docs/adr/0009-materializar-catalogo-sin-romper-fronteras.md)
+- [ADR-0019 - Consultar imágenes en lote a través de Publicaciones](docs/adr/0019-consultar-imagenes-en-lote-a-traves-de-publicaciones.md)
 
 Código principal:
 
@@ -176,13 +171,53 @@ Pruebas:
 - [`backend/tests/test_catalogo.py`](backend/tests/test_catalogo.py)
 - [`backend/tests/test_ec01_catalogo.py`](backend/tests/test_ec01_catalogo.py)
 - [`backend/tests/test_erosion_s9.py`](backend/tests/test_erosion_s9.py)
+- [`backend/tests/test_propiedad_datos.py`](backend/tests/test_propiedad_datos.py)
+- [`backend/tests/test_modularidad_s6.py`](backend/tests/test_modularidad_s6.py)
+
+Mutaciones controladas:
+
+- [`scripts/verificar_mutaciones_mvp.py`](scripts/verificar_mutaciones_mvp.py)
 
 Evidencia:
 
 - [`docs/evidencias/evidencia-s9-2026-10-01.md`](docs/evidencias/evidencia-s9-2026-10-01.md)
 - [`docs/evidencias/evidencia-ec01-catalogo-s9-2026-10-01.md`](docs/evidencias/evidencia-ec01-catalogo-s9-2026-10-01.md)
+- [`docs/evidencias/auditoria-s9-dependencias-secretos-2026-10-01.md`](docs/evidencias/auditoria-s9-dependencias-secretos-2026-10-01.md)
 
-La medición S9 de EC-01 registró 10/10 búsquedas dentro del umbral de 2 segundos con 1.000 publicaciones controladas. Esa medición corresponde al routing HTTP, lógica de búsqueda y serialización bajo carga controlada; no se presenta como una medición extremo a extremo de red de producción.
+La medición inicial S9 de EC-01 registró 10/10 búsquedas dentro del umbral de 2 segundos con 1.000 publicaciones controladas.
+
+La verificación posterior en CI/Compose ejecutó el escenario con MySQL real, HTTP loopback y la cuota del laboratorio, conservando el umbral de `<= 2 s`.
+
+Estas mediciones no se presentan como una medición extremo a extremo de red desde un navegador público.
+
+## Verificación con IA
+
+La porción S9 fue construida con apoyo de IA y sometida a revisión del equipo.
+
+El registro de criterio se conserva en:
+
+- [`docs/ia.md`](docs/ia.md)
+
+Durante S9 se documentaron explícitamente propuestas:
+
+- aceptadas;
+- corregidas;
+- rechazadas con motivo técnico.
+
+Entre las decisiones registradas se encuentran:
+
+- aceptar Catálogo como porción real de S9;
+- corregir lecturas N+1 mediante lectura en lote;
+- rechazar acceso directo de Catálogo al repository de Publicaciones;
+- rechazar aumentar la cuota de infraestructura para ocultar un defecto de rendimiento;
+- rechazar retirar el umbral de EC-01;
+- rechazar atribuir resultados de un SHA distinto al estado auditado;
+- rechazar considerar los cuatro workflows verdes como prueba suficiente de Sonar scanner;
+- rechazar incorporar un modelo generativo únicamente por tratarse de la semana de IA.
+
+La decisión de no incorporar actualmente un componente generativo en el producto está documentada en:
+
+- [ADR-0010 - No incorporar componente generativo en CampusMarket](docs/adr/0010-no-incorporar-componente-generativo-en-campusmarket.md)
 
 ---
 
@@ -204,24 +239,43 @@ Reglas principales:
 - en desarrollo local los archivos se sirven desde `/uploads`.
 
 Pillow verifica contenido real, orienta/normaliza fotos y retira metadatos (ADR-0015).
+
 Compose conserva fotos en volumen nombrado (ADR-0018), probado tras recreación.
-Azure debe disponer de almacenamiento durable antes de habilitar esta capacidad.
-El MVP todavía no está desplegado públicamente.
+
+En el despliegue público vigente, Flutter Web se publica mediante GitHub Pages y la API FastAPI se ejecuta en Dokploy.
+
+Las imágenes se conservan en el volumen nombrado `publication_images` y MySQL utiliza el volumen `mysql_data`.
+
+La verificación pública acreditó la recreación de la API conservando la publicación y su imagen. La recreación conjunta de API y MySQL está verificada en CI/Compose; no se atribuye esa prueba de recreación completa al entorno público.
 
 ---
 
 # Contrato API
 
-Contrato vigente: API 2.0.0 / OpenAPI 3.1.0.
+Contrato vigente:
+
+```text
+API 2.0.0
+OpenAPI 3.1.0
+```
+
+Archivos:
 
 - [`contracts/openapi-v2.json`](contracts/openapi-v2.json)
-- v1 se conserva como referencia histórica S7.
+- `openapi-v1.json` se conserva como referencia histórica S7.
 
 Prueba contractual:
 
 - [`backend/tests/test_contrato_openapi.py`](backend/tests/test_contrato_openapi.py)
 
-La prueba compara el contrato versionado con la superficie OpenAPI generada por FastAPI y detecta divergencias en rutas, métodos, `operationId`, esquemas, campos requeridos y respuestas.
+La prueba compara el contrato versionado con la superficie OpenAPI generada por FastAPI y detecta divergencias en:
+
+- rutas;
+- métodos;
+- `operationId`;
+- esquemas;
+- campos requeridos;
+- respuestas.
 
 Operaciones materializadas incluyen, entre otras:
 
@@ -266,7 +320,13 @@ git diff --check
 sin errores
 ```
 
-El PR #47 (`Producto Marketplace UI - catálogo, gestión e imágenes`) fue integrado a `master` después de que GitHub Actions y SonarQube Cloud finalizaran en verde. El merge quedó registrado en el commit `cd7e029ded6ad33bfff0ff33557bf8efbd34f50f`.
+El PR #47 (`Producto Marketplace UI - catálogo, gestión e imágenes`) fue integrado a `master` después de que GitHub Actions y SonarQube Cloud finalizaran en verde.
+
+El merge quedó registrado en:
+
+```text
+cd7e029ded6ad33bfff0ff33557bf8efbd34f50f
+```
 
 Los dos warnings locales corresponden a deprecaciones de dependencias y no a fallos funcionales de la suite.
 
@@ -274,15 +334,46 @@ Los dos warnings locales corresponden a deprecaciones de dependencias y no a fal
 
 # Verificación del checkpoint MVP
 
-La continuación parte de `fda38976882fd5abcca8486b4b114efd28ca2b1c`.
-Backend: 77 pruebas y diez mutaciones detectadas; Flutter: analyze, seis pruebas,
-dos mutaciones, build Web y APK debug. Tres flujos completos producen nueve
-comprobaciones y 19 capturas por plataforma. Compose verifica volumen, cuota y
-diez búsquedas de 1000 filas. Estas cifras corresponden a ese SHA y sus artefactos.
+La continuación parte de:
 
-El resultado del HEAD de continuación, incluidos CI y SonarCloud, se registra en
-[auditoría MVP](docs/evidencias/auditoria-mvp-continuacion-2026-10-03.md).
-No se considera un gate de otro hash como validación de este trabajo.
+```text
+fda38976882fd5abcca8486b4b114efd28ca2b1c
+```
+
+Backend:
+
+- 77 pruebas;
+- diez mutaciones detectadas.
+
+Flutter:
+
+- `flutter analyze`;
+- seis pruebas;
+- dos mutaciones;
+- build Web;
+- APK debug.
+
+Tres flujos completos producen:
+
+- nueve comprobaciones;
+- 19 capturas por plataforma.
+
+Compose verifica:
+
+- volumen;
+- cuota;
+- EC-02;
+- diez búsquedas de 1000 filas para EC-01.
+
+Estas cifras corresponden al SHA y los artefactos documentados en la evidencia correspondiente.
+
+El resultado del HEAD de continuación, incluidos CI y SonarCloud, se registra en:
+
+- [`docs/evidencias/auditoria-mvp-continuacion-2026-10-03.md`](docs/evidencias/auditoria-mvp-continuacion-2026-10-03.md)
+
+No se considera un gate de otro hash como validación automática de un estado distinto.
+
+---
 
 # Tecnologías vigentes
 
@@ -301,10 +392,12 @@ No se considera un gate de otro hash como validación de este trabajo.
 | Análisis estático | Ruff / `flutter analyze` |
 | Integración continua | GitHub Actions |
 | Calidad | SonarQube Cloud |
-| IaC | Azure Bicep |
-| Frontend público histórico S8 | GitHub Pages |
-| Backend público histórico S8 | Azure App Service |
-| Base de datos pública histórica S8 | Azure Database for MySQL Flexible Server |
+| IaC vigente de laboratorio | Docker Compose (`deploy/compose.lab.yaml`) |
+| IaC histórica S8 | Azure Bicep (`infra/main.bicep`) |
+| Frontend público vigente | GitHub Pages |
+| Backend/API público vigente | Dokploy |
+| Persistencia pública vigente | MySQL 8.4 en servicio interno del Compose de Dokploy |
+| Despliegue histórico S8 | Azure App Service + Azure Database for MySQL |
 | Diagramas | PlantUML |
 
 ---
@@ -380,12 +473,22 @@ flutter run -d emulator-5554 --dart-define=CAMPUSMARKET_API_BASE_URL=http://10.0
 
 ---
 
-# Despliegue S8
+# Despliegue público vigente
 
-Durante S8 se desplegó una línea base pública con:
+La topología pública vigente es:
 
 ```text
-GitHub Pages → Azure App Service → Azure Database for MySQL
+Usuario
+   ↓
+Flutter Web
+GitHub Pages
+   ↓ HTTPS / JSON
+FastAPI
+Dokploy
+   ↓
+MySQL 8.4
+   ↓
+volúmenes persistentes
 ```
 
 Frontend:
@@ -394,31 +497,82 @@ Frontend:
 https://nnigarp.github.io/AS_202620_PROYECTO_CAMPUSMARKET/
 ```
 
-Backend:
+API:
 
 ```text
-https://campusmarket-s8-api-nilver.azurewebsites.net
+https://campusmarket.iscoutb.dev
 ```
 
 Health:
 
 ```text
+https://campusmarket.iscoutb.dev/health
+```
+
+OpenAPI interactivo:
+
+```text
+https://campusmarket.iscoutb.dev/docs
+```
+
+Infraestructura vigente para el laboratorio:
+
+- [`deploy/compose.lab.yaml`](deploy/compose.lab.yaml)
+- [`backend/Dockerfile`](backend/Dockerfile)
+
+El Compose despliega:
+
+- `api`;
+- `db`.
+
+La API y MySQL están limitados a la cuota documentada del laboratorio y utilizan volúmenes nombrados para persistencia.
+
+El dominio público expone la API. Flutter Web permanece publicado independientemente en GitHub Pages.
+
+---
+
+# Despliegue histórico S8
+
+Durante S8 se desplegó una línea base pública con:
+
+```text
+GitHub Pages → Azure App Service → Azure Database for MySQL
+```
+
+Frontend histórico S8:
+
+```text
+https://nnigarp.github.io/AS_202620_PROYECTO_CAMPUSMARKET/
+```
+
+Backend histórico S8:
+
+```text
+https://campusmarket-s8-api-nilver.azurewebsites.net
+```
+
+Health histórico:
+
+```text
 https://campusmarket-s8-api-nilver.azurewebsites.net/health
 ```
 
-Infraestructura como código:
+Infraestructura como código utilizada en S8:
 
 - [`infra/main.bicep`](infra/main.bicep)
 
 La plantilla declara App Service, Azure Database for MySQL Flexible Server y configuración dependiente del entorno. Las credenciales sensibles se suministran mediante configuración externa y parámetros seguros.
 
-> Las URLs anteriores corresponden al despliegue verificado en S8. Las capacidades añadidas posteriormente y ya integradas en `master` no deben considerarse desplegadas públicamente hasta realizar un nuevo despliegue y verificar el mismo hash.
+> Las URLs anteriores corresponden exclusivamente al despliegue histórico verificado en S8.
+> El estado público vigente evolucionó posteriormente a Flutter Web en GitHub Pages y API FastAPI en Dokploy.
+> Las evidencias de cada despliegue conservan sus hashes y resultados por separado; no se atribuyen resultados de una revisión a otra únicamente porque formen parte de la misma evolución del proyecto.
+> Véase el apartado «Despliegue público vigente» y la evidencia asociada.
 
 ---
 
 # Integración continua
 
-Workflow:
+Workflows:
 
 - [`.github/workflows/backend-tests.yml`](.github/workflows/backend-tests.yml)
 - [`.github/workflows/flutter-mvp.yml`](.github/workflows/flutter-mvp.yml)
@@ -426,6 +580,80 @@ Workflow:
 - [`.github/workflows/compose-mvp.yml`](.github/workflows/compose-mvp.yml)
 
 El pipeline configura Python y MySQL, instala dependencias, verifica la base de datos, ejecuta análisis estático, pruebas funcionales/arquitectónicas y la prueba contractual OpenAPI.
+
+La línea de CI del MVP verifica además:
+
+- fronteras arquitectónicas;
+- propiedad de datos;
+- mutaciones controladas;
+- contrato OpenAPI;
+- Flutter;
+- Web;
+- Android;
+- Compose;
+- persistencia;
+- cuotas;
+- EC-01;
+- EC-02.
+
+SonarQube Cloud dispone de Quality Gate automático para el repositorio.
+
+El scanner ejecutado explícitamente desde GitHub Actions continúa registrado como pendiente del contrato transversal; no se presenta el Quality Gate automático como sustituto de esa evidencia.
+
+---
+
+# Evidencia S9 — generación verificada y trazable
+
+La evidencia S9 se concentra en la materialización y verificación del contexto **Catálogo**.
+
+Cadena de trazabilidad:
+
+```text
+ASP-01
+  ↓
+EC-01
+  ↓
+C4 Nivel 3
+  ↓
+ADR-0009 / ADR-0019
+  ↓
+Catálogo / Publicaciones
+  ↓
+Pruebas funcionales
+  ↓
+Auditoría de erosión y propiedad
+  ↓
+Mutaciones controladas
+  ↓
+Medición EC-01
+  ↓
+Evidencia
+```
+
+Puntos de entrada:
+
+- [`docs/aspectos.md`](docs/aspectos.md)
+- [`docs/ia.md`](docs/ia.md)
+- [`docs/adr/0009-materializar-catalogo-sin-romper-fronteras.md`](docs/adr/0009-materializar-catalogo-sin-romper-fronteras.md)
+- [`docs/adr/0010-no-incorporar-componente-generativo-en-campusmarket.md`](docs/adr/0010-no-incorporar-componente-generativo-en-campusmarket.md)
+- [`docs/adr/0019-consultar-imagenes-en-lote-a-traves-de-publicaciones.md`](docs/adr/0019-consultar-imagenes-en-lote-a-traves-de-publicaciones.md)
+- [`backend/app/catalogo/service.py`](backend/app/catalogo/service.py)
+- [`backend/tests/test_catalogo.py`](backend/tests/test_catalogo.py)
+- [`backend/tests/test_erosion_s9.py`](backend/tests/test_erosion_s9.py)
+- [`backend/tests/test_propiedad_datos.py`](backend/tests/test_propiedad_datos.py)
+- [`scripts/verificar_mutaciones_mvp.py`](scripts/verificar_mutaciones_mvp.py)
+- [`docs/evidencias/evidencia-s9-2026-10-01.md`](docs/evidencias/evidencia-s9-2026-10-01.md)
+- [`docs/evidencias/auditoria-s9-dependencias-secretos-2026-10-01.md`](docs/evidencias/auditoria-s9-dependencias-secretos-2026-10-01.md)
+
+La asistencia de IA se utilizó para generar, revisar y contrastar alternativas, pero las decisiones arquitectónicas permanecen bajo responsabilidad del equipo.
+
+Las pruebas de mutación demuestran que las reglas de erosión y propiedad no solo pasan en el estado correcto: fallan ante defectos introducidos deliberadamente.
+
+La auditoría de dependencias comprueba que los paquetes incorporados existen en sus registros oficiales y utiliza nombres legítimos.
+
+La auditoría de secretos incluye código, configuración, ejemplos y documentación.
+
+CampusMarket no incorpora actualmente un componente generativo en runtime. La decisión y sus motivos están documentados mediante ADR-0010.
 
 ---
 
@@ -437,5 +665,10 @@ Puntos de entrada principales:
 - [C4 Nivel 1](docs/c4/01-contexto.md)
 - [C4 Nivel 2](docs/c4/02-contenedores.md)
 - [C4 Nivel 3](docs/c4/03-componentes-backend.md)
-- [Aspectos y trazabilidad](docs/aspectos.md)
-- [Uso de IA](docs/ia.md)
+- [Decisiones arquitectónicas](docs/arc42/09-decisiones.md)
+- [Escenarios de calidad](docs/arc42/10-escenarios-de-calidad.md)
+- [Árbol de utilidad](docs/arc42/10-arbol-de-utilidad.md)
+- [Trazabilidad de aspectos](docs/aspectos.md)
+- [Registro de uso de IA](docs/ia.md)
+- [ADR](docs/adr/)
+- [Evidencias](docs/evidencias/)
