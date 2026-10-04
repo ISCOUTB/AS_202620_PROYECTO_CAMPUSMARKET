@@ -134,9 +134,14 @@ Secuencia: [06-vista-ejecucion.md](06-vista-ejecucion.md).
 
 ## 7. Vista de despliegue
 
-S8 acredita una revisión anterior en Pages/Azure. El MVP de esta rama todavía no
-está desplegado. ADR-0018 prepara Compose con API/MySQL y volúmenes, probado en CI
-bajo cuota y tras recreación. No se realizan despliegues en este bloque.
+S8 acredita una revisión anterior en Pages/Azure. El backend público vigente está
+operativo en Dokploy con revisión `7856416795bb4accdf9d05e01adb470654875e56`.
+Pages conserva frontend compilado desde c38e0cf con la API Dokploy; PR #51 cambia
+workflow/documentación, no código de aplicación. El 4 de octubre a las 03:27 UTC
+se recreó API y se comprobó HTTP 200, la revisión, la publicación y su imagen
+con hash idéntico; MySQL permaneció running/healthy, sin recrearse públicamente.
+ADR-0018 define volúmenes/cuota; la persistencia ante recreación API/MySQL en CI
+se acredita separadamente. [Decisiones y alcance vigente](09-decisiones.md).
 Detalle: [07-vista-despliegue.md](07-vista-despliegue.md).
 
 ## 8. Conceptos transversales
@@ -150,12 +155,17 @@ Detalle: [08-conceptos-transversales.md](08-conceptos-transversales.md).
 
 [09-decisiones.md](09-decisiones.md) indexa ADR-0001 a ADR-0019. Los ADR aceptados
 conservan su contenido; decisiones posteriores indican qué extienden o sustituyen.
-ADR-0002 y despliegue S8 son historia; ADR-0018 es preparación de despliegue.
+ADR-0002 y despliegue S8 son historia. ADR-0018 fue aceptado para preparación;
+el estado operativo posterior se actualiza en el índice, sin reescribir ese ADR.
+La lectura agrupada explica qué complementa o sustituye cada decisión.
 
 ## 10. Escenarios de calidad
 
 [Escenarios y medidas](10-escenarios-de-calidad.md) y [árbol de utilidad](10-arbol-de-utilidad.md).
-EC-01 en Compose: diez búsquedas de 1000 filas, 10/10 bajo 2 s (loopback, no red pública).
+EC-01 en Compose exige diez búsquedas de 1000 filas y >=9/10 bajo 2 s
+(loopback/MySQL/cuota). El run del SHA contrastado cumple ese gate; los valores
+históricos 10/10 pertenecen a sus respectivos hashes. EC-01 completo desde el
+navegador público con 1000 filas todavía no está acreditado.
 EC-02: dos cuentas reales, 10/10 mutaciones ajenas rechazadas y datos intactos.
 EC-06: [OpenAPI v2](../../contracts/openapi-v2.json) coincide exactamente con FastAPI.
 [Ejecuciones por hash](../evidencias/auditoria-mvp-continuacion-2026-10-03.md).
@@ -177,3 +187,11 @@ EC-06: [OpenAPI v2](../../contracts/openapi-v2.json) coincide exactamente con Fa
 [12-glosario.md](12-glosario.md) y [lenguaje ubicuo](08-conceptos-transversales.md#81-lenguaje-ubicuo).
 Trazabilidad: [aspectos](../aspectos.md), [uso de IA](../ia.md),
 [auditoría de continuación](../evidencias/auditoria-mvp-continuacion-2026-10-03.md).
+
+## Lectura específica de S9
+
+La [evidencia S9](../evidencias/evidencia-s9-2026-10-01.md) centraliza la cadena
+ASP-01→EC-01→C4→ADR-0009/0019→Catálogo→prueba/mutación→medición, el extracto
+[IA](../ia.md#s9--criterio-y-verificacion-del-catalogo) y la matriz de la ficha.
+El despliegue se mantiene como operación adicional. La extensión de arc42 no
+sustituye la comprobación de enlaces, resultados por SHA y comprensión del equipo.
