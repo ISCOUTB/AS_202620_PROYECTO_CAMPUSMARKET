@@ -1,0 +1,57 @@
+{
+  "scenario_id": "S10-CT-01",
+  "started_at": "2026-10-12T04:20:08.061843+00:00",
+  "finished_at": "2026-10-12T04:22:41.876255+00:00",
+  "metric_scope": "Observador externo HTTP, todas las muestras, percentil nearest-rank",
+  "metrics": {
+    "baseline": {
+      "requests": 15,
+      "expected_status": 200,
+      "matching_status": 15,
+      "matching_status_ratio": 1.0,
+      "p95_ms": 4220.798,
+      "max_ms": 4220.798,
+      "network_errors": 0
+    },
+    "incompatible": {
+      "requests": 15,
+      "expected_status": 422,
+      "matching_status": 15,
+      "matching_status_ratio": 1.0,
+      "p95_ms": 3209.699,
+      "max_ms": 3209.699,
+      "network_errors": 0
+    },
+    "adapted": {
+      "requests": 15,
+      "expected_status": 200,
+      "matching_status": 15,
+      "matching_status_ratio": 1.0,
+      "p95_ms": 5969.802,
+      "max_ms": 5969.802,
+      "network_errors": 0
+    }
+  },
+  "checks": {
+    "phase_statuses": true,
+    "phase_p95_within_budget": true,
+    "healthy_dependency": true,
+    "correlated_requests": true,
+    "single_expected_runtime_revision": true,
+    "public_contract_equals_versioned_before_after": true,
+    "valid_catalog_payloads": true,
+    "rejection_identifies_query_modalidad": true,
+    "catalog_snapshot_unchanged": true
+  },
+  "total_http_requests": 58,
+  "health_checks": 9,
+  "correlation_ratio": 1.0,
+  "observed_runtime_revisions": [
+    "7856416795bb4accdf9d05e01adb470654875e56"
+  ],
+  "catalog_before_sha256": "e9b2e1e2cb758adc9250017310431768a1f95ed4d86519144e0f646b8ea21a30",
+  "catalog_after_sha256": "e9b2e1e2cb758adc9250017310431768a1f95ed4d86519144e0f646b8ea21a30",
+  "catalog_items_before": 1,
+  "catalog_items_after": 1,
+  "passed": true
+}

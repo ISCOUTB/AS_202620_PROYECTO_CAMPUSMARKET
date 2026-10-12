@@ -1,0 +1,16 @@
+# 11. Riesgos y deuda técnica - Adición S10
+
+Fecha: 2026-10-11, America/Bogota. No sustituye los riesgos ya descritos en evidencias S8/S9.
+
+| Riesgo o deuda | Estado y evidencia | Efecto en S10 |
+|---|---|---|
+| Scanner Sonar en pipeline | La [revisión docente preliminar](https://github.com/ISCOUTB/AS_202620_feedback/blob/master/revisiones/2026-2/AS_202620_PROYECTO_CAMPUSMARKET/semana-10-corte2.md) lo marca No cumple; el workflow vigente no ejecuta scanner. No se corrige ni se presenta un badge como ejecución. | CI funcional no equivale a cierre de CONTRATO 8. |
+| Reescritura histórica de ADR aceptados | La misma revisión registra cambios antiguos en ADR-0002/0003/0005. S10 no altera esos archivos ni elimina el hallazgo. | El ADR-0020 es nuevo; esto no repara el historial anterior. |
+| Permisos para controlar contenedores de Dokploy | [Evidencia pública S9](../evidencias/despliegue-publico-mvp-2026-10-04.md) registra rechazo de restart por permisos. El entorno de trabajo S10 no dispone de control Docker del despliegue. | Se elige incompatibilidad de consumidor; no se declara una caída o recuperación de MySQL no ejecutada. |
+| Logs privados de producción | S10 obtiene request IDs reales y valida el emisor con pruebas del mismo código; no descarga logs privados de Dokploy. | Correlación pública comprobada; extracción de logs de servidor pendiente para la sustentación si el docente la exige. |
+| Fuente de selección del escenario | Nilver informa que el docente autorizó al equipo a elegir uno. Se identifica expresamente S10-CT-01; la indicación oral no se presenta como una asignación escrita localizada en Git. | El docente conserva la validación de la consigna. |
+| Catálogo pequeño y consumidor serial | La corrida mide el catálogo actual y un consumidor; no carga masiva. | No prueba escalabilidad, presión de memoria, throughput ni todo EC-01. |
+| Factores externos de medición | Red, DNS, TLS, proxy y tráfico ajeno pueden afectar tiempos; mismo origen, revisión y secuencia sin reintentos. Se conservan todas las muestras. | Las latencias son del observador externo, sin atribuirlas a tiempo exclusivo del backend. |
+| Consistencia de snapshots | Se compara el hash del catálogo público antes/después; otro usuario podría modificarlo legítimamente durante la corrida. | Igualdad observada no equivale a prueba de integridad de todas las tablas. |
+| Registro IA y conservación de historia | Se añade S10 al final de [docs/ia.md](../ia.md) y el detalle en [docs/ia-s10.md](../ia-s10.md). No se elimina ni reescribe ningún registro anterior. | S10 mantiene la ubicación canónica y evidencia decisiones aceptadas/rechazadas. |
+| Sustentación y pipeline en vivo | Solo el docente puede calificarlos durante la sesión. El workflow nuevo permite repetición manual. | No se otorga nota ni se marca C5 cerrado desde el repositorio. |

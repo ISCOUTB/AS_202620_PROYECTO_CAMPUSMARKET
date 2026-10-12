@@ -1,0 +1,12 @@
+{
+  "repository": "Nnigarp/AS_202620_PROYECTO_CAMPUSMARKET",
+  "workflow_run_id": 38204357938,
+  "job_id": 114664435869,
+  "head_sha": "6eb4c9998b3776c81a8603d8ad8ef0bee32b7981",
+  "conclusion": "success",
+  "url": "https://github.com/Nnigarp/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/38204357938",
+  "artifact_id": 11726432840,
+  "artifact_sha256": "02411db50177ea8539449ef91cc9894f8512b0f941c3b20b6ec9b6a195a3f983",
+  "tests": "8 passed",
+  "export_source": "Logs originales del job de Actions; se retira unicamente el prefijo de timestamp de Actions"
+}
