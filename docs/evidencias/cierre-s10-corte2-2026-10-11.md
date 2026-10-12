@@ -63,3 +63,16 @@ La publicación del trabajo se realizó en [Nnigarp:S10-contrato-cliente](https:
 No se reemplazaron los tiempos más altos de la primera corrida por estos tiempos. Son observadores/redes distintos; no se atribuye la diferencia a una modificación del backend. Las dos corridas completas quedan preservadas en Git: [corrida inicial](s10/ejecucion-20261012T0419Z/) y [corrida en CI](s10/ci-38204357938/). La segunda se reconstruye fielmente del log del job, retirando únicamente el prefijo de timestamp de Actions. El artefacto original 11726432840 y su digest están en [run.json](s10/ci-38204357938/run.json).
 
 Estado de entrega en esta comprobación: **experimento, documentación y CI S10 verificados; integración en el master oficial pendiente**. El equipo debe crear el PR por [comparación del fork con master](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/compare/master...Nnigarp:S10-contrato-cliente?expand=1), esperar el check obligatorio `test` y fusionar antes del cierre. Las comprobaciones posteriores conservan sus hashes y runs; no alteran el ADR aceptado.
+
+## PR oficial y verificación actualizada - 23:38 Colombia
+
+El equipo creó el **[PR oficial #55](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/pull/55)**, `Nnigarp:S10-contrato-cliente` -> `ISCOUTB:master`. La API de GitHub confirmó base master, ausencia de conflictos y rama fuente `039e921a1f7d1b7b9048da5e487dfbc747cde720`. La publicación ya tiene, por tanto, el PR que faltaba en la comprobación anterior; la fusión continúa dependiendo del check requerido y de la sesión del equipo.
+
+CI del repositorio oficial comprobado:
+
+- [Backend 38204457643](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/38204457643): **success** sobre `6eb4c9998b3776c81a8603d8ad8ef0bee32b7981`.
+- [S10 38204457709](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/38204457709): **success** sobre ese mismo commit.
+- [S10 38204609585](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/38204609585): **success** sobre `039e921a1f7d1b7b9048da5e487dfbc747cde720`.
+- [Backend 38204609506](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/38204609506): seguía ejecutándose al registrar esta comprobación; no se lo presenta como terminado.
+
+El último complemento modifica únicamente documentos y añade la copia de la corrida CI; el proveedor, consumidor de prueba, workflow y tests conservan su código verificado. El nuevo commit de este registro se identifica por el historial del PR y vuelve a pasar las reglas, sin saltar protección de master. El estado de fusión, hash final y hora se consultan en el PR #55 y en `git log` de master; no se fabrica una fusión antes de que ocurra.
