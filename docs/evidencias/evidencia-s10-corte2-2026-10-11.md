@@ -82,7 +82,7 @@ Validación local: `pytest backend/tests/test_s10_contrato_cliente.py backend/te
 
 El pipeline existente [backend-tests.yml](../../.github/workflows/backend-tests.yml) mantiene su análisis y prueba completa; la [regla activa de master](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/rules/24001118) exige PR y estado `test` exitoso, sin bypass. Los runs finales se registran en el complemento de cierre. No se afirma que escribir un workflow equivalga a que haya pasado.
 
-El barrido redactado de secretos y sus resultados se consignan en el complemento de cierre. Sonar scanner/Quality Gate en CI permanece deuda; no se declara corregido por este experimento.
+El [CI S10 38204357938](https://github.com/Nnigarp/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/38204357938) ejecutó ocho pruebas y repitió las 58 solicitudes públicas con success. Sus [muestras y resumen](s10/ci-38204357938/) se preservan separadamente de la primera corrida. El barrido redactado de secretos y sus resultados están en el [complemento de cierre](cierre-s10-corte2-2026-10-11.md). Sonar scanner/Quality Gate en CI permanece deuda; no se declara corregido por este experimento.
 
 ## 6. Trazabilidad y correspondencia con lo desplegado
 
@@ -111,15 +111,15 @@ La ampliación añade archivos y solo agrega el registro S10 al final de docs/ia
 
 | Comprobación | Estado documentado | Evidencia y alcance |
 |---|---|---|
-| Estado final principal anterior al cierre | Pendiente del complemento de integración | Base y fecha conocidas; no se confunde rama de trabajo con master |
+| Estado final principal anterior al cierre | Integración oficial pendiente | Fork publicado y CI S10 verificado; no se confunde el fork con master oficial; estado en complemento de cierre |
 | Despliegue accesible | Cumple en la corrida | 58 respuestas públicas; catálogo y health, hora/revisión por muestra |
 | Hipótesis, montaje, variables y umbral | Cumple para S10-CT-01 | Sección 2 y plan prospectivo; selección según indicación oral informada por el equipo |
 | Línea base medida y reproducible | Cumple | 15 solicitudes válidas nuevas, script y JSONL |
 | Decisión registrada y coherente | Cumple en el alcance del reto | ADR-0020 y alternativas; no requiere cambio de proveedor |
 | Respuesta implementada/configurada | Cumple | Adaptación explícita en consumidor de prueba; API preservada |
 | Resultado contrastado con umbral | Cumple en la muestra | Resumen computado, todas las observaciones, límites declarados |
-| Pipeline, health, logs y métrica | Parcial; cierre CI en complemento | Health y correlación públicos, logs probados localmente, métrica del observador; logs privados no extraídos y Sonar pendiente |
-| Secretos protegidos | Barrido en complemento | Prueba pública sin credenciales; no se presume historial limpio |
+| Pipeline, health, logs y métrica | CI S10 verificado; deudas declaradas | Run success, health/correlación públicos, logs probados y métrica del observador; logs privados no extraídos y Sonar pendiente |
+| Secretos protegidos | Verificado en el alcance del barrido | Checkout sin hallazgos; historial completo con cinco identificadores públicos clasificados y reportes redactados preservados |
 | C4/arc42/ADR/contrato correspondientes | Cumple para la ampliación | Tabla anterior, código equivalente y contrato público idéntico |
 | Decisión anterior confirmada o reemplazada | Cumple como confirmación acotada | ADR-0020 confirma HTTP/JSON y lectura por Publicaciones para este estímulo; no hay decisión reemplazada |
 | Sustentación sobre despliegue y pipeline vivo | No verificado; lo califica el docente | Guion siguiente; no se asigna puntaje desde Git |
