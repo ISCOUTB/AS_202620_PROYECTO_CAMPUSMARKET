@@ -1,0 +1,27 @@
+[
+  {
+    "timestamp": "2026-10-12T04:29:50.505337+00:00",
+    "url": "https://nnigarp.github.io/AS_202620_PROYECTO_CAMPUSMARKET/",
+    "http": 200,
+    "duration_ms": 3057.671,
+    "response_bytes": 1544,
+    "body_sha256": "377084e414e484470f2ee74d0e934e06385c24962357d44c8c8b4eadd08c8e96"
+  },
+  {
+    "timestamp": "2026-10-12T04:29:52.499368+00:00",
+    "url": "https://nnigarp.github.io/AS_202620_PROYECTO_CAMPUSMARKET/source-revision.txt",
+    "http": 200,
+    "duration_ms": 1994.007,
+    "response_bytes": 41,
+    "body_sha256": "2545fa5ba0b775cf581642d2c5f7d04b86bda350a7a052902606287e300e5e4d",
+    "frontend_revision": "c38e0cf36a30dddec39f169b7618b7c6127e0a71"
+  },
+  {
+    "timestamp": "2026-10-12T04:29:54.825066+00:00",
+    "url": "https://campusmarket.iscoutb.dev/catalogo/1",
+    "http": 200,
+    "duration_ms": 2325.661,
+    "response_bytes": 434,
+    "body_sha256": "eb35de46382b4585c1d5292d96fedb4e2988d041718a7b80f38dfa694884056b"
+  }
+]

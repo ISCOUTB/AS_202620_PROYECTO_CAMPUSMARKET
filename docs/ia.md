@@ -504,3 +504,17 @@ La verificación del 4 de octubre a las 03:27 UTC confirma recreación API y fot
 persistente; no acredita recreación pública de MySQL ni moderación pública.
 El equipo debe revisar y entender este complemento antes de integrarlo;
 la asistencia de IA no constituye aceptación automática por todos sus miembros.
+
+## S10 - Segundo corte: consumidor incompatible con el contrato v2 (2026-10-11)
+
+Responsable de la solicitud: Nilver García Pimentel. Herramienta: ChatGPT/Codex.
+Se añade este registro conservando íntegro el contenido anterior y los ADR aceptados.
+
+- **Para qué:** seleccionar un solo escenario operativo, ejecutar un experimento nuevo sobre la API pública y documentar hipótesis, línea base, decisión, resultados y trazabilidad.
+- **Aceptado y verificado:** S10-CT-01, consumidor que envía `sale` donde OpenAPI v2 admite `venta`/`alquiler`; tres repeticiones de línea base, incompatibilidad y adaptación explícita del consumidor. La corrida conservó 58 respuestas HTTP: 15/15 válidas con 200, 15/15 incompatibles con 422, 15/15 adaptadas con 200; nueve health 200/ok y 58/58 request IDs correlacionados. Se conservaron plan previo, script de la corrida, JSONL y resumen calculado.
+- **Aceptado y verificado:** ADR-0020 nuevo, pruebas que comprueban rechazo antes del servicio y logs correlacionados, adendas arc42/C4 y workflow adicional. Pruebas locales: 8 passed; Ruff sobre backend/scripts: sin hallazgos. Estos resultados locales no sustituyen la ejecución posterior de CI.
+- **Rechazado y motivo:** inducir fallo de MySQL sin control de contenedores del despliegue; reutilizar N+1/S9 como reto nuevo; ampliar automáticamente el enum del proveedor; modificar ADR aceptados; presentar un PDF cuando la revisión docente lo excluye; inventar resultados, logs privados, recuperación de MySQL o una nota de sustentación.
+- **Límites:** un consumidor serial y un catálogo público pequeño; métricas del observador HTTP, no CPU/memoria ni tiempo exclusivo del backend. Sonar en CI y deudas históricas de ADR no se declaran corregidos.
+
+Registro detallado: [complemento IA S10](ia-s10.md).
+Cadena revisable: [evidencia S10](evidencias/evidencia-s10-corte2-2026-10-11.md), [ADR-0020](adr/0020-preservar-contrato-v2-y-adaptar-consumidor-incompatible.md), [pruebas](../backend/tests/test_s10_contrato_cliente.py), [corrida pública](evidencias/s10/ejecucion-20261012T0419Z/).

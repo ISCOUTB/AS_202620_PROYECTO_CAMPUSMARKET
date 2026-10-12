@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-10-12T04:30:55.646379+00:00",
+  "source_base": "de6ed67c05ccdb7eabd9b1951f146ab8958b1d00",
+  "tests": {
+    "command": "python -m pytest backend/tests/test_s10_contrato_cliente.py backend/tests/test_contrato_openapi.py backend/tests/test_observability.py -q",
+    "result": "8 passed, 1 warning in 0.11s",
+    "warning": "Starlette depreca httpx TestClient; no implica fallo de estas pruebas"
+  },
+  "ruff": {
+    "command": "python -m ruff check backend scripts",
+    "exit_code": 0
+  },
+  "git_diff_check": {
+    "exit_code": 0
+  },
+  "existing_adr_byte_identical": 19,
+  "ia_original_prefix_preserved": true,
+  "provider_source_diff_empty": true,
+  "existing_modified_paths": [
+    "docs/ia.md"
+  ],
+  "frozen_script_matches_plan_sha256": true
+}
