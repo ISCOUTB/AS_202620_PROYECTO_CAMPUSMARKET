@@ -521,8 +521,19 @@ Cadena revisable: [evidencia S10](evidencias/evidencia-s10-corte2-2026-10-11.md)
 
 ## S11 — Fallos parciales y decisión de extracción (2026-10-18)
 
-- **Propósito:** contrastar la consigna del aula/ficha S11 con código actual de Flutter, FastAPI, MySQL y decisiones aceptadas; redactar matriz de riesgos y opciones del ADR-0021.
-- **Herramienta:** ChatGPT, con revisión humana obligatoria antes de integrar a `master`.
-- **Aceptado como propuesta para revisión:** analizar `POST /publicaciones` como operación susceptible de repetición; conservar el monolito modular por costo/fallos y ausencia de escalado independiente justificado; documentar mitigaciones existentes vs pendientes; enlaces a código real.
-- **Rechazado y motivo:** declarar idempotencia implementada solo por escribir el diseño (no hay clave/index único); agregar reintentos automáticos a POST sin deduplicación (puede duplicar publicaciones); extraer Catálogo sin necesidad medida (introduce fallos de red y mayor operación); asegurar que un CI/despliegue está en verde sin URL y SHA comprobados.
-- **Validación pendiente:** revisión de equipo, enlaces locales, prueba CI/contrato, y confirmación del commit entregado. No atribuir a IA una ejecución no realizada.
+Fecha de revisión: 18 de octubre de 2026 (America/Bogota). Herramienta: ChatGPT, con verificación humana de la integración y contrastación mediante GitHub. Se conserva el registro cronológico de S1–S10.
+
+| Propuesta revisada | Resultado | Motivo técnico / destino comprobable |
+|---|---|---|
+| Analizar `POST /publicaciones` en Flutter → FastAPI → MySQL como integración principal | Aceptada | [Evidencia S11 §1–2](evidencias/evidencia-s11-2026-10-18.md) y [router real](../backend/app/publicaciones/router.py) |
+| Tratar no respuesta, respuesta tardía y solicitudes repetidas como fallos parciales distintos | Aceptada | Tabla F11-01–F11-03, mitigaciones actuales y pendientes, sin atribuir pruebas no realizadas |
+| Diseñar `Idempotency-Key` transaccional por usuario/operación | Aceptada como diseño, **no implementada** | [Evidencia S11 §3](evidencias/evidencia-s11-2026-10-18.md); T1–T7 pendientes |
+| Declarar protección contra duplicados ya implementada | Rechazada | Ni router ni tabla SQL contienen aún clave/índice de deduplicación |
+| Reintentar automáticamente `POST` tras timeout | Rechazada | Puede crear publicaciones duplicadas; primero se necesita idempotencia y recuperación del estado |
+| Extraer Catálogo como microservicio para evidenciar S11 | Rechazada | Introduce frontera remota sin escalamiento independiente demostrado; [ADR-0021](adr/0021-mantener-catalogo-en-el-monolito-modular.md) adopta **no extraer** |
+| Presentar CI verde como prueba de fallos parciales inyectados o de despliegue nuevo | Rechazada | CI comprueba regresión general; las pruebas de resiliencia y paridad de SHA público siguen pendientes |
+| Consolidar registro S11 en arc42, aspectos y evidencia existente | Aceptada y fusionada | [PR #56](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/pull/56) y [PR #58](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/pull/58) |
+
+**Comprobación por revisión:** [`master` f2e9497](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/commit/f2e94972f0327cd11f2c956fd894f66d779cede6) obtuvo ocho comprobaciones satisfactorias, incluida Android tras el [PR #57](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/pull/57). Estas comprobaciones no sustituyen T1–T7 ni acreditan desplegar esa revisión.
+
+**Cadena revisable:** [evidencia S11](evidencias/evidencia-s11-2026-10-18.md) → [ADR-0021](adr/0021-mantener-catalogo-en-el-monolito-modular.md) → [arc42 §11](arc42/11-riesgos-y-deuda-tecnica.md) → [aspectos ASP-13/14](aspectos.md) → [código Flutter y FastAPI](../backend/app/publicaciones/) → CI. La evaluación oficial corresponde al docente.
