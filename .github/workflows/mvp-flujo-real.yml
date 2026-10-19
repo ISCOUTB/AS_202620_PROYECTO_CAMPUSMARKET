@@ -14,7 +14,7 @@ jobs:
   flujo:
     name: Flujo ${{ matrix.platform }}
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -105,6 +105,28 @@ jobs:
         run: |
           python scripts/preparar_e2e_ci.py
           sudo chmod a+rw /dev/kvm
+      - name: Instalar NDK Android con reintentos verificables
+        if: matrix.platform == 'android'
+        shell: bash
+        run: |
+          set -euo pipefail
+          ndk_version="28.2.13676358"
+          sdk_root="${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}"
+          sdkmanager="$sdk_root/cmdline-tools/latest/bin/sdkmanager"
+          for attempt in 1 2 3; do
+            echo "NDK $ndk_version: intento $attempt/3"
+            # `yes` can exit via SIGPIPE on normal sdkmanager completion; do not mistake that for SDK failure.
+            if (set +o pipefail; yes | "$sdkmanager" --install "ndk;$ndk_version"); then
+              if [ -f "$sdk_root/ndk/$ndk_version/source.properties" ]; then
+                echo "NDK instalado y verificado: $ndk_version"
+                exit 0
+              fi
+            fi
+            rm -rf "$sdk_root/ndk/$ndk_version"
+            if [ "$attempt" -lt 3 ]; then sleep $((attempt * 10)); fi
+          done
+          echo "::error::No se pudo instalar NDK $ndk_version tras tres intentos"
+          exit 1
       - name: Ejecutar flujo Android en emulador real
         if: matrix.platform == 'android'
         uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
@@ -114,7 +136,7 @@ jobs:
           target: google_apis
           profile: pixel_2
           disable-animations: true
-          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          emulator-options: -no-window -gpu swiftshader -no-snapshot -noaudio -no-boot-anim
           script: bash scripts/ejecutar_android_e2e.sh
       - name: Registrar hash, SDK y configuración generada
         if: always()
