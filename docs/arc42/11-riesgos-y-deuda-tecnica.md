@@ -14,3 +14,18 @@ Fecha: 2026-10-11, America/Bogota. No sustituye los riesgos ya descritos en evid
 | Consistencia de snapshots | Se compara el hash del catálogo público antes/después; otro usuario podría modificarlo legítimamente durante la corrida. | Igualdad observada no equivale a prueba de integridad de todas las tablas. |
 | Registro IA y conservación de historia | Se añade S10 al final de [docs/ia.md](../ia.md) y el detalle en [docs/ia-s10.md](../ia-s10.md). No se elimina ni reescribe ningún registro anterior. | S10 mantiene la ubicación canónica y evidencia decisiones aceptadas/rechazadas. |
 | Sustentación y pipeline en vivo | Solo el docente puede calificarlos durante la sesión. El workflow nuevo permite repetición manual. | No se otorga nota ni se marca C5 cerrado desde el repositorio. |
+
+## Riesgos S11 — fallos parciales en integración Flutter → FastAPI → MySQL (2026-10-18)
+
+La evidencia específica se encuentra en [`docs/evidencias/evidencia-s11-2026-10-18.md`](../evidencias/evidencia-s11-2026-10-18.md) y la decisión en [ADR-0021](../adr/0021-mantener-catalogo-en-el-monolito-modular.md).
+
+| Riesgo | Impacto | Mitigación actual verificada en código / deuda explícita |
+|---|---|---|
+| Respuesta inexistente a `POST /publicaciones` | Resultado incierto de escritura | Flutter aplica timeout; **pendiente** identificar operación/reconciliar sin reintento ciego |
+| Respuesta tardía | UX y duplicación por segundo intento | 20 s por etapas en cliente; **pendiente** prueba con inyección de latencia, política de deadline global |
+| Solicitud repetida tras pérdida de respuesta | Publicaciones duplicadas | **Pendiente** Idempotency-Key persistida con unicidad SQL, transacción y pruebas seriales/concurrentes |
+| MySQL indisponible | 503 y catálogo no disponible | 503 controlado y rollback de errores MySQL; **pendiente** prueba de inyección y recuperación en Compose aislado |
+| Crash/error entre disco y MySQL para fotografías | Archivos huérfanos o referencias inválidas | Compensación existente de registro fallido; **pendiente** reconciliador persistente ante crash y borrado fallido |
+| Extraer Catálogo prematuramente | Más fronteras de red, costo y sincronización | ADR-0021 decide no extraer ahora; reevaluar con pruebas de capacidad y requisitos medidos |
+
+**Estado de validación:** inspección estática del `master` base, no pruebas S11 ejecutadas ni verificación del entorno remoto. La ficha S11 admite mitigaciones diseñadas y claramente pendientes con plan; las pruebas de fallos siguen como deuda para el proyecto final. Conservar los riesgos S10 anteriores, sin sobrescribirlos.

@@ -518,3 +518,11 @@ Se añade este registro conservando íntegro el contenido anterior y los ADR ace
 
 Registro detallado: [complemento IA S10](ia-s10.md).
 Cadena revisable: [evidencia S10](evidencias/evidencia-s10-corte2-2026-10-11.md), [ADR-0020](adr/0020-preservar-contrato-v2-y-adaptar-consumidor-incompatible.md), [pruebas](../backend/tests/test_s10_contrato_cliente.py), [corrida pública](evidencias/s10/ejecucion-20261012T0419Z/).
+
+## S11 — Fallos parciales y decisión de extracción (2026-10-18)
+
+- **Propósito:** contrastar la consigna del aula/ficha S11 con código actual de Flutter, FastAPI, MySQL y decisiones aceptadas; redactar matriz de riesgos y opciones del ADR-0021.
+- **Herramienta:** ChatGPT, con revisión humana obligatoria antes de integrar a `master`.
+- **Aceptado como propuesta para revisión:** analizar `POST /publicaciones` como operación susceptible de repetición; conservar el monolito modular por costo/fallos y ausencia de escalado independiente justificado; documentar mitigaciones existentes vs pendientes; enlaces a código real.
+- **Rechazado y motivo:** declarar idempotencia implementada solo por escribir el diseño (no hay clave/index único); agregar reintentos automáticos a POST sin deduplicación (puede duplicar publicaciones); extraer Catálogo sin necesidad medida (introduce fallos de red y mayor operación); asegurar que un CI/despliegue está en verde sin URL y SHA comprobados.
+- **Validación pendiente:** revisión de equipo, enlaces locales, prueba CI/contrato, y confirmación del commit entregado. No atribuir a IA una ejecución no realizada.
