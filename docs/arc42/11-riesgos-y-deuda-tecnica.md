@@ -1,4 +1,8 @@
-# 11. Riesgos y deuda técnica - Adición S10
+# 11. Riesgos y deuda técnica
+
+Esta sección consolida los riesgos documentados en S10 y la evolución S11 sin alterar los hechos históricos de cada revisión.
+
+## Riesgos registrados en S10
 
 Fecha: 2026-10-11, America/Bogota. No sustituye los riesgos ya descritos en evidencias S8/S9.
 
