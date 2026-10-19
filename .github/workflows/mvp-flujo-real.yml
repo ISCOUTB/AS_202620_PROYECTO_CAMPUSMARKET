@@ -115,7 +115,8 @@ jobs:
           sdkmanager="$sdk_root/cmdline-tools/latest/bin/sdkmanager"
           for attempt in 1 2 3; do
             echo "NDK $ndk_version: intento $attempt/3"
-            if yes | "$sdkmanager" --install "ndk;$ndk_version"; then
+            # `yes` can exit via SIGPIPE on normal sdkmanager completion; do not mistake that for SDK failure.
+            if (set +o pipefail; yes | "$sdkmanager" --install "ndk;$ndk_version"); then
               if [ -f "$sdk_root/ndk/$ndk_version/source.properties" ]; then
                 echo "NDK instalado y verificado: $ndk_version"
                 exit 0
