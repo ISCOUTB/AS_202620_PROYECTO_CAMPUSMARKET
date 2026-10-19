@@ -14,4 +14,8 @@ finish() {
 }
 trap finish EXIT
 cd "$task_root/frontend/campusmarket"
-timeout --signal=TERM --kill-after=20s 12m flutter drive --driver=test_driver/mvp_driver.dart --target=integration_test/mvp_flow_test.dart -d emulator-5554 --dart-define=CAMPUSMARKET_API_BASE_URL=http://10.0.2.2:8000
+adb -s emulator-5554 wait-for-device
+adb -s emulator-5554 shell getprop sys.boot_completed
+adb -s emulator-5554 shell dumpsys activity activities | tail -n 12
+# Keep the real Flutter integration test mandatory; allow time for a slow VM-service handshake.
+timeout --signal=TERM --kill-after=20s 17m flutter drive --driver=test_driver/mvp_driver.dart --target=integration_test/mvp_flow_test.dart -d emulator-5554 --dart-define=CAMPUSMARKET_API_BASE_URL=http://10.0.2.2:8000
