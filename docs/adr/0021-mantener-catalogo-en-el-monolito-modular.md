@@ -1,6 +1,6 @@
 # ADR-0021 — Mantener Catálogo en el monolito modular
 
-- Estado: **Propuesto para S11** (cambiar a Aceptado solo tras revisión del equipo).
+- Estado: **Decidido para S11 — no extraer Catálogo**. Se conserva el monolito modular vigente; esta decisión no implica haber implementado idempotencia ni haber extraído un servicio.
 - Fecha: 2026-10-18 (America/Bogota).
 - Base: `master` `1582c1ff609202fa2cc4a06fa14d18b9b61bed74`.
 - Relación: respeta [ADR-0001](0001-usar-monolito-modular.md), [ADR-0003](0003-usar-integracion-sincrona-http-json.md), [ADR-0009](0009-materializar-catalogo-sin-romper-fronteras.md) y [ADR-0018](0018-ejecutar-el-monolito-en-dokploy-con-volumenes.md). No sustituye ni reescribe ADR aceptados anteriores.
@@ -38,4 +38,4 @@ CampusMarket integra Flutter Web/Android con una API FastAPI y MySQL. El backend
 - Arquitectura: [C4 L2](../c4/02-contenedores.md), [C4 L3](../c4/03-componentes-backend.md), [arc42 08](../arc42/08-conceptos-transversales.md), [arc42 11](../arc42/11-riesgos-y-deuda-tecnica.md).
 - Código: [`catalogo/service.py`](../../backend/app/catalogo/service.py), [`publicaciones/service.py`](../../backend/app/publicaciones/service.py), [`publicaciones/repository.py`](../../backend/app/publicaciones/repository.py).
 - Pruebas ya existentes (sin afirmar ejecución nueva): [`test_modularidad_s6.py`](../../backend/tests/test_modularidad_s6.py), [`test_propiedad_datos.py`](../../backend/tests/test_propiedad_datos.py), [`test_erosion_s9.py`](../../backend/tests/test_erosion_s9.py), [`test_catalogo.py`](../../backend/tests/test_catalogo.py).
-- Evidencia S11: [modos de fallo, diseño y límites](../evidencias/evidencia-s11-2026-10-18.md); completar URL de PR, SHA y CI **solo después de ejecutarlos**.
+- Evidencia S11: [modos de fallo, diseño, límites y CI por revisión](../evidencias/evidencia-s11-2026-10-18.md). Integración: [PR #56](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/pull/56); cierre: [PR #58](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/pull/58). Las mitigaciones no implementadas conservan ese estado.
