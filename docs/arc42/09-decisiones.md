@@ -6,6 +6,9 @@ Las decisiones históricas se conservan; una evolución posterior no reescribe e
 
 ## Índice de decisiones
 
+[ADR-0021 — No extraer Catálogo](../adr/0021-mantener-catalogo-en-el-monolito-modular.md) es la decisión S11, consistente con ADR-0001 y ADR-0009.
+
+
 | ADR | Estado | Decisión | Alcance |
 |---|---|---|---|
 | [ADR-0001](../adr/0001-usar-monolito-modular.md) | Aceptado | Mantener un monolito modular. | Arquitectura general |
