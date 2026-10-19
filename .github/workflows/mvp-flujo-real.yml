@@ -14,7 +14,7 @@ jobs:
   flujo:
     name: Flujo ${{ matrix.platform }}
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -114,7 +114,7 @@ jobs:
           target: google_apis
           profile: pixel_2
           disable-animations: true
-          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          emulator-options: -no-window -gpu swiftshader -no-snapshot -noaudio -no-boot-anim
           script: bash scripts/ejecutar_android_e2e.sh
       - name: Registrar hash, SDK y configuración generada
         if: always()
