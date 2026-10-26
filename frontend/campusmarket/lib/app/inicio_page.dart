@@ -202,6 +202,7 @@ class _InicioPageState extends State<InicioPage> {
     }
 
     return LayoutBuilder(
+      key: const Key('inicio-publicaciones-lista'),
       builder: (context, constraints) {
         var columnas = 1;
         if (constraints.maxWidth >= 1180) {
