@@ -214,8 +214,15 @@ void main() {
     final catalogoDatos = (jsonDecode(catalogoRespuesta.body) as List).cast<Map<String, dynamic>>();
     expect(catalogoDatos.any((dato) => dato['titulo'] == title), isTrue,
         reason: 'Publicación persistida en catálogo antes de verificar portada');
+    await until(() => find.text('Publicaciones recientes').evaluate().isNotEmpty,
+        'Encabezado de publicaciones en Inicio');
+    // En Android, LayoutBuilder no necesariamente se construye hasta entrar
+    // al viewport. Mover primero el encabezado a la vista y luego comprobar
+    // que la cuadrícula se haya construido, evitando un falso negativo.
+    await tester.ensureVisible(find.text('Publicaciones recientes'));
+    await tester.pumpAndSettle();
     await until(() => find.byKey(const Key('inicio-publicaciones-lista')).evaluate().isNotEmpty,
-        'Inicio terminó de cargar publicaciones');
+        'Inicio construyó la lista visible de publicaciones');
     final inicioScroll = find.descendant(
       of: find.byType(InicioPage),
       matching: find.byType(Scrollable),
