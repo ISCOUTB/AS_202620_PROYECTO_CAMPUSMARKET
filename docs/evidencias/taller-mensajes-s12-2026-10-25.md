@@ -50,3 +50,8 @@ No hay transporte de red, broker real, recepción asíncrona, cronómetro de bac
 
 ## Matriz transversal CONTRATO
 Repositorio y estructura: ISCOUTB y directorios históricos. ADR nuevo sin editar aceptados. `docs/ia.md` y `docs/aspectos.md` extendidos. CI y SonarCloud: verificar en hash final. Secretos, autores, historial ADR y scanner: **no verificados aquí**, requieren auditoría específica. Estado evaluable: último `master` anterior al cierre, no basta una rama o un PR verde.
+
+
+## Adenda posterior — backoff temporal verificable
+
+El prototipo conserva `MAX_ATTEMPTS=3` y ahora **ejecuta** `sleep_fn(2)` y `sleep_fn(4)` antes de los reintentos. Por defecto `sleep_fn=time.sleep`, por lo que la demostración experimenta una espera real. En pruebas se inyecta `delays.append` para registrar y verificar exactamente `[2]` en el fallo recuperable y `[2,4]` en la DLQ, sin demoras de reloj real en CI. Se añaden eventos `retry_elapsed` posteriores a cada espera. La inyección valida el protocolo de espera, no mide precisión de un scheduler ni demuestra tiempos distribuidos. Los apartados anteriores que dicen 'tiempo lógico' describen la versión histórica del PR #64; esta adenda corresponde al commit correctivo posterior. ADR-0023 no se modifica: permanece como decisión histórica del montaje original. **Validar run nuevo antes de declarar Cumple**.
