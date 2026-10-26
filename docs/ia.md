@@ -588,3 +588,10 @@ Fecha de revisión: 18 de octubre de 2026 (America/Bogota). Herramienta: ChatGPT
 - Uso de ChatGPT/GitHub: revisión del requisito de reintentos y corrección aislada del simulador; adopción de `time.sleep` real por defecto, con inyección de función de espera en `unittest` para probar 2 y 4 segundos programados sin retrasar CI.
 - Se aceptó preservar tres intentos, DLQ, deduplicación y trazas; se añadieron comprobaciones explícitas de argumentos del sleeper.
 - Se rechazó conservar exclusivamente el log de espera lógica porque no demuestra aplicación de backoff, y también se rechazó insertar `sleep` obligatorio en todas las pruebas por ser innecesariamente lento. No se reescribieron ADR aceptados ni se modificó producción.
+
+
+### Índice de cierre documental — Taller S12 (sin validación anticipada)
+
+- Cambio incremental: [README](../README.md), [S12-MSG-01 / S12-MSG-02 en aspectos](aspectos.md), [evidencia](evidencias/taller-mensajes-s12-2026-10-25.md), [contrato JSON](../contracts/messages/publicacion-creada-v1.schema.json), [test](../backend/tests/test_taller_mensajes_s12.py), [workflow](../.github/workflows/s12-taller-mensajes.yml).
+- Resultado previo y verificable: [CI taller del PR #64, run 40265066306](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/40265066306) fue exitoso **antes** de esta corrección. No sustituye el run nuevo.
+- Cierre pendiente: URL de PR correctivo, SHA del merge y CI específico del último `master`. Se evita presentar estados de una rama anterior como validación del nuevo código.
