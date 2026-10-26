@@ -50,3 +50,10 @@ Pages → Azure App Service → Azure MySQL se conserva como línea base histór
 
 Véanse [C4 Nivel 3](03-componentes-backend.md), [arc42 despliegue](../arc42/07-vista-despliegue.md)
 y [auditoría de continuación](../evidencias/auditoria-mvp-continuacion-2026-10-03.md).
+
+
+## Lectura S12 — Consistencia, caché y eventos (2026-10-25)
+
+En el [diagrama fuente](02-contenedores.puml), MySQL continúa como contenedor de persistencia diferenciado del Backend y el almacenamiento de imágenes figura como contenedor de archivos. Catálogo consume el servicio de Publicaciones en el mismo proceso FastAPI, **sin una réplica asíncrona**. La revisión de reportes y las mutaciones se apoyan en transacciones MySQL; SQL y filesystem no forman una transacción atómica conjunta. **No se agrega Redis ni broker al C4** porque la estrategia S12 opta por no cachear lecturas mutables en la aplicación ni introducir mensajería productiva. Si esa decisión cambia en el futuro, deberá actualizarse el diagrama fuente y la justificación arquitectónica antes de atribuirle operatividad.
+
+Véase [tabla de operaciones y caché S12](../evidencias/evidencia-s12-2026-10-25.md), [arc42 §8](../arc42/08-conceptos-transversales.md) y [ADR-0022](../adr/0022-mantener-mysql-como-fuente-de-verdad-y-evitar-proyecciones-asincronas.md).
