@@ -50,3 +50,24 @@ No hay transporte de red, broker real, recepción asíncrona, cronómetro de bac
 
 ## Matriz transversal CONTRATO
 Repositorio y estructura: ISCOUTB y directorios históricos. ADR nuevo sin editar aceptados. `docs/ia.md` y `docs/aspectos.md` extendidos. CI y SonarCloud: verificar en hash final. Secretos, autores, historial ADR y scanner: **no verificados aquí**, requieren auditoría específica. Estado evaluable: último `master` anterior al cierre, no basta una rama o un PR verde.
+
+
+## Adenda posterior — backoff temporal verificable
+
+El prototipo conserva `MAX_ATTEMPTS=3` y ahora **ejecuta** `sleep_fn(2)` y `sleep_fn(4)` antes de los reintentos. Por defecto `sleep_fn=time.sleep`, por lo que la demostración experimenta una espera real. En pruebas se inyecta `delays.append` para registrar y verificar exactamente `[2]` en el fallo recuperable y `[2,4]` en la DLQ, sin demoras de reloj real en CI. Se añaden eventos `retry_elapsed` posteriores a cada espera. La inyección valida el protocolo de espera, no mide precisión de un scheduler ni demuestra tiempos distribuidos. Los apartados anteriores que dicen 'tiempo lógico' describen la versión histórica del PR #64; esta adenda corresponde al commit correctivo posterior. ADR-0023 no se modifica: permanece como decisión histórica del montaje original. **Validar run nuevo antes de declarar Cumple**.
+
+
+## Índice final de entrega y trazabilidad del ajuste (completar tras CI)
+
+- **Base evaluable anterior:** [PR #64 fusionado](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/pull/64), demostración original y [run S12 exitoso 40265066306](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/40265066306). Ese run **no** verifica la corrección posterior de temporización.
+- **Contratos:** [PublicacionCreada.v1](../../contracts/messages/publicacion-creada-v1.schema.json); versión mayor incompatible y campos requeridos explícitos.
+- **Productor/consumidor, deduplicación, retry y DLQ:** [simulador](../../scripts/taller_mensajes_s12.py); **pruebas reales** de duplicado, fallo recuperable, fallo permanente y versión incompatible: [unittest](../../backend/tests/test_taller_mensajes_s12.py).
+- **Política nueva demostrable:** `sleep_fn` por defecto = `time.sleep`; intervalos 2 s y 4 s; sleeper sustituto en pruebas comprueba invocaciones y orden sin bloquear CI. Registro `retry_scheduled` y `retry_elapsed` con correlación. Queda explícita la diferencia entre temporización por defecto y reloj de pruebas.
+- **Decisión de no incorporar infraestructura nueva:** [ADR-0023, histórico e inalterado](../adr/0023-probar-mensajes-aislados-sin-introducir-broker-productivo.md); comparación con HTTP síncrono y broker productivo.
+- **Matriz de arquitectura:** [S12-MSG-01 y S12-MSG-02](../aspectos.md); [registro de IA](../ia.md) y [README](../../README.md).
+- **Verificación rápida requerida en corrección:** `python -m unittest discover -s backend/tests -p 'test_taller_mensajes_s12.py' -v`. El workflow dedicado debe resultar exitoso para el SHA que se fusionará.
+- **Pendiente al redactar:** URL del nuevo PR, SHA de merge y run de comprobación en `master`. No se rellenan con valores supuestos. Preservar enlace al commit definitivo en la entrega SAVIO.
+
+### Advertencias del evaluador
+
+El prototipo **no acredita** broker durable, transacción outbox productiva ni rendimiento bajo carga. SQLite en memoria y el backoff inyectado en tests tienen límites documentados. Las pruebas verifican las invocaciones de espera, pero no cuantifican precisión de reloj del sistema. Los controles transversales de secretos, scanner y autoría requieren verificación adicional; no se declaran aprobados por tener un workflow verde.

@@ -530,3 +530,12 @@ Las filas S12-DAT-01 y S12-DAT-02 anteriores permanecen como trazabilidad origin
 | ID | Aspecto | Requisito | C4 | ADR | Código | Pruebas | Evidencia |
 |---|---|---|---|---|---|---|---|
 | S12-MSG-01 | Entrega tolerante a duplicados de notificación simulada | Taller aplicado S12: contrato, at-least-once, deduplicación, backoff, DLQ y correlación | [C4 L2 sin broker](c4/02-contenedores.md), sin cambio productivo | [ADR-0023](adr/0023-probar-mensajes-aislados-sin-introducir-broker-productivo.md) | [Prototipo](../scripts/taller_mensajes_s12.py), [contrato](../contracts/messages/publicacion-creada-v1.schema.json) | [Duplicados y reintentos](../backend/tests/test_taller_mensajes_s12.py) | [Evidencia y límites](evidencias/taller-mensajes-s12-2026-10-25.md), [workflow](../.github/workflows/s12-taller-mensajes.yml) |
+
+
+### S12-MSG-02 — Validación explícita de backoff, sin romper S12-MSG-01
+
+| ID | Requisito | Implementación | Prueba verificable | Evidencia | Decisión |
+|---|---|---|---|---|---|
+| S12-MSG-02 | Reintentos con espera progresiva y fallidos a DLQ | [`BrokerSimulator.consume`](../scripts/taller_mensajes_s12.py) invoca `sleep_fn(2)` y `sleep_fn(4)`; por defecto `time.sleep` | [Test fallo recuperable y DLQ](../backend/tests/test_taller_mensajes_s12.py): sleeper inyectado y verificación de `[2]` y `[2,4]` | [Adenda de backoff y límites](evidencias/taller-mensajes-s12-2026-10-25.md#adenda-posterior--backoff-temporal-verificable) | [ADR-0023](adr/0023-probar-mensajes-aislados-sin-introducir-broker-productivo.md), sin modificación histórica |
+
+El test con sleeper falso demuestra que la ruta de reintento **invoca las demoras correctas**; no mide el tiempo real del scheduler. La demostración ejecutada sin inyección sí aplica esperas temporales. El CI de la corrección deberá comprobarse con el SHA posterior al PR correctivo, sin reutilizar el verde de PR #64 como si fuese validación de este cambio.

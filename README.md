@@ -702,3 +702,8 @@ python scripts/taller_mensajes_s12.py
 ```
 
 [Contrato JSON](contracts/messages/publicacion-creada-v1.schema.json) · [ADR-0023](docs/adr/0023-probar-mensajes-aislados-sin-introducir-broker-productivo.md) · [Evidencia, 11 criterios y límites](docs/evidencias/taller-mensajes-s12-2026-10-25.md) · [CI específico](.github/workflows/s12-taller-mensajes.yml). No se modifica C4 ni se declara un broker desplegado.
+
+
+### Taller S12 — Cierre correctivo de backoff (sin alterar ADR históricos)
+
+El consumidor aplica espera real por defecto con `time.sleep` entre los intentos (2 s y 4 s). Las pruebas inyectan un sleeper de prueba que registra las esperas requeridas, manteniendo CI rápido sin eliminar la política temporal del código real. Véanse [pruebas del backoff](backend/tests/test_taller_mensajes_s12.py), [simulador](scripts/taller_mensajes_s12.py), [evidencia y adenda](docs/evidencias/taller-mensajes-s12-2026-10-25.md), [trazabilidad](docs/aspectos.md) y [registro de IA](docs/ia.md). La corrección no altera la arquitectura productiva ni reescribe el ADR-0023. El resultado definitivo depende de pruebas del nuevo commit y del `master` fusionado.

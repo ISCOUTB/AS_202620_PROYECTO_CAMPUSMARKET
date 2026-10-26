@@ -1,12 +1,13 @@
 """Prototipo AISLADO: eventos de publicación para notificaciones (sin tocar la API)."""
 import json
 import sqlite3
+import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
 SCHEMA_VERSION = 1
 MAX_ATTEMPTS = 3
-BACKOFF_SECONDS = (0, 2, 4)  # tiempos lógicos: no se duerme en pruebas
+BACKOFF_SECONDS = (0, 2, 4)  # esperas reales en demo; reloj inyectado en pruebas
 
 
 @dataclass(frozen=True)
@@ -30,12 +31,13 @@ class Event:
 
 class BrokerSimulator:
     """Entrega at-least-once mediante redelivery explícito; SQLite solo para el experimento."""
-    def __init__(self, connection=None):
+    def __init__(self, connection=None, sleep_fn=None):
         self.db = connection or sqlite3.connect(":memory:")
         self.db.execute("CREATE TABLE IF NOT EXISTS processed (message_id TEXT PRIMARY KEY, publication_id INTEGER NOT NULL)")
         self.db.execute("CREATE TABLE IF NOT EXISTS notifications (publication_id INTEGER NOT NULL, message_id TEXT NOT NULL UNIQUE)")
         self.db.execute("CREATE TABLE IF NOT EXISTS dead_letters (message_id TEXT PRIMARY KEY, payload TEXT NOT NULL, attempts INTEGER NOT NULL, reason TEXT NOT NULL)")
         self.trace = []
+        self.sleep_fn = sleep_fn if sleep_fn is not None else time.sleep
 
     def log(self, event, stage, attempt=0, **fields):
         row = {"time": datetime.now(timezone.utc).isoformat(), "message_id": event.message_id,
@@ -65,7 +67,10 @@ class BrokerSimulator:
             except ConnectionError as exc:
                 self.log(event, "attempt_failed", attempt, reason=str(exc))
                 if attempt < MAX_ATTEMPTS:
-                    self.log(event, "retry_scheduled", attempt, backoff_seconds=BACKOFF_SECONDS[attempt])
+                    delay = BACKOFF_SECONDS[attempt]
+                    self.log(event, "retry_scheduled", attempt, backoff_seconds=delay)
+                    self.sleep_fn(delay)
+                    self.log(event, "retry_elapsed", attempt, backoff_seconds=delay)
                 else:
                     with self.db:
                         self.db.execute("INSERT OR REPLACE INTO dead_letters VALUES (?,?,?,?)",
