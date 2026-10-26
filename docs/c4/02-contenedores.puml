@@ -1,7 +1,7 @@
 @startuml
 
 title CampusMarket - C4 Nivel 2 · Contenedores
-caption Estado vigente · Flutter Web/Android · FastAPI · MySQL
+caption Estado vigente · Flutter Web/Android · FastAPI · MySQL · sin broker ni caché de aplicación
 
 left to right direction
 
@@ -48,7 +48,7 @@ Desarrollo: directorio configurable.
 Compose: volumen nombrado verificado.
 Azure requiere almacenamiento durable.
 ADR-0011, ADR-0015 y ADR-0018.
-MVP público todavía no desplegado.
+MVP público: API en Dokploy,\nfrontend en GitHub Pages.
 end note
 
 note right of mysql
