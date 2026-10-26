@@ -32,7 +32,8 @@ class MessagesTest(unittest.TestCase):
         self.assertEqual({x["correlation_id"] for x in broker.trace}, {"corr-42"})
 
     def test_permanent_failure_enters_dead_letter_store(self):
-        broker = BrokerSimulator()
+        delays = []
+        broker = BrokerSimulator(sleep_fn=delays.append)
         self.assertEqual(broker.consume(event(), permanent_failure=True), "dead_lettered")
         self.assertEqual(broker.stats(), {"processed": 0, "notifications": 0, "dlq": 1})
         self.assertEqual([x["backoff_seconds"] for x in broker.trace if x["stage"] == "retry_scheduled"], [2, 4])
