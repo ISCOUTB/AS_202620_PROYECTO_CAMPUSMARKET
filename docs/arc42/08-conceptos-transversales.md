@@ -95,3 +95,16 @@ SQLite y bloqueo del primer corte permanecen en evidencia/ADR históricos.
 La evolución materializa los cuatro contextos; conserva ADR-0001 y el único
 escritor por tabla. Esta continuación sincroniza documentación, no cambia ADR
 aceptados ni efectúa despliegue.
+
+
+## 8.9 Estrategia de datos y consistencia — S12 (2026-10-25)
+
+La garantía se determina **por operación**, no como propiedad universal de CampusMarket. MySQL es la fuente de verdad: las escrituras locales confirman o revierten mediante transacciones; la creación/edición de publicaciones y los reportes permanecen en sus contextos propietarios. Catálogo consulta a Publicaciones por una llamada interna, sin proyección asíncrona; la revisión de reportes bloquea la fila con `FOR UPDATE`, pero el ocultamiento entre contextos no constituye una única transacción global. Las imágenes abarcan MySQL y filesystem con compensaciones, y un timeout HTTP en la creación no equivale a que la escritura haya fallado ni garantiza idempotencia.
+
+La [tabla operación → garantía de S12](../evidencias/evidencia-s12-2026-10-25.md#2-tabla-operación--garantía-de-consistencia) identifica rutas, consecuencias de desfase y límites por operación. Se conserva [ADR-0022](../adr/0022-mantener-mysql-como-fuente-de-verdad-y-evitar-proyecciones-asincronas.md) para explicar el costo de revertir la propiedad de datos.
+
+## 8.10 Estrategia de caché — S12 (2026-10-25)
+
+**No incorporar caché mutable de aplicación en S12.** Las lecturas del catálogo acceden al servicio propietario/MySQL. No hay entradas ni TTL de aplicación que invalidar; cualquier futura caché necesitaría una política explícita de invalidación **tras cada escritura confirmada** (creación, edición, cambio de estado, moderación, borrado) y clave o versión para todas las variantes de filtros. TTL por sí solo dejaría lecturas obsoletas. Esta alternativa de cache-aside es **propuesta, no implementada**, y requiere medición EC-01 para justificarla. Los motores y navegadores pueden tener mecanismos internos distintos, que no se presentan aquí como caché del dominio.
+
+La implementación productiva no agrega broker ni consumidor de mensajes; un eventual laboratorio de mensajería se documenta como prototipo aislado. [Evidencia y política completa S12](../evidencias/evidencia-s12-2026-10-25.md).
