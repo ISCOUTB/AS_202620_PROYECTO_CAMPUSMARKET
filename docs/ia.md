@@ -552,3 +552,10 @@ Fecha de revisión: 18 de octubre de 2026 (America/Bogota). Herramienta: ChatGPT
 | Fecha | Herramienta | Uso realizado | Verificación del equipo | Qué se rechazó y por qué |
 |---|---|---|---|---|
 | 25/10/2026 | ChatGPT / GitHub Actions | Se investigó el fallo del [job Android PR #61](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/40249803106/job/121339008849): la aserción `Portada usa publicación existente`. Se modificó la transición de navegación a Inicio en `frontend/campusmarket/lib/app/marketplace_shell.dart` para recargar publicaciones al regresar desde otras vistas. | El error original y su ubicación se verificaron en logs; la hipótesis de datos obsoletos se basa en inspección del código. **La corrección NO está validada hasta obtener un nuevo run exitoso.** | Se rechazó suprimir la aserción, declarar el fallo intermitente sin prueba o aumentar tiempos de espera arbitrariamente; ninguna opción corrige la frescura de la portada. |
+
+
+## S12 — Auditoría correctiva posterior al PR #61 (25/10/2026)
+
+| Fecha | Herramienta | Uso realizado | Verificación del equipo | Qué se rechazó y por qué |
+|---|---|---|---|---|
+| 25/10/2026 | ChatGPT + GitHub | Contraste de la evidencia S12 fusionada con nueve criterios y contrato transversal; elaboración de adenda nueva de cierre por hash y corrección de nota obsoleta del diagrama C4 L2. | Se comprobó el merge original `14ab852` y el éxito del reintento S10; el hash de la corrección y otros enlaces CI requieren corroboración tras fusionar. | Se rechazó reescribir el ADR aceptado, atribuir pruebas específicas de caché inexistentes o declarar 5/5 sin resultado docente. Se rechazó borrar el fallo histórico S10: se conserva junto al reintento exitoso. |

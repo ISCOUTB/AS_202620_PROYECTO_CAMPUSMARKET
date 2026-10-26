@@ -685,3 +685,8 @@ Puntos de entrada principales:
 - [Matriz de trazabilidad de aspectos](docs/aspectos.md) y [registro IA](docs/ia.md).
 
 Estas decisiones no introducen infraestructura de mensajería productiva ni una caché que no exista. La evidencia del taller es una entrega separada. **El trabajo de `s12` solo será evaluable tras integrarse a `master` antes del cierre**; consultar en la evidencia los límites y comprobaciones pendientes.
+
+
+### S12 — Adenda correctiva y auditoría de cierre
+
+[Auditoría S12 por hash, nueve criterios, límites y matriz transversal](docs/evidencias/cierre-s12-2026-10-25.md). Se mantiene la evidencia original y el ADR-0022 sin reescritura. El resultado del commit correctivo depende del merge en master antes del cierre del aula.
