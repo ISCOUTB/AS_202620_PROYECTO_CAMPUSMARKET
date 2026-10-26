@@ -206,21 +206,27 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
 
     await click(find.byKey(const Key('nav-inicio')));
-    // En Android la sección de publicaciones queda debajo del hero; una tarjeta
-    // puede no estar construida por el viewport hasta que se desplace la página.
-    // Verificar el elemento real tras desplazarlo, sin suprimir la aserción.
+    // La portada carga async y muestra como máximo cuatro publicaciones.
+    // Asegurar primero que el dato persiste y la lista realmente terminó de
+    // cargar, antes de buscar la tarjeta visible en pantallas compactas.
+    final catalogoRespuesta = await http.get(Uri.parse('$defaultApiBaseUrl/catalogo'));
+    expect(catalogoRespuesta.statusCode, 200, reason: 'API catálogo disponible tras publicar');
+    final catalogoDatos = (jsonDecode(catalogoRespuesta.body) as List).cast<Map<String, dynamic>>();
+    expect(catalogoDatos.any((dato) => dato['titulo'] == title), isTrue,
+        reason: 'Publicación persistida en catálogo antes de verificar portada');
+    await until(() => find.byKey(const Key('inicio-publicaciones-lista')).evaluate().isNotEmpty,
+        'Inicio terminó de cargar publicaciones');
     final inicioScroll = find.descendant(
       of: find.byType(InicioPage),
       matching: find.byType(Scrollable),
     ).first;
-    await until(() => find.byType(InicioPage).evaluate().isNotEmpty, 'Portada montada');
-    // La cuadrícula de Inicio se construye según el viewport. Desplazar el
-    // contenido hasta que el título exista y sea visible; no usar .first/.last
-    // sobre un finder todavía vacío ni asumir que solo aparece una vez.
+    await tester.ensureVisible(find.byKey(const Key('inicio-publicaciones-lista')));
     await tester.pumpAndSettle();
-    for (var intento = 0; intento < 12; intento++) {
+    // El texto debe estar en la portada real, no solo en una respuesta HTTP.
+    // Desplazar las tarjetas en Android sin asumir un viewport fijo.
+    for (var intento = 0; intento < 8; intento++) {
       if (find.text(title).hitTestable().evaluate().isNotEmpty) break;
-      await tester.drag(inicioScroll, const Offset(0, -280));
+      await tester.drag(inicioScroll, const Offset(0, -180));
       await tester.pumpAndSettle();
     }
     await until(() => find.text(title).hitTestable().evaluate().isNotEmpty,
