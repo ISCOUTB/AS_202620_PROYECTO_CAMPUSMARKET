@@ -214,14 +214,16 @@ void main() {
       matching: find.byType(Scrollable),
     ).first;
     await until(() => find.byType(InicioPage).evaluate().isNotEmpty, 'Portada montada');
-    // Un título puede aparecer tanto en el destacado como en la tarjeta.
-    // scrollUntilVisible requiere un finder que identifique un solo elemento.
-    final tarjeta = find.descendant(
-      of: find.byType(InicioPage),
-      matching: find.text(title),
-    ).last;
-    await tester.scrollUntilVisible(tarjeta, 220, scrollable: inicioScroll);
-    await until(() => tarjeta.hitTestable().evaluate().isNotEmpty,
+    // La cuadrícula de Inicio se construye según el viewport. Desplazar el
+    // contenido hasta que el título exista y sea visible; no usar .first/.last
+    // sobre un finder todavía vacío ni asumir que solo aparece una vez.
+    await tester.pumpAndSettle();
+    for (var intento = 0; intento < 12; intento++) {
+      if (find.text(title).hitTestable().evaluate().isNotEmpty) break;
+      await tester.drag(inicioScroll, const Offset(0, -280));
+      await tester.pumpAndSettle();
+    }
+    await until(() => find.text(title).hitTestable().evaluate().isNotEmpty,
         'Portada usa publicación existente');
     await screenshot('inicio-con-producto');
     await click(find.byKey(const Key('nav-catalogo')));
