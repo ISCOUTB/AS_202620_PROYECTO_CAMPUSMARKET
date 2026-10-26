@@ -559,3 +559,18 @@ Fecha de revisión: 18 de octubre de 2026 (America/Bogota). Herramienta: ChatGPT
 | Fecha | Herramienta | Uso realizado | Verificación del equipo | Qué se rechazó y por qué |
 |---|---|---|---|---|
 | 25/10/2026 | ChatGPT + GitHub | Contraste de la evidencia S12 fusionada con nueve criterios y contrato transversal; elaboración de adenda nueva de cierre por hash y corrección de nota obsoleta del diagrama C4 L2. | Se comprobó el merge original `14ab852` y el éxito del reintento S10; el hash de la corrección y otros enlaces CI requieren corroboración tras fusionar. | Se rechazó reescribir el ADR aceptado, atribuir pruebas específicas de caché inexistentes o declarar 5/5 sin resultado docente. Se rechazó borrar el fallo histórico S10: se conserva junto al reintento exitoso. |
+
+
+## Corrección de verificabilidad Android posterior a S12 — 25/10/2026
+
+| Herramienta | Evidencia del error | Hipótesis y modificación | Estado y alternativas rechazadas |
+|---|---|---|---|
+| ChatGPT + GitHub Actions | [Job 121353733617](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/40254634092/job/121353733617) falla en `mvp_flow_test.dart`: `Portada usa publicación existente` a pesar de la recarga de Inicio. | `InicioPage` sitúa la cuadrícula debajo de un hero largo y emplea `GridView.builder` en una pantalla móvil. Se ajustó el test para desplazar el `Scrollable` de Inicio hasta la tarjeta y validar que el texto real sea alcanzable. | Hipótesis pendiente de CI: no se afirma que el error esté resuelto hasta un run verde. No se alteran backend, timeout, datos ni aserción sustantiva; el error de S10 público es independiente. |
+
+
+### Diagnóstico mediante artefacto real Android — 25/10/2026 (PR #63)
+
+- Evidencia: [run 40260246299](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/40260246299), artefacto `12624208957` (capturas `android-fallo.png`, `android-1-inicio-vacio.png`, `backend.log`, `resultado.json` y estado ADB).
+- Hechos comprobados: API `/catalogo` respondió 200 y devolvió el objeto requerido antes de la aserción; inmediatamente al cargar Inicio el servidor CI devolvió **dos 503** acompañados de `Exceeded concurrency limit`. El workflow configuraba `uvicorn --limit-concurrency 6`, también compartido con solicitudes de imágenes. La captura de fallo muestra el hero de Inicio sin publicación destacada; la excepción fue `Inicio terminó de cargar publicaciones`.
+- Corrección acotada: elevar el límite artificial del backend **solo en E2E** de 6 a 40 conexiones, sin modificar reglas de negocio, y desplazar primero al encabezado antes de comprobar el `LayoutBuilder` bajo el viewport Android. Se mantiene la aserción de publicación realmente visible. El límite aumentado no demuestra por sí solo disponibilidad bajo carga ni reemplaza pruebas de desempeño.
+- Validación pendiente: no afirmar éxito sin CI verde del commit correctivo. Se rechazó borrar la prueba, simular publicaciones o reemplazar el 503 por una respuesta ficticia.

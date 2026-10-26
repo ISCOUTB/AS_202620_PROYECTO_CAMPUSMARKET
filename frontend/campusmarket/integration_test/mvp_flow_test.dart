@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:campusmarket/app/campus_market_app.dart';
+import 'package:campusmarket/app/inicio_page.dart';
 import 'package:campusmarket/publicaciones/publicaciones_api.dart';
 import 'package:campusmarket/publicaciones/mis_publicaciones_page.dart';
 import 'package:campusmarket/shared/api_configuration.dart';
@@ -205,7 +206,38 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
 
     await click(find.byKey(const Key('nav-inicio')));
-    await until(() => find.text(title).evaluate().isNotEmpty, 'Portada usa publicación existente');
+    // La portada carga async y muestra como máximo cuatro publicaciones.
+    // Asegurar primero que el dato persiste y la lista realmente terminó de
+    // cargar, antes de buscar la tarjeta visible en pantallas compactas.
+    final catalogoRespuesta = await http.get(Uri.parse('$defaultApiBaseUrl/catalogo'));
+    expect(catalogoRespuesta.statusCode, 200, reason: 'API catálogo disponible tras publicar');
+    final catalogoDatos = (jsonDecode(catalogoRespuesta.body) as List).cast<Map<String, dynamic>>();
+    expect(catalogoDatos.any((dato) => dato['titulo'] == title), isTrue,
+        reason: 'Publicación persistida en catálogo antes de verificar portada');
+    await until(() => find.text('Publicaciones recientes').evaluate().isNotEmpty,
+        'Encabezado de publicaciones en Inicio');
+    // En Android, LayoutBuilder no necesariamente se construye hasta entrar
+    // al viewport. Mover primero el encabezado a la vista y luego comprobar
+    // que la cuadrícula se haya construido, evitando un falso negativo.
+    await tester.ensureVisible(find.text('Publicaciones recientes'));
+    await tester.pumpAndSettle();
+    await until(() => find.byKey(const Key('inicio-publicaciones-lista')).evaluate().isNotEmpty,
+        'Inicio construyó la lista visible de publicaciones');
+    final inicioScroll = find.descendant(
+      of: find.byType(InicioPage),
+      matching: find.byType(Scrollable),
+    ).first;
+    await tester.ensureVisible(find.byKey(const Key('inicio-publicaciones-lista')));
+    await tester.pumpAndSettle();
+    // El texto debe estar en la portada real, no solo en una respuesta HTTP.
+    // Desplazar las tarjetas en Android sin asumir un viewport fijo.
+    for (var intento = 0; intento < 8; intento++) {
+      if (find.text(title).hitTestable().evaluate().isNotEmpty) break;
+      await tester.drag(inicioScroll, const Offset(0, -180));
+      await tester.pumpAndSettle();
+    }
+    await until(() => find.text(title).hitTestable().evaluate().isNotEmpty,
+        'Portada usa publicación existente');
     await screenshot('inicio-con-producto');
     await click(find.byKey(const Key('nav-catalogo')));
     await catalogResult(title, 'Producto visible en catálogo');
