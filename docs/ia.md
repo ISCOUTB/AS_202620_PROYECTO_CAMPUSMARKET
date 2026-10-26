@@ -545,3 +545,10 @@ Fecha de revisión: 18 de octubre de 2026 (America/Bogota). Herramienta: ChatGPT
 |---|---|---|---|---|
 | 25/10/2026 | ChatGPT + conector GitHub | Ayuda a contrastar la ficha oficial S12/CONTRATO con los repositorios de Publicaciones, Catálogo y Administración; redactar la tabla operación→garantía, ADR-0022 y política de caché. | Revisión estática de `create_publication`, `buscar_publicaciones`, `create_report`, `open_review` y de la topología C4; la aceptación funcional y CI del commit final quedan por verificar. | Se rechazó introducir Redis o Kafka solo por apariencia: el MVP no demuestra necesidad y sería inconsistente con la topología. Se rechazó afirmar consistencia distribuida fuerte entre SQL y archivos. |
 | 25/10/2026 | ChatGPT | Preparación de evidencias, enlaces y ampliaciones de arc42/C4/aspectos sin borrar el trabajo histórico. | Requiere revisión humana de enlaces, pruebas y hash `master` elegible al cierre de SAVIO. | Se rechazó modificar ADR aceptados o presentar el prototipo del taller como broker productivo; el taller se evalúa aparte. |
+
+
+### Verificación correctiva S12 — Android (25/10/2026)
+
+| Fecha | Herramienta | Uso realizado | Verificación del equipo | Qué se rechazó y por qué |
+|---|---|---|---|---|
+| 25/10/2026 | ChatGPT / GitHub Actions | Se investigó el fallo del [job Android PR #61](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/40249803106/job/121339008849): la aserción `Portada usa publicación existente`. Se modificó la transición de navegación a Inicio en `frontend/campusmarket/lib/app/marketplace_shell.dart` para recargar publicaciones al regresar desde otras vistas. | El error original y su ubicación se verificaron en logs; la hipótesis de datos obsoletos se basa en inspección del código. **La corrección NO está validada hasta obtener un nuevo run exitoso.** | Se rechazó suprimir la aserción, declarar el fallo intermitente sin prueba o aumentar tiempos de espera arbitrariamente; ninguna opción corrige la frescura de la portada. |
