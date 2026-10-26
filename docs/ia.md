@@ -581,3 +581,10 @@ Fecha de revisión: 18 de octubre de 2026 (America/Bogota). Herramienta: ChatGPT
 | Herramienta | Uso | Aceptado y verificable | Rechazado y motivo |
 |---|---|---|---|
 | ChatGPT + GitHub | Diseñar simulador Python de `PublicacionCreada.v1`, JSON Schema, pruebas con `unittest`, ADR-0023 y workflow independiente | Aceptado como **prototipo aislado** con `message_id`, correlación, deduplicación transaccional SQLite, reintento y DLQ; verificar run del commit final antes de afirmar éxito | Kafka/RabbitMQ en MVP sin caso de calidad medido: agrega operación innecesaria. No simular broker productivo. No eliminar pruebas previas ni sobrescribir ADR-0022. No declarar retardo real cuando backoff es tiempo lógico. |
+
+
+### Adenda correctiva Taller S12 — backoff ejecutable
+
+- Uso de ChatGPT/GitHub: revisión del requisito de reintentos y corrección aislada del simulador; adopción de `time.sleep` real por defecto, con inyección de función de espera en `unittest` para probar 2 y 4 segundos programados sin retrasar CI.
+- Se aceptó preservar tres intentos, DLQ, deduplicación y trazas; se añadieron comprobaciones explícitas de argumentos del sleeper.
+- Se rechazó conservar exclusivamente el log de espera lógica porque no demuestra aplicación de backoff, y también se rechazó insertar `sleep` obligatorio en todas las pruebas por ser innecesariamente lento. No se reescribieron ADR aceptados ni se modificó producción.
