@@ -523,3 +523,10 @@ Se añaden aspectos sin sustituir las filas históricas. Estado inicial: evidenc
 ### Cierre auditable S12 — referencia incremental
 
 Las filas S12-DAT-01 y S12-DAT-02 anteriores permanecen como trazabilidad original. Su [adenda de auditoría por hash](evidencias/cierre-s12-2026-10-25.md) contrasta las operaciones, la ausencia justificada de caché, el ADR-0022, C4 y arc42, y separa evidencias verificadas de CI y controles transversales aún no verificados. Los enlaces históricos de pruebas funcionales no se presentan como pruebas nuevas de invalidación.
+
+
+## Taller S12 — Mensajes y consistencia (prototipo aislado)
+
+| ID | Aspecto | Requisito | C4 | ADR | Código | Pruebas | Evidencia |
+|---|---|---|---|---|---|---|---|
+| S12-MSG-01 | Entrega tolerante a duplicados de notificación simulada | Taller aplicado S12: contrato, at-least-once, deduplicación, backoff, DLQ y correlación | [C4 L2 sin broker](c4/02-contenedores.md), sin cambio productivo | [ADR-0023](adr/0023-probar-mensajes-aislados-sin-introducir-broker-productivo.md) | [Prototipo](../scripts/taller_mensajes_s12.py), [contrato](../contracts/messages/publicacion-creada-v1.schema.json) | [Duplicados y reintentos](../backend/tests/test_taller_mensajes_s12.py) | [Evidencia y límites](evidencias/taller-mensajes-s12-2026-10-25.md), [workflow](../.github/workflows/s12-taller-mensajes.yml) |

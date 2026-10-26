@@ -574,3 +574,10 @@ Fecha de revisión: 18 de octubre de 2026 (America/Bogota). Herramienta: ChatGPT
 - Hechos comprobados: API `/catalogo` respondió 200 y devolvió el objeto requerido antes de la aserción; inmediatamente al cargar Inicio el servidor CI devolvió **dos 503** acompañados de `Exceeded concurrency limit`. El workflow configuraba `uvicorn --limit-concurrency 6`, también compartido con solicitudes de imágenes. La captura de fallo muestra el hero de Inicio sin publicación destacada; la excepción fue `Inicio terminó de cargar publicaciones`.
 - Corrección acotada: elevar el límite artificial del backend **solo en E2E** de 6 a 40 conexiones, sin modificar reglas de negocio, y desplazar primero al encabezado antes de comprobar el `LayoutBuilder` bajo el viewport Android. Se mantiene la aserción de publicación realmente visible. El límite aumentado no demuestra por sí solo disponibilidad bajo carga ni reemplaza pruebas de desempeño.
 - Validación pendiente: no afirmar éxito sin CI verde del commit correctivo. Se rechazó borrar la prueba, simular publicaciones o reemplazar el 503 por una respuesta ficticia.
+
+
+## Taller aplicado S12 — Mensajes y consistencia (2026-10-25)
+
+| Herramienta | Uso | Aceptado y verificable | Rechazado y motivo |
+|---|---|---|---|
+| ChatGPT + GitHub | Diseñar simulador Python de `PublicacionCreada.v1`, JSON Schema, pruebas con `unittest`, ADR-0023 y workflow independiente | Aceptado como **prototipo aislado** con `message_id`, correlación, deduplicación transaccional SQLite, reintento y DLQ; verificar run del commit final antes de afirmar éxito | Kafka/RabbitMQ en MVP sin caso de calidad medido: agrega operación innecesaria. No simular broker productivo. No eliminar pruebas previas ni sobrescribir ADR-0022. No declarar retardo real cuando backoff es tiempo lógico. |
