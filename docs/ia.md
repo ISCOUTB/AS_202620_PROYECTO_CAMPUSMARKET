@@ -559,3 +559,10 @@ Fecha de revisión: 18 de octubre de 2026 (America/Bogota). Herramienta: ChatGPT
 | Fecha | Herramienta | Uso realizado | Verificación del equipo | Qué se rechazó y por qué |
 |---|---|---|---|---|
 | 25/10/2026 | ChatGPT + GitHub | Contraste de la evidencia S12 fusionada con nueve criterios y contrato transversal; elaboración de adenda nueva de cierre por hash y corrección de nota obsoleta del diagrama C4 L2. | Se comprobó el merge original `14ab852` y el éxito del reintento S10; el hash de la corrección y otros enlaces CI requieren corroboración tras fusionar. | Se rechazó reescribir el ADR aceptado, atribuir pruebas específicas de caché inexistentes o declarar 5/5 sin resultado docente. Se rechazó borrar el fallo histórico S10: se conserva junto al reintento exitoso. |
+
+
+## Corrección de verificabilidad Android posterior a S12 — 25/10/2026
+
+| Herramienta | Evidencia del error | Hipótesis y modificación | Estado y alternativas rechazadas |
+|---|---|---|---|
+| ChatGPT + GitHub Actions | [Job 121353733617](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/40254634092/job/121353733617) falla en `mvp_flow_test.dart`: `Portada usa publicación existente` a pesar de la recarga de Inicio. | `InicioPage` sitúa la cuadrícula debajo de un hero largo y emplea `GridView.builder` en una pantalla móvil. Se ajustó el test para desplazar el `Scrollable` de Inicio hasta la tarjeta y validar que el texto real sea alcanzable. | Hipótesis pendiente de CI: no se afirma que el error esté resuelto hasta un run verde. No se alteran backend, timeout, datos ni aserción sustantiva; el error de S10 público es independiente. |
