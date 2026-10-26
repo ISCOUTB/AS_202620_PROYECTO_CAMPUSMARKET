@@ -214,8 +214,14 @@ void main() {
       matching: find.byType(Scrollable),
     ).first;
     await until(() => find.byType(InicioPage).evaluate().isNotEmpty, 'Portada montada');
-    await tester.scrollUntilVisible(find.text(title), 220, scrollable: inicioScroll);
-    await until(() => find.text(title).hitTestable().evaluate().isNotEmpty,
+    // Un título puede aparecer tanto en el destacado como en la tarjeta.
+    // scrollUntilVisible requiere un finder que identifique un solo elemento.
+    final tarjeta = find.descendant(
+      of: find.byType(InicioPage),
+      matching: find.text(title),
+    ).last;
+    await tester.scrollUntilVisible(tarjeta, 220, scrollable: inicioScroll);
+    await until(() => tarjeta.hitTestable().evaluate().isNotEmpty,
         'Portada usa publicación existente');
     await screenshot('inicio-con-producto');
     await click(find.byKey(const Key('nav-catalogo')));
