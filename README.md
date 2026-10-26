@@ -690,3 +690,15 @@ Estas decisiones no introducen infraestructura de mensajería productiva ni una 
 ### S12 — Adenda correctiva y auditoría de cierre
 
 [Auditoría S12 por hash, nueve criterios, límites y matriz transversal](docs/evidencias/cierre-s12-2026-10-25.md). Se mantiene la evidencia original y el ADR-0022 sin reescritura. El resultado del commit correctivo depende del merge en master antes del cierre del aula.
+
+
+## Taller aplicado Semana 12 — Mensajes y consistencia (prototipo aislado)
+
+Prototipo académico `PublicacionCreada.v1` **sin conexión al backend de producción**. Python 3.12, estándar de biblioteca:
+
+```bash
+python -m unittest discover -s backend/tests -p 'test_taller_mensajes_s12.py' -v
+python scripts/taller_mensajes_s12.py
+```
+
+[Contrato JSON](contracts/messages/publicacion-creada-v1.schema.json) · [ADR-0023](docs/adr/0023-probar-mensajes-aislados-sin-introducir-broker-productivo.md) · [Evidencia, 11 criterios y límites](docs/evidencias/taller-mensajes-s12-2026-10-25.md) · [CI específico](.github/workflows/s12-taller-mensajes.yml). No se modifica C4 ni se declara un broker desplegado.
