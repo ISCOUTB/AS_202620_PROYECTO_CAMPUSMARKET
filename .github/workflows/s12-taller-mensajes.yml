@@ -1,0 +1,37 @@
+name: S12 Taller Mensajes aislado
+on:
+  push:
+    branches: [s12-taller-mensajes]
+    paths:
+      - 'scripts/taller_mensajes_s12.py'
+      - 'backend/tests/test_taller_mensajes_s12.py'
+      - 'contracts/messages/**'
+      - '.github/workflows/s12-taller-mensajes.yml'
+  pull_request:
+    branches: [master]
+    paths:
+      - 'scripts/taller_mensajes_s12.py'
+      - 'backend/tests/test_taller_mensajes_s12.py'
+      - 'contracts/messages/**'
+      - '.github/workflows/s12-taller-mensajes.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  messages-contract-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validar contrato JSON parseable
+        run: python -m json.tool contracts/messages/publicacion-creada-v1.schema.json > /dev/null
+      - name: Test duplicado, fallo recuperable y DLQ
+        run: python -m unittest discover -s backend/tests -p 'test_taller_mensajes_s12.py' -v
+      - name: Evidencia trazable de productor a consumidor
+        run: python scripts/taller_mensajes_s12.py | tee taller-mensajes-trace.jsonl
+      - uses: actions/upload-artifact@v4
+        with:
+          name: s12-messages-trace-${{ github.sha }}
+          path: taller-mensajes-trace.jsonl
