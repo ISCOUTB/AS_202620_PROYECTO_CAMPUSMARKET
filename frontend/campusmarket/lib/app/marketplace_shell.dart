@@ -55,7 +55,16 @@ class _MarketplaceShellState extends State<MarketplaceShell> {
       if (!mounted || entered != true || !SessionController.instance.authenticated) return;
     }
     if (!mounted) return;
-    setState(() { _indice = indice; _visited.add(indice); });
+    setState(() {
+      // Inicio vuelve a consultar la fuente de verdad al regresar de otra vista.
+      // No conservar una portada potencialmente obsoleta tras editar imágenes
+      // o publicaciones en las pantallas de gestión.
+      if (indice == 0 && _indice != 0) {
+        _catalogRevision++;
+      }
+      _indice = indice;
+      _visited.add(indice);
+    });
   }
 
   void _irInicio() => _seleccionar(0);

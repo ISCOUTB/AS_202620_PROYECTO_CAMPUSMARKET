@@ -674,3 +674,14 @@ Puntos de entrada principales:
 - [Registro de uso de IA](docs/ia.md)
 - [ADR](docs/adr/)
 - [Evidencias](docs/evidencias/)
+
+
+## Semana 12 — Arquitecturas de datos y eventos (2026-10-25)
+
+- [Evidencia S12: tabla operación→garantía, caché e invalidación y matriz](docs/evidencias/evidencia-s12-2026-10-25.md).
+- [ADR-0022: fuente de verdad MySQL y costo de reversión](docs/adr/0022-mantener-mysql-como-fuente-de-verdad-y-evitar-proyecciones-asincronas.md).
+- [arc42 sección 8: consistencia y caché](docs/arc42/08-conceptos-transversales.md).
+- [C4 nivel 2: contenedores productivos reales](docs/c4/02-contenedores.md) y [diagrama fuente](docs/c4/02-contenedores.puml).
+- [Matriz de trazabilidad de aspectos](docs/aspectos.md) y [registro IA](docs/ia.md).
+
+Estas decisiones no introducen infraestructura de mensajería productiva ni una caché que no exista. La evidencia del taller es una entrega separada. **El trabajo de `s12` solo será evaluable tras integrarse a `master` antes del cierre**; consultar en la evidencia los límites y comprobaciones pendientes.

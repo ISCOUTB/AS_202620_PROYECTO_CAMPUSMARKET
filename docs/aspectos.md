@@ -508,3 +508,13 @@ Publicaciones (`publicaciones`, `publicacion_imagenes`), Administración
 vincula requisito → implementación → ejecución → prueba → evidencia por hash.
 La documentación histórica permanece fechada; no valida automáticamente el HEAD
 MVP. Los ADR aceptados no se reescriben. El despliegue público está contrastado en la evidencia operativa; la recreación API posterior al PR #51 se registra en el complemento del índice arc42. EC-01 público completo y scanner continúan abiertos.
+
+
+## Ampliación de trazabilidad — Evidencia S12 (2026-10-25)
+
+Se añaden aspectos sin sustituir las filas históricas. Estado inicial: evidencia documental y contraste estático; los resultados de CI y el commit final de `master` deben completarse en la auditoría de cierre.
+
+| ID | Aspecto | Requisito | C4 | ADR | Código | Pruebas | Evidencia |
+|---|---|---|---|---|---|---|---|
+| S12-DAT-01 | Garantías de consistencia en escrituras y lecturas | [Operaciones reales y garantía](./evidencias/evidencia-s12-2026-10-25.md#2-tabla-operación--garantía-de-consistencia) | [C4 L2](./c4/02-contenedores.md) | [ADR-0022](./adr/0022-mantener-mysql-como-fuente-de-verdad-y-evitar-proyecciones-asincronas.md) | [repository Publicaciones](../backend/app/publicaciones/repository.py), [Catálogo](../backend/app/catalogo/service.py), [repository Administración](../backend/app/administracion/repository.py) | [gestión](../backend/tests/test_gestion_publicaciones.py), [Catálogo](../backend/tests/test_catalogo.py) | [Matriz y límites](./evidencias/evidencia-s12-2026-10-25.md#7-matriz-de-los-nueve-criterios-específicos) |
+| S12-DAT-02 | Evitar lecturas obsoletas por caché injustificada | [Política de caché e invalidación](./evidencias/evidencia-s12-2026-10-25.md#3-diseño-de-caché-e-invalidación) | [C4 L2](./c4/02-contenedores.md) | [ADR-0022](./adr/0022-mantener-mysql-como-fuente-de-verdad-y-evitar-proyecciones-asincronas.md) | [Catálogo directo al servicio](../backend/app/catalogo/service.py) | [test_catalogo.py](../backend/tests/test_catalogo.py) (verificación funcional previa; no prueba nueva de caché) | [Decisión y alternativa no implementada](./evidencias/evidencia-s12-2026-10-25.md#3-diseño-de-caché-e-invalidación) |
