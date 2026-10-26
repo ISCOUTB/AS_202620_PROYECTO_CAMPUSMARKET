@@ -537,3 +537,11 @@ Fecha de revisión: 18 de octubre de 2026 (America/Bogota). Herramienta: ChatGPT
 **Comprobación por revisión:** [`master` f2e9497](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/commit/f2e94972f0327cd11f2c956fd894f66d779cede6) obtuvo ocho comprobaciones satisfactorias, incluida Android tras el [PR #57](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/pull/57). Estas comprobaciones no sustituyen T1–T7 ni acreditan desplegar esa revisión.
 
 **Cadena revisable:** [evidencia S11](evidencias/evidencia-s11-2026-10-18.md) → [ADR-0021](adr/0021-mantener-catalogo-en-el-monolito-modular.md) → [arc42 §11](arc42/11-riesgos-y-deuda-tecnica.md) → [aspectos ASP-13/14](aspectos.md) → [código Flutter y FastAPI](../backend/app/publicaciones/) → CI. La evaluación oficial corresponde al docente.
+
+
+## Evidencia S12 — Arquitecturas de datos y eventos (2026-10-25)
+
+| Fecha | Herramienta | Uso realizado | Verificación del equipo | Qué se rechazó y por qué |
+|---|---|---|---|---|
+| 25/10/2026 | ChatGPT + conector GitHub | Ayuda a contrastar la ficha oficial S12/CONTRATO con los repositorios de Publicaciones, Catálogo y Administración; redactar la tabla operación→garantía, ADR-0022 y política de caché. | Revisión estática de `create_publication`, `buscar_publicaciones`, `create_report`, `open_review` y de la topología C4; la aceptación funcional y CI del commit final quedan por verificar. | Se rechazó introducir Redis o Kafka solo por apariencia: el MVP no demuestra necesidad y sería inconsistente con la topología. Se rechazó afirmar consistencia distribuida fuerte entre SQL y archivos. |
+| 25/10/2026 | ChatGPT | Preparación de evidencias, enlaces y ampliaciones de arc42/C4/aspectos sin borrar el trabajo histórico. | Requiere revisión humana de enlaces, pruebas y hash `master` elegible al cierre de SAVIO. | Se rechazó modificar ADR aceptados o presentar el prototipo del taller como broker productivo; el taller se evalúa aparte. |
