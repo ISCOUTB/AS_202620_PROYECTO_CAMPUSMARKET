@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:campusmarket/app/campus_market_app.dart';
+import 'package:campusmarket/app/inicio_page.dart';
 import 'package:campusmarket/publicaciones/publicaciones_api.dart';
 import 'package:campusmarket/publicaciones/mis_publicaciones_page.dart';
 import 'package:campusmarket/shared/api_configuration.dart';
@@ -205,7 +206,17 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
 
     await click(find.byKey(const Key('nav-inicio')));
-    await until(() => find.text(title).evaluate().isNotEmpty, 'Portada usa publicación existente');
+    // En Android la sección de publicaciones queda debajo del hero; una tarjeta
+    // puede no estar construida por el viewport hasta que se desplace la página.
+    // Verificar el elemento real tras desplazarlo, sin suprimir la aserción.
+    final inicioScroll = find.descendant(
+      of: find.byType(InicioPage),
+      matching: find.byType(Scrollable),
+    ).first;
+    await until(() => find.byType(InicioPage).evaluate().isNotEmpty, 'Portada montada');
+    await tester.scrollUntilVisible(find.text(title), 220, scrollable: inicioScroll);
+    await until(() => find.text(title).hitTestable().evaluate().isNotEmpty,
+        'Portada usa publicación existente');
     await screenshot('inicio-con-producto');
     await click(find.byKey(const Key('nav-catalogo')));
     await catalogResult(title, 'Producto visible en catálogo');
