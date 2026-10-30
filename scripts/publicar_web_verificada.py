@@ -22,6 +22,7 @@ ZIP_SHA = "e51664f3e6a6833b541f9143e5ea18d607f6f8b93f258fd409e7be3f99796113"
 TAR_SHA = "8edab5dca0c28063970c0183e8b8df458df302d7721c07a972203648cb3dc940"
 IMAGE_ID = "sha256:15a6fee324bc315d27ab85674781dfd1bded727243cb6ff752370e70b5d6fd19"
 IMAGE = "ghcr.io/nnigarp/campusmarket-web-candidate"
+PUBLISH_MESSAGE = "ci: publicar solo candidato Web a9b6709 verificado sin desplegar"
 CRITERIA = {"config", "identity", "sql", "routes", "cors", "browser", "navigation", "resources", "export", "cleanup"}
 OUT = Path("artifacts/publicacion-web")
 
@@ -106,9 +107,19 @@ def inspect_identity(reference):
         require(raw.decode().strip() == SOURCE, "REVISION API/Web distinta")
 
 
+def authorize_publication(env, event):
+    require(env.get("GITHUB_REPOSITORY") == REPOSITORY and env.get("GITHUB_REF") == "refs/heads/" + BRANCH, "Publicacion solo desde rama del fork autorizada")
+    if env.get("GITHUB_EVENT_NAME") == "workflow_dispatch":
+        return
+    require(env.get("GITHUB_EVENT_NAME") == "push" and event.get("head_commit", {}).get("message") == PUBLISH_MESSAGE
+            and event.get("after") == env.get("GITHUB_SHA") and event.get("repository", {}).get("full_name") == REPOSITORY,
+            "Push sin orden puntual de publicacion")
+
+
 def publish(token):
-    require(token and os.environ.get("GITHUB_REPOSITORY") == REPOSITORY, "Publicacion solo desde fork autorizado")
-    require(os.environ.get("GITHUB_EVENT_NAME") == "workflow_dispatch" and os.environ.get("GITHUB_REF") == "refs/heads/" + BRANCH, "Publicacion solo manual en la rama auditada")
+    require(bool(token), "Token efimero ausente")
+    event = json.loads(Path(os.environ["GITHUB_EVENT_PATH"]).read_text()) if os.environ.get("GITHUB_EVENT_NAME") == "push" else {}
+    authorize_publication(os.environ, event)
     with tempfile.TemporaryDirectory(prefix="cm-ghcr-auth-") as auth:
         previous = os.environ.get("DOCKER_CONFIG")
         os.environ["DOCKER_CONFIG"] = auth
@@ -139,6 +150,7 @@ def main():
     args = parser.parse_args()
     record = {"source_sha": SOURCE, "source_repository": REPOSITORY, "source_run": RUN, "artifact_id": ARTIFACT,
               "zip_sha256": ZIP_SHA, "archive_sha256": TAR_SHA, "image_id": IMAGE_ID,
+              "publisher_sha": os.getenv("GITHUB_SHA"), "publisher_run_id": os.getenv("GITHUB_RUN_ID"),
               "publication_attempted": False, "published": False}
     OUT.mkdir(parents=True, exist_ok=True)
     try:

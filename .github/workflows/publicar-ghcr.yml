@@ -239,12 +239,14 @@ jobs:
               assert os.environ["SOURCE_SHA"] == SOURCE
           PY
       - name: Recuperar y verificar la imagen original sin construir
-        if: inputs.publicar != true
+        if: >-
+          inputs.publicar != true && !(github.event_name == 'push' && github.event.head_commit.message == 'ci: publicar solo candidato Web a9b6709 verificado sin desplegar')
         env:
           GH_TOKEN: ${{ github.token }}
         run: python -m scripts.publicar_web_verificada
       - name: Publicar exclusivamente el candidato original en GHCR del fork
-        if: inputs.publicar == true
+        if: >-
+          inputs.publicar == true || (github.event_name == 'push' && github.event.head_commit.message == 'ci: publicar solo candidato Web a9b6709 verificado sin desplegar')
         env:
           GH_TOKEN: ${{ github.token }}
         run: python -m scripts.publicar_web_verificada --publish

@@ -78,11 +78,21 @@ class PublisherTests(unittest.TestCase):
             publisher.command(["docker", "push", "safe-reference"])
         self.assertEqual(str(result.exception), "Operacion docker rechazada: exit=1; category=UNKNOWN")
 
-    def test_publish_requires_manual_fork_branch(self):
-        with patch.dict(os.environ, {"GITHUB_REPOSITORY": "ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET"}), self.assertRaises(publisher.VerificationError):
-            publisher.publish("synthetic")
-        with patch.dict(os.environ, {"GITHUB_REPOSITORY": publisher.REPOSITORY, "GITHUB_EVENT_NAME": "push"}), self.assertRaises(publisher.VerificationError):
-            publisher.publish("synthetic")
+    def test_publication_requires_authorized_fork_branch_and_explicit_event(self):
+        env = {"GITHUB_REPOSITORY": publisher.REPOSITORY, "GITHUB_REF": "refs/heads/" + publisher.BRANCH,
+               "GITHUB_EVENT_NAME": "workflow_dispatch", "GITHUB_SHA": "1" * 40}
+        publisher.authorize_publication(env, {})
+        event = {"head_commit": {"message": publisher.PUBLISH_MESSAGE}, "after": "1" * 40,
+                 "repository": {"full_name": publisher.REPOSITORY}}
+        env["GITHUB_EVENT_NAME"] = "push"
+        publisher.authorize_publication(env, event)
+        for key, value in (("GITHUB_REPOSITORY", "other/repo"), ("GITHUB_REF", "refs/heads/master"),
+                           ("GITHUB_EVENT_NAME", "pull_request"), ("GITHUB_SHA", "2" * 40)):
+            invalid = {**env, key: value}
+            with self.subTest(key=key), self.assertRaises(publisher.VerificationError):
+                publisher.authorize_publication(invalid, event)
+        with self.assertRaises(publisher.VerificationError):
+            publisher.authorize_publication(env, {**event, "head_commit": {"message": "ordinary push"}})
 
     def test_auth_directory_is_removed_on_failed_push(self):
         recorded = []
