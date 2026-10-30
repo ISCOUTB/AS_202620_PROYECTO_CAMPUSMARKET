@@ -80,6 +80,31 @@ jobs:
         run: |
           git diff --check bfe3222c1e29dddc404560cdd9d61095d4bdb3fe HEAD
           git diff --exit-code
+      - name: Exportar imagen Compose verificada
+        if: github.repository == 'ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET' && (github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/master'))
+        shell: bash
+        run: |
+          set -euo pipefail
+          IMAGE_ID="$(docker compose \
+            --project-name "$CAMPUSMARKET_CI_PROJECT" \
+            --env-file "$RUNNER_TEMP/campusmarket-compose.env" \
+            -f deploy/compose.lab.yaml \
+            -f deploy/compose.local.yaml \
+            images -q api)"
+
+          test -n "$IMAGE_ID"
+          mkdir -p "$RUNNER_TEMP/campusmarket-release"
+          docker save "$IMAGE_ID" -o "$RUNNER_TEMP/campusmarket-release/api.tar"
+          printf '%s\n' "$GITHUB_SHA" > "$RUNNER_TEMP/campusmarket-release/source-sha.txt"
+
+      - name: Conservar imagen verificada para publicacion posterior
+        if: github.repository == 'ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET' && (github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/master'))
+        uses: actions/upload-artifact@v4
+        with:
+          name: campusmarket-imagen-${{ github.sha }}
+          path: ${{ runner.temp }}/campusmarket-release/
+          retention-days: 7
+          if-no-files-found: error
       - name: Logs de infraestructura sin valores de Environment
         if: always()
         run: |
