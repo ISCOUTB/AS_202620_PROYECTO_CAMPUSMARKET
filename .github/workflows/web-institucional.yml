@@ -1,0 +1,70 @@
+name: Web institucional aislada
+
+on:
+  push:
+    branches: [feat/web-institucional-20261030-40be256]
+    paths: [backend/**, frontend/**, scripts/**, .github/workflows/web-institucional.yml, .dockerignore]
+  pull_request:
+    branches: [master]
+    paths: [backend/**, frontend/**, scripts/**, .github/workflows/web-institucional.yml, .dockerignore]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  web:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: "3.12"
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: "3.47.3"
+          channel: stable
+          cache: true
+      - name: Pruebas del montaje y contrato existente
+        run: |
+          python -m pip install -r backend/requirements-dev.txt
+          python -m pytest backend/tests/test_web_frontend.py backend/tests/test_contrato_openapi.py backend/tests/test_modularidad_s6.py -q
+      - name: Analizar y probar Flutter existente
+        working-directory: frontend/campusmarket
+        run: |
+          flutter pub get
+          flutter analyze
+          flutter test
+      - name: Compilar Web fuera del servidor institucional
+        working-directory: frontend/campusmarket
+        run: flutter build web --release --base-href /app/ --pwa-strategy none --no-web-resources-cdn
+      - name: Empaquetar el build en la API sin otro contenedor
+        run: |
+          rsync -a --delete --exclude=.gitkeep frontend/campusmarket/build/web/ backend/web/
+          git rev-parse HEAD > backend/web/source-revision.txt
+          python -m scripts.verificar_web_institucional prepare
+          python -m scripts.verificar_web_institucional start
+      - name: Preparar ChromeDriver oficial existente
+        run: python scripts/preparar_e2e_ci.py --chrome
+      - name: Navegar la aplicación compilada con Chrome real
+        run: |
+          chromedriver --port=4444 --allowed-ips=127.0.0.1 > "$RUNNER_TEMP/campusmarket-web-chromedriver.log" 2>&1 &
+          python -m scripts.verificar_web_institucional run
+      - name: Exportar imagen verificada para revisión, sin publicarla
+        run: python -m scripts.verificar_web_institucional export
+      - name: Limpiar solo el proyecto efímero del ensayo
+        if: always()
+        run: python -m scripts.verificar_web_institucional cleanup
+      - name: Registrar resultados reales
+        if: always()
+        run: python -m scripts.verificar_web_institucional report
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: web-institucional-${{ github.sha }}-${{ github.run_attempt }}
+          path: artifacts/web-institucional/
+          if-no-files-found: error
+          retention-days: 7

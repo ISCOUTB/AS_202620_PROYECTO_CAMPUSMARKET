@@ -16,3 +16,7 @@ frontend/campusmarket/build/
 .env
 
 backend/uploads/
+
+# Build Flutter generado fuera del servidor; se empaqueta en CI, no en Git.
+backend/web/*
+!backend/web/.gitkeep
