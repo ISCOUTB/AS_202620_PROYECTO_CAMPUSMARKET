@@ -6,6 +6,9 @@ String get defaultApiBaseUrl {
   if (configuredApiBaseUrl.isNotEmpty) {
     return configuredApiBaseUrl.replaceFirst(RegExp(r'/$'), '');
   }
+  if (kIsWeb) {
+    return Uri.base.origin;
+  }
   if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
     return 'http://10.0.2.2:8000';
   }

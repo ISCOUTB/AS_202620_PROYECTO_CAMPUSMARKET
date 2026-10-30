@@ -2,6 +2,26 @@
 
 Marketplace universitario para publicar, consultar, vender y alquilar productos dentro de la comunidad universitaria.
 
+## Frontend institucional: candidato probado, aún sin publicar — 2026-10-30
+
+La interfaz pública continúa en [GitHub Pages](https://nnigarp.github.io/AS_202620_PROYECTO_CAMPUSMARKET/).
+El dominio [campusmarket.iscoutb.dev](https://campusmarket.iscoutb.dev) sirve la API;
+la inspección de `/app/` todavía devuelve `Not Found`. **El cumplimiento institucional de toda la solución sigue parcial.**
+
+La rama de esta fase implementa Flutter compilado en GitHub Actions y servido en `/app/`
+por el mismo contenedor FastAPI, conservando `/health`, `/docs` y el contrato del catálogo.
+El [run 41094945507](https://github.com/Nnigarp/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/41094945507),
+fuente `a9b6709a67f8036346acb64b9c2b9849ee355cf2`, pasó compilación, 15 pruebas backend,
+7 pruebas Flutter y 10/10 criterios con Chrome, MySQL real y datos sintéticos.
+Dos contenedores, límites de 256 MiB y 0,5 CPU cada uno; picos CI de 186,73 y 176,66 MiB.
+La imagen probada se exportó como artefacto; **no se publicó en GHCR ni se desplegó en Dokploy**.
+
+Véanse [ADR-0025](docs/adr/0025-servir-flutter-precompilado-desde-fastapi.md),
+[implementación y workflow](.github/workflows/web-institucional.yml) y
+[evidencia, limitaciones y pasos pendientes](docs/evidencias/despliegue-publico-mvp-2026-10-04.md#fase-2--frontend-institucional-candidato-probado-en-ci--2026-10-30).
+Un checkout Git sin el build mantiene la API sola; fusionar este cambio no publica Flutter.
+El autodeploy de `master` sigue activo: coordinar su control antes de cualquier merge.
+
 ## Integrantes
 
 - Joshua Tenorio Alvarez

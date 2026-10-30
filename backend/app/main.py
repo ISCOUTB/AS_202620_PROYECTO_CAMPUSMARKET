@@ -18,6 +18,7 @@ from backend.app.observability import (
 from backend.app.publicaciones.router import router as publicaciones_router
 from backend.app.resource_limits import RequestBodyLimitMiddleware
 from backend.app.usuarios.router import router as usuarios_router
+from backend.app.web_frontend import mount_web_frontend
 
 
 class HealthResponse(BaseModel):
@@ -126,3 +127,6 @@ def health_check():
         "status": "ok",
         "service": "campusmarket-api",
     }
+
+
+mount_web_frontend(app)
