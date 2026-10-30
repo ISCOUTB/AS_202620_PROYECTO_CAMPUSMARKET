@@ -222,7 +222,12 @@ class Trial:
             api = [{"path": urllib.parse.urlsplit(item["url"]).path, "status": item["status"]} for item in responses if item["url"].startswith(BASE + "/catalogo")]
             require(any(item["path"] == "/catalogo" and item["status"] == 200 for item in api), "Sin catalogo HTTP real")
             require(any(item["path"] == "/catalogo/" + str(self.state["fixture"]["publication_id"]) and item["status"] == 200 for item in api), "Sin detalle HTTP real")
-            require(not any(item["status"] >= 400 for item in responses if item["url"].startswith(BASE + "/app/")), "Fallo de recurso Web")
+            assets = [{"path": urllib.parse.urlsplit(item["url"]).path, "status": item["status"]}
+                      for item in responses if item["url"].startswith(BASE + "/app/")]
+            self.state["browser_assets"] = assets
+            self.save()
+            failed = [item for item in assets if item["status"] >= 400]
+            require(not failed, "Fallo de recurso Web: " + json.dumps(failed))
             self.checked("navigation", {"inicio_catalogo_detalle_reload": True, "api_responses": api})
         finally:
             chrome.screenshot("04-ultimo-estado.png")
