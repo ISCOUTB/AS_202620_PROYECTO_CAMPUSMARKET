@@ -11,14 +11,21 @@ on:
         description: "SHA completo del codigo construido"
         required: true
         type: string
+      publicar:
+        description: "Publicar imagen verificada en GHCR"
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: read
   actions: read
+  checks: read
+  packages: write
 
 jobs:
   verificar-artefacto:
-    if: github.repository == 'ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET'
+    if: github.repository == 'ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET' && github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -44,6 +51,65 @@ jobs:
 
           echo "Run Compose aprobado y SHA verificado."
 
+      - name: Autorizar commit para publicacion
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_SHA: ${{ inputs.source_sha }}
+        run: |
+          set -euo pipefail
+
+
+          gh api --paginate \
+            "repos/$GITHUB_REPOSITORY/commits/$SOURCE_SHA/check-runs?per_page=100" \
+            --jq '.check_runs[] | [.name, .status, .conclusion, .head_sha, .app.slug] | @tsv' \
+            > "$RUNNER_TEMP/campusmarket-checks.tsv"
+
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+
+          expected_sha = os.environ["SOURCE_SHA"]
+          required = {
+              "compose",
+              "test",
+              "frontend",
+              "Flujo android",
+              "Flujo web-desktop",
+              "Flujo web-mobile",
+              "contrato-publico",
+              "SonarCloud Code Analysis",
+          }
+
+          rows = []
+          path = Path(os.environ["RUNNER_TEMP"]) / "campusmarket-checks.tsv"
+          for line in path.read_text(encoding="utf-8").splitlines():
+              fields = line.split("\t")
+              if len(fields) == 5:
+                  rows.append(fields)
+
+          for name in sorted(required):
+              expected_app = (
+                  "sonarqubecloud"
+                  if name == "SonarCloud Code Analysis"
+                  else "github-actions"
+              )
+              matches = [
+                  row for row in rows
+                  if row[0] == name
+                  and row[3] == expected_sha
+                  and row[4] == expected_app
+              ]
+              if len(matches) != 1 or any(
+                  row[1] != "completed" or row[2] != "success"
+                  for row in matches
+              ):
+                  raise SystemExit(
+                      f"Check requerido no aprobado: {name}"
+                  )
+
+          print("Checks de GitHub Actions aprobados.")
+          PY
       - name: Recuperar imagen probada
         uses: actions/download-artifact@v4
         with:
@@ -85,4 +151,56 @@ jobs:
           test "$FILE" = "$SOURCE_SHA"
 
           echo "ARTEFACTO VERIFICADO: $SOURCE_SHA"
-          echo "Publicacion GHCR no habilitada."
+          echo "VERIFIED_IMAGE_ID=$IMAGE_ID" >> "$GITHUB_ENV"
+          echo "Imagen validada y lista para publicacion."
+      - name: Publicar imagen verificada en GHCR
+        if: inputs.publicar == true
+        shell: bash
+        env:
+          GHCR_TOKEN: ${{ github.token }}
+          SOURCE_SHA: ${{ inputs.source_sha }}
+        run: |
+          set -euo pipefail
+
+          IMAGE="ghcr.io/iscoutb/campusmarket-api"
+          TAG="$IMAGE:$SOURCE_SHA"
+
+          test -n "${VERIFIED_IMAGE_ID:-}"
+          docker image inspect "$VERIFIED_IMAGE_ID" >/dev/null
+
+          echo "$GHCR_TOKEN" | docker login ghcr.io \
+            --username "$GITHUB_ACTOR" --password-stdin
+
+          docker tag "$VERIFIED_IMAGE_ID" "$TAG"
+          docker push "$TAG" | tee "$RUNNER_TEMP/ghcr-push.log"
+
+          DIGEST="$(sed -nE \
+            's/.*digest: (sha256:[0-9a-f]{64}).*/\1/p' \
+            "$RUNNER_TEMP/ghcr-push.log" | tail -n 1)"
+
+          [[ "$DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]
+
+          docker buildx imagetools inspect "$IMAGE@$DIGEST" >/dev/null
+
+          docker pull "$IMAGE@$DIGEST"
+
+          REMOTE_ID="$(docker image inspect "$IMAGE@$DIGEST" \
+            --format '{{.Id}}')"
+
+          test "$REMOTE_ID" = "$VERIFIED_IMAGE_ID"
+
+          OCI="$(docker image inspect "$IMAGE@$DIGEST" \
+            --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}')"
+
+          FILE="$(docker run --rm --entrypoint cat \
+            "$IMAGE@$DIGEST" /app/REVISION)"
+
+          test "$OCI" = "$SOURCE_SHA"
+          test "$FILE" = "$SOURCE_SHA"
+
+          echo "## Publicacion GHCR verificada" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Fuente: \`$SOURCE_SHA\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Imagen: \`$IMAGE@$DIGEST\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Identidad OCI, archivo REVISION e imagen remota: OK" >> "$GITHUB_STEP_SUMMARY"
+
+          echo "GHCR_VERIFICADO=$IMAGE@$DIGEST"
