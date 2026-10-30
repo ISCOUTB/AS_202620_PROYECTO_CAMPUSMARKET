@@ -39,7 +39,7 @@ jobs:
               .event == "push" and
               .head_branch == "master" and
               .conclusion == "success" and
-              .path == ".github/workflows/compose-mvp.yml"
+              (.path | endswith(".github/workflows/compose-mvp.yml"))
             ' >/dev/null
 
           echo "Run Compose aprobado y SHA verificado."
