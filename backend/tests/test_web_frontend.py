@@ -36,6 +36,7 @@ def test_mount_preserves_root_contracts_and_docs(web_dir):
     app.add_api_route("/catalogo", lambda: JSONResponse([]))
     schema = app.openapi()
     assert mount_web_frontend(app, web_dir) is True
+    app.openapi_schema = None
     client = TestClient(app)
     assert client.get("/").status_code == 404
     assert client.get("/health").json() == {"status": "ok"}
