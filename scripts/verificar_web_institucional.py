@@ -37,7 +37,7 @@ def http(path, expected=200, headers=None):
         response = error
     with response:
         require(response.status == expected, "HTTP inesperado en " + path)
-        return response.read(), dict(response.headers)
+        return response.read(), {key.lower(): value for key, value in response.headers.items()}
 
 
 class Chrome:
@@ -188,7 +188,7 @@ class Trial:
         self.state["fixture"] = self.probe("seed"); self.save()
         html, headers = http("/app/")
         require(b'<base href="/app/">' in html and b"flutter_bootstrap.js" in html, "HTML no es el build Flutter esperado")
-        require(headers.get("X-CampusMarket-Revision") == self.source, "Cabecera incorrecta")
+        require(headers.get("x-campusmarket-revision") == self.source, "Cabecera incorrecta")
         for path in ("/app/flutter_bootstrap.js", "/app/main.dart.js", "/docs", "/openapi.json", "/health"):
             http(path)
         http("/app/asset-inexistente.js", 404); http("/", 404)
