@@ -12,12 +12,74 @@ La promocion productiva sigue aplazada segun ADR-0024.
 - Imagen: `ghcr.io/iscoutb/campusmarket-api@sha256:f9eaabdb166274225e9ad490c44999f71f6b1f7c9c5902dc68ab98b07115ce8b`.
 - Workflow nuevo: [ensayo-ghcr.yml](../../.github/workflows/ensayo-ghcr.yml).
 - Verificador nuevo: [ensayar_imagen_ghcr.py](../../scripts/ensayar_imagen_ghcr.py).
-- **Run real:** [41046842362](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/41046842362), dos intentos fallidos sobre `1068764ba84095b93fe0d643cf401503131473ec`. API/MySQL no llegaron a arrancar. La correccion de esta rama no se ha ejecutado en Actions.
+- **Run definitivo:** [41051624793](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/41051624793), intento 1, **success y 10/10 CUMPLE**, sobre `669368894d583406c7610e8c735f686c02931de3`. Se conservan abajo los dos intentos fallidos anteriores; esta consolidación documental no ejecuta otro ensayo.
 
 `GITHUB_SHA` identifica el codigo del workflow, no el backend de la imagen.
 El verificador contrasta OCI, `/app/REVISION` y el encabezado HTTP con el commit
 fuente indicado arriba, independientemente del HEAD documental. El par SHA/digest
 es el objetivo explicito de este ensayo; no es una variable productiva fija.
+
+## Resultado real del run 41051624793
+
+El run manual del 30/10/2026, de 06:56:04 a 06:58:52 (Colombia, UTC-5),
+terminó satisfactoriamente. Se contrastaron la API de Actions, los diez PASS del
+[job 124048828223](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/41051624793/job/124048828223)
+y los archivos `resultado.json` y `matriz.md` del
+[artefacto ensayo-ghcr-41051624793-1](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/41051624793/artifacts/12975600016).
+El ZIP, ID `12975600016`, se descargó y verificó contra SHA-256
+`5e45714e318b78f50d08b651aa149cc27fd198082996b65d748f2d3b3bd0daad`.
+El JSON contiene `passed: true` y exactamente diez criterios `CUMPLE`.
+
+Resultados observados, en el orden del verificador:
+
+1. **compose — CUMPLE:** configuración validada sin build, dos servicios,
+   red y volúmenes exclusivos del proyecto `campusmarket-ghcr-41051624793-1`.
+2. **pull — CUMPLE:** digest GHCR corregido descargado con `packages: read`;
+   RepoDigests y etiqueta comprobados. Esto acredita acceso desde este job de
+   Actions, sin modificar la visibilidad Internal ni los permisos del paquete.
+3. **identity — CUMPLE:** Image ID, Config.Image, etiqueta OCI,
+   `/app/REVISION` y `X-CampusMarket-Revision` corresponden a la imagen fijada
+   y al SHA fuente `2154e7880e5111537256206a29f4f4c29a8c86c4`.
+   El SHA del workflow `6693688...` no se atribuye al backend construido.
+4. **health — CUMPLE:** `/health` respondió HTTP 200, API y MySQL estuvieron
+   healthy y la consulta SQL real acreditó MySQL **8.4.13** y la base
+   `campusmarket_ghcr_41051624793_1_test`.
+5. **functional — CUMPLE:** GET `/health`, `/openapi.json` y `/catalogo`
+   respondieron HTTP 200; el catálogo inicial estaba vacío.
+6. **synthetic — CUMPLE:** base nueva, un usuario `example.test`, una
+   publicación y un PNG generados en el runner. No se accedió a datos reales.
+7. **dependency — CUMPLE:** detener solo MySQL de prueba produjo HTTP 503 y
+   healthcheck unhealthy de API. Al arrancar MySQL, ambos volvieron a healthy
+   y se pudo recuperar la publicación y su archivo.
+8. **persistence — CUMPLE:** cambiaron los IDs de ambos contenedores al
+   recrearlos y conservaron los mismos montajes. El JSON acredita
+   `sql_persisted: true` y `uploads_persisted: true`, comprobando el hash del PNG.
+9. **no_build — CUMPLE:** ambos arranques usaron `--no-build --pull never`;
+   la imagen ejecutada mantuvo el mismo Image ID descargado antes y después.
+10. **cleanup — CUMPLE:** inventario final de contenedores, volúmenes y redes
+    propios vacío; `temporary_credentials_removed: true`. Se eliminó también
+    la autenticación temporal del runner.
+
+Identidades y configuración efectivas conservadas en la evidencia:
+
+- Image ID de API: `sha256:8e409313166b2c39cd0cc173cd9082e9e8ca7364746d4afb790bab652dc3962b`.
+- MySQL descargado: `mysql@sha256:a0225d1ea6631c8bc2385dc4c2faba17bbf1834ecf369e1659a9a382bd8d5dd7`.
+- Docker cliente/servidor: `28.0.4 / 28.0.4`; Docker Compose: `2.38.2`.
+- SHA-256 del Compose usado: `1799970bbd7a9c2b8464a8c1f68bd717c52cd8e9f2344c01bfe17800aa108593`.
+- Volumen SQL de prueba: `campusmarket-ghcr-41051624793-1_mysql_data`,
+  destino `/var/lib/mysql`, RW `true`.
+- Volumen de uploads de prueba: `campusmarket-ghcr-41051624793-1_publication_images`,
+  destino `/app/backend/uploads`, RW `true`.
+- Cada contenedor tuvo `268435456` bytes (256 MiB) de límite efectivo.
+  Los snapshots completos y los IDs antes/después están en `resultado.json`.
+
+La matriz de diez criterios generada por el propio run permanece en el
+artefacto; no se crea otra copia documental. La relación con decisiones,
+implementación y evidencias se actualiza en la
+[matriz de trazabilidad existente](../evidencias/trazabilidad-ghcr-2026-10-30.md).
+El artefacto está sujeto a la retención de 14 días del workflow; las identidades
+y resultados contrastados quedan registrados aquí. Este éxito no acredita
+migración, respaldo o rollback productivos ni acceso GHCR desde Dokploy.
 
 ## Incidente: digest transcrito incorrectamente
 
@@ -45,7 +107,7 @@ Evidencia verificable:
 - Los tres jobs muestran runner `2.338.0`, imagen `ubuntu-24.04`, version `20261025.353.1`. El publicador dispone de `packages: write`; el ensayo acredita `packages: read`. No hay evidencia de incompatibilidad del runner.
 - El rol Admin en Manage Actions access y la visibilidad Internal son informacion comprobada por el usuario; no se han consultado ni cambiado desde esta investigacion. Login exitoso no prueba por si solo la autorizacion de una descarga concreta.
 
-**Causa corregible confirmada:** el ensayo no solicita el digest que se publico.
+**Error histórico confirmado:** los dos intentos fallidos solicitaron un digest distinto del publicado.
 El error de Docker concreto (404/manifest, autorizacion, red u otro) no puede
 recuperarse de esos logs: `capture_output=True` capturo stderr y el verificador
 lo descarto al elevar un mensaje generico. Los logs solo preservan el exit 1 de
@@ -57,6 +119,11 @@ referencias documentales; no se reconstruye ni publica otra imagen, no cambia
 el SHA fuente y no se modifica el workflow. El Compose alternativo permanece
 sin activar en Dokploy. Las evidencias antiguas pueden contrastarse en el
 commit anterior; este apartado deja constancia expresa de la fe de erratas.
+
+La corrección se incorporó mediante [PR #74](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/pull/74)
+y se probó realmente en `41051624793`. El error de transcripción se conserva
+como error detectado y corregido con apoyo de IA en el
+[registro canónico](../ia.md#ghcr--publicación-ensayo-aislado-y-cierre-documental-2026-10-30).
 
 ## Diagnostico seguro y validacion de la correccion
 
@@ -87,6 +154,9 @@ Compose con credenciales sinteticas, se compara su imagen con el digest extraido
 del log de publicacion y se exige que el digest anterior sea rechazado.
 Gitleaks revisa los archivos del cambio. Ninguna de estas validaciones descarga
 la imagen ni arranca servicios.
+
+La tabla siguiente conserva el estado del incidente **antes** del run exitoso;
+sus NO CUMPLE/BLOQUEADO no describen el estado actual del ensayo corregido.
 
 | Criterio | Estado | Archivo/linea en el commit auditado | Commit | Run | Resultado |
 |---|---|---|---|---|---|
@@ -158,8 +228,8 @@ simulan la infraestructura; sus identificadores temporales no son runs de Action
 
 ## Historial: matriz anterior al run 41046842362
 
-Esta matriz conserva el estado previo. El estado actual y la fe de erratas
-figuran en los apartados del incidente anteriores.
+Esta matriz conserva el estado previo. El cierre vigente figura en
+«Resultado real del run 41051624793» y la fe de erratas permanece en el incidente.
 
 El workflow y verificador se publicaron en el commit `80152f17d175409f0d171ac39e5f96108d4ee4ff` del fork.
 La matriz producida
@@ -188,18 +258,21 @@ La integracion rechazo crear el PR contra ISCOUTB/master con **403, Resource
 not accessible by integration**. Se comprobo que no existe un PR abierto de
 esta rama. No se reintenta con credenciales o permisos ampliados.
 
-[Abrir la comparacion y preparar el PR oficial](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/compare/master...Nnigarp:ci/ensayo-ghcr-20261030-0971b2b?expand=1).
-Ese enlace es un formulario de comparacion, **no una URL de PR creado**.
+[Comparación inicial, conservada como historial](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/compare/master...Nnigarp:ci/ensayo-ghcr-20261030-0971b2b?expand=1).
+La incorporación posterior se acredita en [PR #73](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/pull/73),
+merge `1068764...`; la corrección se incorporó en PR #74, merge `6693688...`.
+El 403 inicial de la integración no se atribuye al registro GHCR.
 
 ## Siguiente ejecucion, solo con autorizacion
 
-El workflow ya esta registrado en la rama predeterminada y se ejecuto en el
-contexto oficial sobre `1068764...`. La correccion se entrega en una rama nueva
-del fork. No se dispara ningun run ni se modifica un job anterior.
+El workflow ya está registrado y el ensayo sobre `6693688...` finalizó con
+éxito. No hay una repetición pendiente para acreditar este resultado. Los pasos
+siguientes quedan como procedimiento para un ensayo futuro autorizado; esta
+consolidación no dispara runs ni modifica jobs anteriores.
 
 Pasos del responsable autorizado, despues de revisar el PR:
 
-1. Coordinar la incorporacion de la correccion a la rama predeterminada mediante
+1. Coordinar cualquier cambio futuro del ensayo a la rama predeterminada mediante
    el PR. **Fusionar a master tambien activa el autodeploy actual de Dokploy**;
    esa consecuencia requiere coordinacion independiente. Este trabajo no hace
    merge ni modifica ese autodeploy.
@@ -218,9 +291,9 @@ Pasos del responsable autorizado, despues de revisar el PR:
 
 ## Riesgos y limites
 
-- La descarga corregida, arranque, SQL, dependencia de health y persistencia
-  siguen sin comprobarse. Cleanup se ejecuto en ambos intentos, pero no se ha
-  ensayado todavia la eliminacion de un stack que haya llegado a funcionar.
+- Descarga corregida, SQL, dependencia, persistencia y cleanup después de un
+  stack funcional quedaron acreditados en `41051624793`; el alcance es el
+  runner efímero. Los dos fallos previos se conservan como historial.
 - MySQL usa el tag 8.4 requerido; se registra su digest e Image ID efectivos.
 - No se prueban red publica, HTTPS, dominio, autodeploy ni recuperacion productiva.
 - Una cancelacion forzada o perdida del runner puede impedir el ultimo paso;
@@ -235,8 +308,8 @@ Pasos del responsable autorizado, despues de revisar el PR:
 - [Plan productivo](despliegue-ghcr.md), [cierre GHCR](evidencia-ghcr-cierre.md) y
   [decision operativa](decision-migracion-ghcr.md): no se da por realizada la migracion.
 - [ADR-0024](../adr/0024-publicar-imagen-verificada-y-condicionar-promocion.md),
-  [trazabilidad anterior](../evidencias/trazabilidad-ghcr-2026-10-30.md) y
-  [registro IA de este ensayo](../evidencias/uso-ia-ensayo-ghcr-2026-10-30.md).
+  [trazabilidad existente](../evidencias/trazabilidad-ghcr-2026-10-30.md) y
+  [registro canónico de IA](../ia.md#ghcr--publicación-ensayo-aislado-y-cierre-documental-2026-10-30).
 - [Guia UTB, secciones 1, 3.4, 3.6, bloques operativos y 5](https://github.com/ISCOUTB/iscoutb.dev/blob/0d121afd28a8472d75232b95ab6bb6b071a61e21/README.md)
   y [politicas](https://github.com/ISCOUTB/iscoutb.dev/blob/0d121afd28a8472d75232b95ab6bb6b071a61e21/docs/politicas-uso.md).
 - [Requisito de registro del workflow manual](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow).
