@@ -5,7 +5,12 @@
 Desplegar una imagen Docker previamente probada en CI,
 sin reconstruirla en Dokploy y sin afectar la persistencia.
 
-Estado: PREPARADO, NO EJECUTADO.
+Estado del plan productivo: PREPARADO, NO EJECUTADO.
+
+El [ensayo aislado en Actions](ensayo-ghcr.md) terminó con 10/10 criterios
+aprobados en el [run 41051624793](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/41051624793).
+No modifica el estado de este plan ni satisface por sí solo sus condiciones
+de acceso, respaldo y recuperación del servidor Dokploy.
 
 ## 2. Evidencia de origen
 

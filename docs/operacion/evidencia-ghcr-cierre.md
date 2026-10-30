@@ -51,6 +51,12 @@ https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/41025785
 Publicación GHCR verificada:
 https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/41026286264
 
+Ensayo real de la imagen publicada, aprobado con 10/10 criterios:
+https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/41051624793
+
+Commit del workflow del ensayo:
+669368894d583406c7610e8c735f686c02931de3
+
 Imagen inmutable:
 ghcr.io/iscoutb/campusmarket-api@sha256:f9eaabdb166274225e9ad490c44999f71f6b1f7c9c5902dc68ab98b07115ce8b
 
@@ -70,11 +76,23 @@ CONFIRMADO:
 - Imagen remota contrastada con la imagen recuperada.
 - Compose alternativo validado estructuralmente.
 - docker compose config --quiet aprobado localmente.
+- Imagen descargada por digest y ejecutada sin reconstrucción en el runner.
+- MySQL real 8.4.13 y `/health` HTTP 200 con conexión SQL comprobada.
+- Degradación HTTP 503 al detener MySQL de prueba y recuperación a healthy.
+- Persistencia SQL y PNG tras recrear ambos contenedores de prueba.
+- Cleanup sin contenedores, volúmenes ni redes propios, con credenciales temporales eliminadas.
+
+Estos resultados se contrastaron con `resultado.json` (`passed: true`, diez
+CUMPLE), logs y ZIP del artefacto `ensayo-ghcr-41051624793-1`, ID `12975600016`.
+El [informe existente](ensayo-ghcr.md) conserva identidades, SHA-256 y alcance;
+la [matriz existente](../evidencias/trazabilidad-ghcr-2026-10-30.md) vincula las
+decisiones con esas pruebas. El error anterior del digest y su corrección con
+apoyo de IA se conservan en el [registro canónico](../ia.md#ghcr--publicación-ensayo-aislado-y-cierre-documental-2026-10-30).
 
 NO CONFIRMADO:
 - Uso efectivo de la imagen GHCR en Dokploy.
 - Autenticación GHCR desde el servidor Dokploy.
-- Destinos y permisos efectivos de todos los montajes.
+- Destinos y permisos efectivos de todos los montajes en Dokploy.
 - Respaldo recuperable de la base de datos y uploads.
 - Imagen anterior conservada y recuperable.
 - Ensayo completo de rollback.
@@ -97,6 +115,9 @@ No se realizó una migración a GHCR.
 
 Se completó la cadena de trazabilidad y publicación de la
 imagen probada hasta GHCR.
+
+También quedó demostrada su ejecución aislada en GitHub Actions con MySQL,
+recuperación, persistencia y cleanup, sin cambiar la arquitectura ni producción.
 
 La promoción a producción quedó deliberadamente aplazada
 porque no se acreditaron todas las condiciones de

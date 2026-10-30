@@ -595,3 +595,79 @@ Fecha de revisión: 18 de octubre de 2026 (America/Bogota). Herramienta: ChatGPT
 - Cambio incremental: [README](../README.md), [S12-MSG-01 / S12-MSG-02 en aspectos](aspectos.md), [evidencia](evidencias/taller-mensajes-s12-2026-10-25.md), [contrato JSON](../contracts/messages/publicacion-creada-v1.schema.json), [test](../backend/tests/test_taller_mensajes_s12.py), [workflow](../.github/workflows/s12-taller-mensajes.yml).
 - Resultado previo y verificable: [CI taller del PR #64, run 40265066306](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/40265066306) fue exitoso **antes** de esta corrección. No sustituye el run nuevo.
 - Cierre pendiente: URL de PR correctivo, SHA del merge y CI específico del último `master`. Se evita presentar estados de una rama anterior como validación del nuevo código.
+
+
+## GHCR — Publicación, ensayo aislado y cierre documental (2026-10-30)
+
+Este es el registro canónico de IA para GHCR. Se consolidan los dos anexos
+anteriores sin modificar los registros S1–S12 que preceden a esta sección.
+Las decisiones corresponden al equipo; la IA propuso contenido y comandos.
+La columna de verificación distingue hechos comprobados de los límites de
+cada etapa. La revisión humana de este cambio corresponde al PR documental.
+
+### Publicación y auditoría previas
+
+Las seis entradas siguientes proceden del anexo inicial. Se conserva su
+alcance temporal: publicar y verificar una imagen no acreditaba desplegarla.
+
+| Fecha | Herramienta | Uso realizado | Verificación del equipo | Qué se rechazó y por qué |
+|---|---|---|---|---|
+| 29–30/10/2026 | ChatGPT | Diagnóstico de discrepancia entre versión configurada y commits; propuesta de cadena commit → imagen probada → GHCR | Se compararon commits, Dockerfile, Compose y resultados visibles de GitHub Actions | No se afirmó que el encabezado público fuera incorrecto: el cliente de auditoría obtuvo 403 y no pudo comprobarlo |
+| 30/10/2026 | ChatGPT | Propuesta e iteraciones de workflows de exportación y publicación con comprobaciones de SHA, checks y origen | Se comprobaron YAML, nombres reales de checks de GitHub y se ejecutó ensayo `publicar: false` en [run 41025785578](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/41025785578) | Se descartó publicar sin comprobar identidad, usar nombres supuestos de checks y confundir el SHA del merge con el del artefacto |
+| 30/10/2026 | ChatGPT | Propuesta de publicación manual y verificación de digest remoto | [Run 41026286264](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/41026286264), con verificación de identidad de imagen y revisión | No se dio por desplegada la imagen por el simple hecho de publicar en GHCR |
+| 30/10/2026 | ChatGPT | Propuesta de Compose alternativo y plan de despliegue/rollback | Se comparó la estructura con Compose de laboratorio y se validó localmente con `docker compose config --quiet` | No se sustituyó el Compose activo ni se realizaron cambios sobre MySQL o sus volúmenes |
+| 30/10/2026 | ChatGPT Work | Auditoría exclusivamente de lectura del servicio Dokploy, autodeploy, contenedores, nombres de volúmenes y limitaciones de acceso | Informes de Work y consulta visual del panel; API y DB reportados saludables | No se inventaron montajes RW, credenciales GHCR, respaldos recuperables ni una imagen anterior efectiva ante inspectores inaccesibles |
+| 30/10/2026 | ChatGPT / equipo | Evaluación de alternativas: migrar de inmediato o preservar producción y documentar bloqueantes | [ADR-0024](adr/0024-publicar-imagen-verificada-y-condicionar-promocion.md), [decisión operativa](operacion/decision-migracion-ghcr.md) | Se rechazó la migración inmediata sin autenticación, respaldo, imagen para rollback ni verificación de montajes |
+
+Límites conservados del registro inicial: los resultados procedían de Actions,
+Compose local y auditorías de lectura; el análisis sintáctico de YAML no
+sustituía ejecutar el pipeline. El `device offline` de Android y el PNG inválido
+se contrastaron con logs y un reintento exitoso del
+[run 41029797678](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/41029797678),
+sin atribuirlos a una reparación de código o al despliegue GHCR. No se publicaron
+contraseñas MySQL, PAT ni secretos. Acceso Internal desde Dokploy, respaldo
+restaurable, migración y rollback continuaban sin probarse; el ensayo posterior
+en Actions no acredita esas condiciones del servidor.
+
+### Preparación del ensayo: propuestas y correcciones históricas
+
+Estas decisiones se tomaron antes de ejecutar el ensayo. Los futuros y estados
+pendientes en sus verificaciones describen esa etapa; el cierre real se
+registra después. La aceptación de «usar digest publicado» no oculta la
+transcripción incorrecta que se detectó y corrigió posteriormente.
+
+| Fecha | Herramienta | Uso realizado | Verificación del equipo | Qué se rechazó y por qué |
+|---|---|---|---|---|
+| 30/10/2026 | ChatGPT + conector GitHub | Aceptada: Crear rama del fork desde upstream actualizado | Ambos master coinciden en `0971b2b0c229c25d4ebefd5c90bf1b8625656932`; se usa ese commit, no una base personal divergente | No consta otro rechazo en esta entrada; se conserva el límite de verificación. |
+| 30/10/2026 | ChatGPT + conector GitHub | Aceptada: Workflow manual y verificador separado, sin cambiar workflows anteriores | Permisos contents/packages de lectura; dependencias existentes de la imagen y Python estandar en el runner | No consta otro rechazo en esta entrada; se conserva el límite de verificación. |
+| 30/10/2026 | ChatGPT + conector GitHub | Aceptada: Usar digest publicado y SHA fuente independiente de GITHUB_SHA | Preflight rechaza otro digest; OCI, archivo, encabezado e Image ID se comprobaran en el run real | No consta otro rechazo en esta entrada; se conserva el límite de verificación. |
+| 30/10/2026 | ChatGPT + conector GitHub | Aceptada para el ensayo: Crear MySQL y uploads sinteticos; probar fallo de DB y recreacion | Solo proyecto unico del runner alojado, sin conexiones Docker remotas ni endpoints publicos; ejecucion real pendiente | No consta otro rechazo en esta entrada; se conserva el límite de verificación. |
+| 30/10/2026 | ChatGPT + conector GitHub | Corregida: Definir runner.temp en env del job | Actionlint lo rechazo por contexto no permitido. Se genera DOCKER_CONFIG mediante GITHUB_ENV en un paso del runner | Definir runner.temp en env del job: Actionlint lo rechazo por contexto no permitido. Se genera DOCKER_CONFIG mediante GITHUB_ENV en un paso del runner |
+| 30/10/2026 | ChatGPT + conector GitHub | Corregida: Capturar cualquier Exception para ocultar stderr | Ruff rechazo la captura ciega; se enumeran errores esperados y solo se publican mensajes propios/tipos, nunca stdout/stderr completos | Capturar cualquier Exception para ocultar stderr: Ruff rechazo la captura ciega; se enumeran errores esperados y solo se publican mensajes propios/tipos, nunca stdout/stderr completos |
+| 30/10/2026 | ChatGPT + conector GitHub | Rechazada: Dar CUMPLE a persistencia o cleanup por tener codigo | Las pruebas unitarias de control no se presentan como Docker real. Matriz previa PARCIAL/BLOQUEADO; matriz del run se genera con hechos medidos | Dar CUMPLE a persistencia o cleanup por tener codigo: Las pruebas unitarias de control no se presentan como Docker real. Matriz previa PARCIAL/BLOQUEADO; matriz del run se genera con hechos medidos |
+| 30/10/2026 | ChatGPT + conector GitHub | Rechazada: Ejecutar el nuevo workflow desde la rama del fork como si estuviera registrado | workflow_dispatch requiere presencia en rama predeterminada; el job requiere contexto oficial. No se altera master ni se hace merge para sortearlo | Ejecutar el nuevo workflow desde la rama del fork como si estuviera registrado: workflow_dispatch requiere presencia en rama predeterminada; el job requiere contexto oficial. No se altera master ni se hace merge para sortearlo |
+| 30/10/2026 | ChatGPT + conector GitHub | Rechazada: Usar pull_request_target, PAT o ampliar permisos para forzar una prueba | No son necesarios ni estan autorizados; un 403 se documenta como bloqueo | Usar pull_request_target, PAT o ampliar permisos para forzar una prueba: No son necesarios ni estan autorizados; un 403 se documenta como bloqueo |
+| 30/10/2026 | ChatGPT + conector GitHub | Rechazada: Copiar produccion a development o tocar recursos del laboratorio | El ensayo se prepara en Actions. No modifica Dokploy ni consume la cuota compartida del equipo | Copiar produccion a development o tocar recursos del laboratorio: El ensayo se prepara en Actions. No modifica Dokploy ni consume la cuota compartida del equipo |
+
+### Evidencia, incidente del digest y cierre
+
+| Fecha | Herramienta | Uso realizado | Verificación del equipo | Qué se rechazó y por qué |
+|---|---|---|---|---|
+| 30/10/2026 | ChatGPT + conector GitHub | Validación estática inicial del ensayo y entrega desde el fork. | Compose standalone 5.6.1, Actionlint 1.7.12 sin ShellCheck, Ruff 0.16.9, Gitleaks 8.30.1, sintaxis Python/Bash, 14 casos negativos y cuatro pruebas unitarias de control sin daemon. El entorno de implementación no tenía Docker Engine. | Se rechazó presentar esas validaciones locales como descarga GHCR, arranque, persistencia o cleanup real; el run anterior de publicación tampoco los sustituía. |
+| 30/10/2026 | ChatGPT + conector GitHub | Rama `ci/ensayo-ghcr-20261030-0971b2b` desde `0971b2b0c229c25d4ebefd5c90bf1b8625656932`; implementación `80152f17d175409f0d171ac39e5f96108d4ee4ff`. | Inicialmente la integración devolvió 403, `Resource not accessible by integration`, al crear el PR; no había un PR abierto de esa rama. La incorporación posterior se acredita en [PR #73](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/pull/73), merge `1068764ba84095b93fe0d643cf401503131473ec`. | No ampliar permisos, fingir un PR/run, alterar master directamente ni eludir el registro de workflow_dispatch en la rama predeterminada. |
+| 30/10/2026 | ChatGPT + conector GitHub | Error detectado y corregido con apoyo de IA: se conservó un digest proporcionado sin contrastarlo con el log original de publicación. | [Publicador 41026286264](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/41026286264) y [ensayo fallido 41046842362](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/41046842362), intentos 1 y 2: diferencias hex 18 (`c → e`) y 24 (`d → 0`). La rama `fix/diagnostico-pull-ghcr-20261030-1068764` partió de `1068764...`; corrigió Compose, verificador y cinco referencias documentales, manteniendo el SHA fuente `2154e7880e5111537256206a29f4f4c29a8c86c4`. [PR #74](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/pull/74), merge `669368894d583406c7610e8c735f686c02931de3`. | No ocultar la transcripción incorrecta ni atribuir el éxito del publicador a los intentos fallidos del ensayo; no reconstruir ni republicar otra imagen. |
+| 30/10/2026 | ChatGPT + conector GitHub | Clasificación segura del error de pull por lista cerrada de categorías y exit real; UNKNOWN conserva un fallo no reconocido. | Cinco pruebas unitarias, incluidos 20 mensajes de clasificación, supresión de stdout/stderr privados, timeout, fallo ordinario y éxito; Ruff, Compose config y Gitleaks locales. Son controles sin descargar la imagen. | Se rechazó imprimir/archivar stderr/stdout o redactarlos parcialmente por riesgo de exponer secretos; se conservaron solo categoría y exit_code. |
+| 30/10/2026 | ChatGPT + conector GitHub | Contraste de permisos declarados, login y límite del diagnóstico antiguo. | Los dos intentos fallidos acreditaron login y packages: read; el usuario comprobó Actions access Admin. El stderr y el exit de Docker no quedaron preservados, por lo que no se atribuyó un 403/404 concreto. | Se rechazó declarar un fallo de permisos sin evidencia, añadir PAT, cambiar visibilidad/runner/workflow/permisos/credenciales/Dokploy o repetir automáticamente el ensayo. |
+| 30/10/2026 | ChatGPT + conector GitHub | Comprobación del ensayo real exitoso de la imagen corregida, sin reconstruir el backend. | [Run 41051624793](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/41051624793), commit `669368894d583406c7610e8c735f686c02931de3`: job/logs y ZIP `ensayo-ghcr-41051624793-1`, ID `12975600016`, contrastados con SHA-256 `5e45714e318b78f50d08b651aa149cc27fd198082996b65d748f2d3b3bd0daad`; resultado `passed: true`, 10/10 CUMPLE. MySQL real 8.4.13, SQL/HTTP, identidad, recuperación, persistencia SQL/PNG y cleanup vacío. [Detalles](operacion/ensayo-ghcr.md). | No extrapolar el éxito del runner a acceso GHCR desde Dokploy, respaldos productivos, HTTPS, migración o rollback. No atribuir el SHA documental a la imagen fuente. |
+| 30/10/2026 | ChatGPT + conector GitHub | Consolidación de los dos anexos en este archivo canónico; actualización del informe y de la matriz GHCR existente. | Rama documental desde `ISCOUTB/master` `6693688...`; conservación byte por byte del contenido previo de este registro, enlaces comprobados, evidencia del ZIP contrastada y corrección mecánica UTF-8 de ADR-0024 y trazabilidad. | Se rechazó crear otro documento/matriz o un tercer anexo de IA, reescribir ADR aceptados, cambiar resultados S1–S12, modificar código/Compose/workflows/producción o ejecutar otro ensayo. |
+
+### Procedencia y referencias del registro consolidado
+
+Los anexos retirados siguen disponibles en el historial anterior a esta
+consolidación: [registro de publicación](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/blob/669368894d583406c7610e8c735f686c02931de3/docs/evidencias/uso-ia-ghcr-2026-10-30.md)
+y [registro del ensayo](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/blob/669368894d583406c7610e8c735f686c02931de3/docs/evidencias/uso-ia-ensayo-ghcr-2026-10-30.md).
+Esas referencias inmutables permiten auditar el traslado, no mantener registros
+activos separados. El objetivo, la configuración y el resultado operativo
+permanecen en el [informe del ensayo](operacion/ensayo-ghcr.md); la cadena
+arquitectónica permanece en la [matriz existente](evidencias/trazabilidad-ghcr-2026-10-30.md)
+y la publicación en la [evidencia de cierre](operacion/evidencia-ghcr-cierre.md).
