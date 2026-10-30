@@ -470,3 +470,17 @@ interpretarse como la persistencia vigente de S8.
 Para S8, las restricciones R-08 a R-12 describen el estado operativo vigente:
 despliegue público, protección de secretos, infraestructura reproducible,
 control de costo y ausencia de dependencia de una tarjeta bancaria personal.
+
+## Restricción institucional para la fase 2 — 2026-10-30
+
+La [guía §1 y §3.2](https://github.com/ISCOUTB/iscoutb.dev/blob/main/README.md#32-describe-tu-entorno-en-deploycomposelabyaml)
+y las [políticas](https://github.com/ISCOUTB/iscoutb.dev/blob/main/docs/politicas-uso.md)
+limitan al equipo a cuatro contenedores, suma de límites de memoria de 512 MB y 0,5 CPU por contenedor.
+Los límites existentes `256M + 256M` equivalen a 512 MiB en Compose; no dejan cupo declarado para Nginx
+ni para otro entorno simultáneo con esos límites. No se reducen los límites de API/MySQL.
+Flutter se compila fuera del servidor. El [candidato ADR-0025](../adr/0025-servir-flutter-precompilado-desde-fastapi.md)
+usa el contenedor API existente, sin añadir servicios, puertos públicos, privilegios ni volúmenes.
+El [ensayo CI](../evidencias/despliegue-publico-mvp-2026-10-04.md#fase-2--frontend-institucional-candidato-probado-en-ci--2026-10-30)
+acredita límites efectivos y picos con datos sintéticos; no acredita consumo bajo carga productiva.
+Monitoring de Dokploy mostró valores cero no utilizables como medición. No se deduce memoria libre de ellos.
+Autodeploy, respaldos, registro privado y rollback deben resolverse antes de una promoción autorizada.

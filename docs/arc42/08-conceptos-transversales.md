@@ -108,3 +108,17 @@ La [tabla operación → garantía de S12](../evidencias/evidencia-s12-2026-10-2
 **No incorporar caché mutable de aplicación en S12.** Las lecturas del catálogo acceden al servicio propietario/MySQL. No hay entradas ni TTL de aplicación que invalidar; cualquier futura caché necesitaría una política explícita de invalidación **tras cada escritura confirmada** (creación, edición, cambio de estado, moderación, borrado) y clave o versión para todas las variantes de filtros. TTL por sí solo dejaría lecturas obsoletas. Esta alternativa de cache-aside es **propuesta, no implementada**, y requiere medición EC-01 para justificarla. Los motores y navegadores pueden tener mecanismos internos distintos, que no se presentan aquí como caché del dominio.
 
 La implementación productiva no agrega broker ni consumidor de mensajes; un eventual laboratorio de mensajería se documenta como prototipo aislado. [Evidencia y política completa S12](../evidencias/evidencia-s12-2026-10-25.md).
+
+## 8.11 Transporte del frontend candidato — 2026-10-30
+
+El [candidato ADR-0025](../adr/0025-servir-flutter-precompilado-desde-fastapi.md) sirve únicamente archivos
+Flutter precompilados en `/app/`. Web usa el origen de la página salvo URL explícita de build; Pages y Android
+conservan su configuración. Las rutas API/OpenAPI no se renombran y no hay acceso Flutter → MySQL directo.
+ETag con `Cache-Control: no-cache` revalida assets; esto no incorpora caché mutable del dominio ni sustituye S12.
+StaticFiles confina el directorio, rechaza escapes/symlinks y no responde HTML a JS inexistente.
+`Location: /app/` conserva HTTPS; `Connection: close` solo en estáticos libera conexiones bajo el límite Uvicorn 6.
+Los contracts y la semántica de autorización no se modifican.
+
+OCI, `/app/REVISION`, cabecera HTTP y `/app/source-revision.txt` se verifican contra el mismo SHA del checkout CI.
+La imagen exportada y su checksum permiten revisión posterior sin reconstrucción; todavía no hay digest de registro
+ni despliegue para esta capacidad. [Resultados reales y límites](../evidencias/despliegue-publico-mvp-2026-10-04.md#fase-2--frontend-institucional-candidato-probado-en-ci--2026-10-30).

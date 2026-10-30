@@ -30,6 +30,7 @@ Las decisiones históricas se conservan; una evolución posterior no reescribe e
 | [ADR-0017](../adr/0017-serializar-inicializacion-y-migracion-de-identidad.md) | Aceptado | Lock MySQL y migración de identidad única. | Persistencia |
 | [ADR-0018](../adr/0018-ejecutar-el-monolito-en-dokploy-con-volumenes.md) | Aceptado para preparación; implementación pública posterior acreditada | Compose con volúmenes y backend principal Dokploy. | Operación vigente |
 | [ADR-0019](../adr/0019-consultar-imagenes-en-lote-a-traves-de-publicaciones.md) | Aceptado | Lectura de imágenes en lote por el service propietario. | Catálogo / rendimiento |
+| [ADR-0025](../adr/0025-servir-flutter-precompilado-desde-fastapi.md) | Propuesto; implementado y probado en CI, promoción pendiente | Servir Flutter precompilado en `/app/` desde FastAPI sin otro contenedor. | Hosting Web institucional; Pages continúa publicado |
 
 ## Composición vigente
 
