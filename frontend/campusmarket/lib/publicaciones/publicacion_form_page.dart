@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
@@ -41,7 +42,17 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
   int? _publicacionPendiente;
   int _imagenesSubidas = 0;
   String? _errorGuardado;
+  String? _idempotencyKey;
   bool _seleccionandoImagenes = false;
+
+  // UUID v4 con entropía criptográfica, estable durante los reintentos del formulario.
+  String _newIdempotencyKey() {
+    final bytes = List<int>.generate(16, (_) => Random.secure().nextInt(256));
+    bytes[6] = (bytes[6] & 0x0f) | 0x40;
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;
+    final hex = bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+    return '${hex.substring(0, 8)}-${hex.substring(8, 12)}-${hex.substring(12, 16)}-${hex.substring(16, 20)}-${hex.substring(20)}';
+  }
 
   @override
   void dispose() {
@@ -85,7 +96,9 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
 
         final longitud = archivo.lengthSync() ?? await archivo.length();
         if (longitud == null) {
-          _mostrarMensaje('No fue posible determinar el tamaño de ${archivo.name}.');
+          _mostrarMensaje(
+            'No fue posible determinar el tamaño de ${archivo.name}.',
+          );
           continue;
         }
         if (longitud > _maxImageBytes) {
@@ -118,7 +131,9 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
       }
 
       if (archivos.length > disponibles) {
-        _mostrarMensaje('Solo se permiten $_maxImagenes imágenes por publicación.');
+        _mostrarMensaje(
+          'Solo se permiten $_maxImagenes imágenes por publicación.',
+        );
       }
     } catch (_) {
       if (mounted) {
@@ -137,14 +152,22 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
   Future<void> _guardar() async {
     if (_guardando || !_formKey.currentState!.validate()) return;
     FocusScope.of(context).unfocus();
-    setState(() { _guardando = true; _errorGuardado = null; });
+    setState(() {
+      _guardando = true;
+      _errorGuardado = null;
+    });
     try {
       if (_publicacionPendiente == null) {
+        _idempotencyKey ??= _newIdempotencyKey();
         final creada = await _api.crearPublicacion(
           titulo: _tituloController.text.trim(),
           descripcion: _descripcionController.text.trim(),
-          precio: double.parse(_precioController.text.trim().replaceAll(',', '.')),
-          modalidad: _modalidad, estado: _estado,
+          precio: double.parse(
+            _precioController.text.trim().replaceAll(',', '.'),
+          ),
+          modalidad: _modalidad,
+          estado: _estado,
+          idempotencyKey: _idempotencyKey,
         );
         _publicacionPendiente = (creada['id'] as num).toInt();
       }
@@ -152,7 +175,8 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
       while (_imagenesSubidas < _imagenes.length) {
         final imagen = _imagenes[_imagenesSubidas];
         await _api.subirImagen(
-          publicacionId: id, imagen: ImagenPublicacion(nombre: imagen.nombre, bytes: imagen.bytes),
+          publicacionId: id,
+          imagen: ImagenPublicacion(nombre: imagen.nombre, bytes: imagen.bytes),
         );
         _imagenesSubidas++;
       }
@@ -162,9 +186,11 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
       widget.onPublicada?.call();
     } catch (error) {
       if (!mounted) return;
-      setState(() => _errorGuardado = _publicacionPendiente == null
-        ? readableError(error)
-        : 'Tu publicación ya fue creada. Reintenta para subir las imágenes pendientes. ${readableError(error)}');
+      setState(
+        () => _errorGuardado = _publicacionPendiente == null
+            ? readableError(error)
+            : 'Tu publicación ya fue creada. Reintenta para subir las imágenes pendientes. ${readableError(error)}',
+      );
     } finally {
       if (mounted) setState(() => _guardando = false);
     }
@@ -177,6 +203,7 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
     setState(() {
       _imagenes.clear();
       _publicacionPendiente = null;
+      _idempotencyKey = null;
       _imagenesSubidas = 0;
       _errorGuardado = null;
       _modalidad = 'venta';
@@ -289,7 +316,10 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
                     color: colors.primaryContainer,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(Icons.description_outlined, color: colors.primary),
+                  child: Icon(
+                    Icons.description_outlined,
+                    color: colors.primary,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -306,7 +336,10 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
             TextFormField(
               key: const Key('publicacion-titulo'),
               controller: _tituloController,
-              enabled: !_guardando && _publicacionPendiente == null,
+              enabled:
+                  !_guardando &&
+                  _publicacionPendiente == null &&
+                  _idempotencyKey == null,
               textInputAction: TextInputAction.next,
               decoration: const InputDecoration(
                 labelText: 'Título',
@@ -330,8 +363,13 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
                 final precio = TextFormField(
                   key: const Key('publicacion-precio'),
                   controller: _precioController,
-                  enabled: !_guardando && _publicacionPendiente == null,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  enabled:
+                      !_guardando &&
+                      _publicacionPendiente == null &&
+                      _idempotencyKey == null,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   decoration: const InputDecoration(
                     labelText: 'Precio',
                     hintText: '85000',
@@ -342,7 +380,12 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
                     final parsed = double.tryParse(
                       (value ?? '').replaceAll(',', '.').trim(),
                     );
-                    if (parsed == null || !parsed.isFinite || parsed <= 0 || parsed > 9999999999.99 || ((parsed * 100) - (parsed * 100).round()).abs() > 0.0001) {
+                    if (parsed == null ||
+                        !parsed.isFinite ||
+                        parsed <= 0 ||
+                        parsed > 9999999999.99 ||
+                        ((parsed * 100) - (parsed * 100).round()).abs() >
+                            0.0001) {
                       return 'Usa un precio positivo con máximo 2 decimales.';
                     }
                     return null;
@@ -358,9 +401,15 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
                   ),
                   items: const [
                     DropdownMenuItem(value: 'venta', child: Text('Venta')),
-                    DropdownMenuItem(value: 'alquiler', child: Text('Alquiler')),
+                    DropdownMenuItem(
+                      value: 'alquiler',
+                      child: Text('Alquiler'),
+                    ),
                   ],
-                  onChanged: _guardando || _publicacionPendiente != null
+                  onChanged:
+                      _guardando ||
+                          _publicacionPendiente != null ||
+                          _idempotencyKey != null
                       ? null
                       : (value) {
                           if (value != null) setState(() => _modalidad = value);
@@ -398,7 +447,10 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
                   child: Text('Reacondicionado'),
                 ),
               ],
-              onChanged: _guardando || _publicacionPendiente != null
+              onChanged:
+                  _guardando ||
+                      _publicacionPendiente != null ||
+                      _idempotencyKey != null
                   ? null
                   : (value) {
                       if (value != null) setState(() => _estado = value);
@@ -408,7 +460,10 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
             TextFormField(
               key: const Key('publicacion-descripcion'),
               controller: _descripcionController,
-              enabled: !_guardando && _publicacionPendiente == null,
+              enabled:
+                  !_guardando &&
+                  _publicacionPendiente == null &&
+                  _idempotencyKey == null,
               minLines: 5,
               maxLines: 8,
               decoration: const InputDecoration(
@@ -440,12 +495,24 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.send_outlined),
-                label: Text(_guardando ? 'Publicando...' : _publicacionPendiente != null ? 'Reintentar imágenes' : 'Publicar producto'),
+                label: Text(
+                  _guardando
+                      ? 'Publicando...'
+                      : _publicacionPendiente != null
+                      ? 'Reintentar imágenes'
+                      : 'Publicar producto',
+                ),
               ),
             ),
             if (_errorGuardado != null) ...[
               const SizedBox(height: 16),
-              Semantics(liveRegion: true, child: Text(_errorGuardado!, style: TextStyle(color: colors.error))),
+              Semantics(
+                liveRegion: true,
+                child: Text(
+                  _errorGuardado!,
+                  style: TextStyle(color: colors.error),
+                ),
+              ),
             ],
             if (_guardando) ...[
               const SizedBox(height: 12),
@@ -517,7 +584,10 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
                     color: colors.primaryContainer,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(Icons.photo_library_outlined, color: colors.primary),
+                  child: Icon(
+                    Icons.photo_library_outlined,
+                    color: colors.primary,
+                  ),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -540,7 +610,10 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
                 ),
                 const SizedBox(width: 12),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 11,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: colors.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(20),
@@ -576,7 +649,10 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
 
     return InkWell(
       key: const Key('publicacion-fotografias'),
-      onTap: _guardando || _seleccionandoImagenes || _publicacionPendiente != null ? null : _seleccionarImagenes,
+      onTap:
+          _guardando || _seleccionandoImagenes || _publicacionPendiente != null
+          ? null
+          : _seleccionarImagenes,
       borderRadius: BorderRadius.circular(16),
       child: Container(
         width: double.infinity,
@@ -590,10 +666,16 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.add_photo_alternate_outlined, size: 52, color: colors.primary),
+            Icon(
+              Icons.add_photo_alternate_outlined,
+              size: 52,
+              color: colors.primary,
+            ),
             const SizedBox(height: 12),
             Text(
-              _seleccionandoImagenes ? 'Abriendo selector...' : 'Seleccionar fotografías',
+              _seleccionandoImagenes
+                  ? 'Abriendo selector...'
+                  : 'Seleccionar fotografías',
               style: const TextStyle(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 5),
@@ -621,7 +703,9 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest,
                     alignment: Alignment.center,
                     child: const Icon(Icons.broken_image_outlined, size: 44),
                   );
@@ -666,7 +750,9 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
               shape: const CircleBorder(),
               child: InkWell(
                 customBorder: const CircleBorder(),
-                onTap: _guardando || _publicacionPendiente != null ? null : () => _eliminarImagen(index),
+                onTap: _guardando || _publicacionPendiente != null
+                    ? null
+                    : () => _eliminarImagen(index),
                 child: const Padding(
                   padding: EdgeInsets.all(7),
                   child: Icon(Icons.close, color: Colors.white, size: 18),
@@ -682,14 +768,19 @@ class _PublicacionFormPageState extends State<PublicacionFormPage> {
   Widget _buildAgregarImagen() {
     return InkWell(
       key: const Key('publicacion-fotografias'),
-      onTap: _guardando || _seleccionandoImagenes || _publicacionPendiente != null ? null : _seleccionarImagenes,
+      onTap:
+          _guardando || _seleccionandoImagenes || _publicacionPendiente != null
+          ? null
+          : _seleccionarImagenes,
       borderRadius: BorderRadius.circular(16),
       child: Container(
         width: 190,
         height: 160,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outlineVariant,
+          ),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

@@ -20,10 +20,13 @@ class ImagenPublicacion {
 }
 
 class PublicacionesApi {
-  PublicacionesApi({String? baseUrl, http.Client? client, SessionController? session})
-    : baseUrl = baseUrl ?? defaultApiBaseUrl,
-      _client = client ?? http.Client(),
-      _session = session ?? SessionController.instance;
+  PublicacionesApi({
+    String? baseUrl,
+    http.Client? client,
+    SessionController? session,
+  }) : baseUrl = baseUrl ?? defaultApiBaseUrl,
+       _client = client ?? http.Client(),
+       _session = session ?? SessionController.instance;
 
   final String baseUrl;
   final http.Client _client;
@@ -31,13 +34,26 @@ class PublicacionesApi {
 
   void dispose() => _client.close();
 
-  Future<http.Response> _request(String method, String path, int expected, {Object? body}) async {
+  Future<http.Response> _request(
+    String method,
+    String path,
+    int expected, {
+    Object? body,
+    String? idempotencyKey,
+  }) async {
     final headers = _session.authorizedHeaders;
     final request = http.Request(method, Uri.parse('$baseUrl$path'));
     request.headers.addAll(headers);
+    if (idempotencyKey != null) {
+      request.headers['Idempotency-Key'] = idempotencyKey;
+    }
     if (body != null) request.body = jsonEncode(body);
-    final stream = await _client.send(request).timeout(const Duration(seconds: 20));
-    final response = await http.Response.fromStream(stream).timeout(const Duration(seconds: 20));
+    final stream = await _client
+        .send(request)
+        .timeout(const Duration(seconds: 20));
+    final response = await http.Response.fromStream(
+      stream,
+    ).timeout(const Duration(seconds: 20));
     _check(response, expected, headers['Authorization']);
     return response;
   }
@@ -48,18 +64,41 @@ class PublicacionesApi {
     if (response.statusCode == 503) {
       throw PublicacionTemporalmenteNoDisponible(responseMessage(response));
     }
-    throw ApiException(responseMessage(response), statusCode: response.statusCode);
+    throw ApiException(
+      responseMessage(response),
+      statusCode: response.statusCode,
+    );
   }
 
-  Map<String, dynamic> _payload(String titulo, String descripcion, double precio, String modalidad, String estado) =>
-    {'titulo': titulo, 'descripcion': descripcion, 'precio': precio, 'modalidad': modalidad, 'estado': estado};
+  Map<String, dynamic> _payload(
+    String titulo,
+    String descripcion,
+    double precio,
+    String modalidad,
+    String estado,
+  ) => {
+    'titulo': titulo,
+    'descripcion': descripcion,
+    'precio': precio,
+    'modalidad': modalidad,
+    'estado': estado,
+  };
 
   Future<Map<String, dynamic>> crearPublicacion({
-    required String titulo, required String descripcion, required double precio,
-    required String modalidad, required String estado,
+    required String titulo,
+    required String descripcion,
+    required double precio,
+    required String modalidad,
+    required String estado,
+    String? idempotencyKey,
   }) async {
-    final response = await _request('POST', '/publicaciones', 201,
-      body: _payload(titulo, descripcion, precio, modalidad, estado));
+    final response = await _request(
+      'POST',
+      '/publicaciones',
+      201,
+      idempotencyKey: idempotencyKey,
+      body: _payload(titulo, descripcion, precio, modalidad, estado),
+    );
     return jsonDecode(response.body) as Map<String, dynamic>;
   }
 
@@ -69,19 +108,32 @@ class PublicacionesApi {
   }
 
   Future<Map<String, dynamic>> editarPublicacion({
-    required int publicacionId, required String titulo, required String descripcion,
-    required double precio, required String modalidad, required String estado,
+    required int publicacionId,
+    required String titulo,
+    required String descripcion,
+    required double precio,
+    required String modalidad,
+    required String estado,
   }) async {
-    final response = await _request('PUT', '/publicaciones/$publicacionId', 200,
-      body: _payload(titulo, descripcion, precio, modalidad, estado));
+    final response = await _request(
+      'PUT',
+      '/publicaciones/$publicacionId',
+      200,
+      body: _payload(titulo, descripcion, precio, modalidad, estado),
+    );
     return jsonDecode(response.body) as Map<String, dynamic>;
   }
 
   Future<Map<String, dynamic>> cambiarEstadoPublicacion({
-    required int publicacionId, required String estadoPublicacion,
+    required int publicacionId,
+    required String estadoPublicacion,
   }) async {
-    final response = await _request('PATCH', '/publicaciones/$publicacionId/estado', 200,
-      body: {'estado_publicacion': estadoPublicacion});
+    final response = await _request(
+      'PATCH',
+      '/publicaciones/$publicacionId/estado',
+      200,
+      body: {'estado_publicacion': estadoPublicacion},
+    );
     return jsonDecode(response.body) as Map<String, dynamic>;
   }
 
@@ -90,35 +142,64 @@ class PublicacionesApi {
   }
 
   Future<Map<String, dynamic>> subirImagen({
-    required int publicacionId, required ImagenPublicacion imagen,
+    required int publicacionId,
+    required ImagenPublicacion imagen,
   }) async {
     final headers = _session.authorizedHeaders;
-    final request = http.MultipartRequest('POST', Uri.parse('$baseUrl/publicaciones/$publicacionId/imagenes'));
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse('$baseUrl/publicaciones/$publicacionId/imagenes'),
+    );
     request.headers['Authorization'] = headers['Authorization']!;
-    request.files.add(http.MultipartFile.fromBytes('archivo', imagen.bytes, filename: imagen.nombre));
-    final stream = await _client.send(request).timeout(const Duration(seconds: 30));
-    final response = await http.Response.fromStream(stream).timeout(const Duration(seconds: 20));
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        'archivo',
+        imagen.bytes,
+        filename: imagen.nombre,
+      ),
+    );
+    final stream = await _client
+        .send(request)
+        .timeout(const Duration(seconds: 30));
+    final response = await http.Response.fromStream(
+      stream,
+    ).timeout(const Duration(seconds: 20));
     _check(response, 201, headers['Authorization']);
     return jsonDecode(response.body) as Map<String, dynamic>;
   }
 
-  Future<void> subirImagenes({required int publicacionId, required List<ImagenPublicacion> imagenes}) async {
-    if (imagenes.length > 3) throw ArgumentError('Solo se permiten hasta 3 imágenes.');
+  Future<void> subirImagenes({
+    required int publicacionId,
+    required List<ImagenPublicacion> imagenes,
+  }) async {
+    if (imagenes.length > 3) {
+      throw ArgumentError('Solo se permiten hasta 3 imágenes.');
+    }
     for (final imagen in imagenes) {
       await subirImagen(publicacionId: publicacionId, imagen: imagen);
     }
   }
 
   Future<void> eliminarImagen(int publicacionId, int imagenId) async {
-    await _request('DELETE', '/publicaciones/$publicacionId/imagenes/$imagenId', 204);
+    await _request(
+      'DELETE',
+      '/publicaciones/$publicacionId/imagenes/$imagenId',
+      204,
+    );
   }
 
   Future<void> elegirPrincipal(int publicacionId, int imagenId) async {
-    await _request('PUT', '/publicaciones/$publicacionId/imagenes/$imagenId/principal', 200);
+    await _request(
+      'PUT',
+      '/publicaciones/$publicacionId/imagenes/$imagenId/principal',
+      200,
+    );
   }
 
   Future<List<dynamic>> listarPublicaciones() async {
-    final response = await _client.get(Uri.parse('$baseUrl/publicaciones')).timeout(const Duration(seconds: 20));
+    final response = await _client
+        .get(Uri.parse('$baseUrl/publicaciones'))
+        .timeout(const Duration(seconds: 20));
     _check(response, 200, null);
     return jsonDecode(response.body) as List<dynamic>;
   }

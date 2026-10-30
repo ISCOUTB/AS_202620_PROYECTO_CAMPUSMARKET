@@ -1,6 +1,7 @@
 from .image_storage import delete_publication_image, save_publication_image
 from .repository import (
     PersistenceUnavailableError,
+    IdempotencyConflictError,
     create_publication,
     create_publication_image,
     delete_publication,
@@ -22,6 +23,10 @@ class PublicationPersistenceUnavailableError(RuntimeError):
     """No es posible guardar o consultar publicaciones temporalmente."""
 
 
+class PublicationIdempotencyConflictError(ValueError):
+    """Clave de idempotencia reutilizada de forma incompatible."""
+
+
 class PublicationNotFoundError(LookupError):
     """La publicación no existe o no pertenece al propietario indicado."""
 
@@ -36,7 +41,7 @@ def _normalizar_publicacion(data: dict) -> dict:
     }
 
 
-def crear_publicacion(data: dict, propietario_id: int) -> dict:
+def crear_publicacion(data: dict, propietario_id: int, idempotency_key: str | None = None) -> dict:
     normalized = {
         **_normalizar_publicacion(data),
         "propietario_id": propietario_id,
@@ -47,7 +52,9 @@ def crear_publicacion(data: dict, propietario_id: int) -> dict:
     }
 
     try:
-        return create_publication(normalized)
+        return create_publication(normalized, idempotency_key=idempotency_key)
+    except IdempotencyConflictError as error:
+        raise PublicationIdempotencyConflictError(str(error)) from error
     except PersistenceUnavailableError as error:
         raise PublicationPersistenceUnavailableError(
             "No es posible guardar la publicación temporalmente."
