@@ -14,6 +14,9 @@ class FlutterFiles(StaticFiles):
         # evita mezclar builds sin desactivar ETag ni el aislamiento del mount.
         response.headers["Cache-Control"] = "no-cache"
         response.headers["X-Content-Type-Options"] = "nosniff"
+        # Uvicorn cuenta conexiones keep-alive dentro del limite existente (6).
+        # No retener slots por assets; no altera el keep-alive de las rutas API.
+        response.headers["Connection"] = "close"
         return response
 
 

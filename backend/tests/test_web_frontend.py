@@ -64,6 +64,7 @@ def test_missing_assets_never_return_html_and_cache_revalidates(web_dir):
     assert "javascript" in response.headers["Content-Type"]
     assert response.headers["Cache-Control"] == "no-cache"
     assert response.headers["X-Content-Type-Options"] == "nosniff"
+    assert response.headers["Connection"] == "close"
     assert client.get("/app/main.dart.js", headers={"If-None-Match": response.headers["ETag"]}).status_code == 304
 
 
