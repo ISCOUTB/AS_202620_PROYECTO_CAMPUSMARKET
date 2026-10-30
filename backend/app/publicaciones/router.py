@@ -3,6 +3,7 @@ from typing import Annotated, Literal
 from fastapi import (
     APIRouter,
     File,
+    Header,
     HTTPException,
     Response,
     UploadFile,
@@ -14,6 +15,7 @@ from starlette.concurrency import run_in_threadpool
 from backend.app.usuarios.dependencies import UsuarioActual
 
 from .service import (
+    PublicationIdempotencyConflictError,
     PublicationNotFoundError,
     PublicationPersistenceUnavailableError,
     cambiar_estado_publicacion,
@@ -111,12 +113,22 @@ def _service_unavailable(error: Exception) -> HTTPException:
         status.HTTP_503_SERVICE_UNAVAILABLE: {
             "model": ErrorResponse,
             "description": "Persistencia temporalmente no disponible",
-        }
+        },
+        status.HTTP_409_CONFLICT: {
+            "model": ErrorResponse,
+            "description": "Idempotency-Key reutilizada con datos distintos o publicación ausente",
+        },
     },
 )
-def crear(payload: PublicacionCreate, user: UsuarioActual):
+def crear(
+    payload: PublicacionCreate,
+    user: UsuarioActual,
+    idempotency_key: str | None = Header(default=None, min_length=8, max_length=128, alias="Idempotency-Key"),
+):
     try:
-        return crear_publicacion(payload.model_dump(), user["id"])
+        return crear_publicacion(payload.model_dump(), user["id"], idempotency_key=idempotency_key)
+    except PublicationIdempotencyConflictError as error:
+        raise HTTPException(status.HTTP_409_CONFLICT, str(error)) from error
     except PublicationPersistenceUnavailableError as error:
         raise _service_unavailable(error) from error
 

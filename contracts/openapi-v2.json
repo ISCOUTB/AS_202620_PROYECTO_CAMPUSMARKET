@@ -13,62 +13,46 @@
   ],
   "paths": {
     "/publicaciones": {
-      "get": {
-        "tags": [
-          "publicaciones"
-        ],
-        "summary": "Listar publicaciones",
-        "operationId": "listarPublicaciones",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/Publicacion"
-                  },
-                  "type": "array",
-                  "title": "Response Listarpublicaciones"
-                }
-              }
-            }
-          },
-          "413": {
-            "description": "La solicitud supera el límite permitido.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "detail": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "detail"
-                  ]
-                }
-              }
-            }
-          }
-        }
-      },
       "post": {
         "tags": [
           "publicaciones"
         ],
         "summary": "Crear una publicación",
         "operationId": "crearPublicacion",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 8,
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/PublicacionCreate"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "201": {
@@ -99,16 +83,6 @@
               }
             }
           },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          },
           "503": {
             "description": "Persistencia temporalmente no disponible",
             "content": {
@@ -118,13 +92,69 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "Idempotency-Key reutilizada con datos distintos o publicación ausente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
           }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
+        }
+      },
+      "get": {
+        "tags": [
+          "publicaciones"
+        ],
+        "summary": "Listar publicaciones",
+        "operationId": "listarPublicaciones",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Publicacion"
+                  },
+                  "title": "Response Listarpublicaciones"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "La solicitud supera el límite permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
           }
-        ]
+        }
       }
     },
     "/publicaciones/mias": {
@@ -154,12 +184,12 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
                   "properties": {
                     "detail": {
                       "type": "string"
                     }
                   },
+                  "type": "object",
                   "required": [
                     "detail"
                   ]
@@ -219,16 +249,6 @@
               }
             }
           },
-          "404": {
-            "description": "Publicación no encontrada para el propietario",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "413": {
             "description": "La solicitud supera el límite permitido.",
             "content": {
@@ -247,12 +267,12 @@
               }
             }
           },
-          "422": {
-            "description": "Validation Error",
+          "404": {
+            "description": "Publicación no encontrada para el propietario",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -263,6 +283,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -295,16 +325,6 @@
           "204": {
             "description": "Successful Response"
           },
-          "404": {
-            "description": "Publicación no encontrada para el propietario",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "413": {
             "description": "La solicitud supera el límite permitido.",
             "content": {
@@ -323,12 +343,12 @@
               }
             }
           },
-          "422": {
-            "description": "Validation Error",
+          "404": {
+            "description": "Publicación no encontrada para el propietario",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -339,6 +359,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -390,16 +420,6 @@
               }
             }
           },
-          "404": {
-            "description": "Publicación no encontrada para el propietario",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "413": {
             "description": "La solicitud supera el límite permitido.",
             "content": {
@@ -418,12 +438,12 @@
               }
             }
           },
-          "422": {
-            "description": "Validation Error",
+          "404": {
+            "description": "Publicación no encontrada para el propietario",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -434,6 +454,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -485,6 +515,24 @@
               }
             }
           },
+          "413": {
+            "description": "La solicitud supera el límite permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
           "400": {
             "description": "Imagen inválida o máximo alcanzado",
             "content": {
@@ -505,20 +553,12 @@
               }
             }
           },
-          "413": {
-            "description": "La solicitud supera el límite permitido.",
+          "503": {
+            "description": "Persistencia temporalmente no disponible",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "detail": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "detail"
-                  ]
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -529,16 +569,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Persistencia temporalmente no disponible",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -931,12 +961,12 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
                   "properties": {
                     "detail": {
                       "type": "string"
                     }
                   },
+                  "type": "object",
                   "required": [
                     "detail"
                   ]
@@ -990,12 +1020,12 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
                   "properties": {
                     "detail": {
                       "type": "string"
                     }
                   },
+                  "type": "object",
                   "required": [
                     "detail"
                   ]
@@ -1039,12 +1069,12 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
                   "properties": {
                     "detail": {
                       "type": "string"
                     }
                   },
+                  "type": "object",
                   "required": [
                     "detail"
                   ]
@@ -1091,12 +1121,12 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
                   "properties": {
                     "detail": {
                       "type": "string"
                     }
                   },
+                  "type": "object",
                   "required": [
                     "detail"
                   ]
@@ -1138,12 +1168,12 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
                   "properties": {
                     "detail": {
                       "type": "string"
                     }
                   },
+                  "type": "object",
                   "required": [
                     "detail"
                   ]
@@ -1186,12 +1216,12 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
                   "properties": {
                     "detail": {
                       "type": "string"
                     }
                   },
+                  "type": "object",
                   "required": [
                     "detail"
                   ]
@@ -1238,12 +1268,12 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
                   "properties": {
                     "detail": {
                       "type": "string"
                     }
                   },
+                  "type": "object",
                   "required": [
                     "detail"
                   ]
@@ -1364,12 +1394,12 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
                   "properties": {
                     "detail": {
                       "type": "string"
                     }
                   },
+                  "type": "object",
                   "required": [
                     "detail"
                   ]
@@ -1549,7 +1579,7 @@
           "precio": {
             "type": "number",
             "maximum": 9999999999.99,
-            "exclusiveMinimum": 0,
+            "exclusiveMinimum": 0.0,
             "title": "Precio"
           },
           "modalidad": {
@@ -1641,13 +1671,6 @@
             ],
             "title": "Estado"
           },
-          "imagenes": {
-            "items": {
-              "$ref": "#/components/schemas/ImagenCatalogo"
-            },
-            "type": "array",
-            "title": "Imagenes"
-          },
           "propietario_id": {
             "anyOf": [
               {
@@ -1668,6 +1691,13 @@
             ],
             "title": "Estado Publicacion",
             "default": "disponible"
+          },
+          "imagenes": {
+            "items": {
+              "$ref": "#/components/schemas/ImagenCatalogo"
+            },
+            "type": "array",
+            "title": "Imagenes"
           }
         },
         "type": "object",
@@ -1698,7 +1728,7 @@
           "precio": {
             "type": "number",
             "maximum": 9999999999.99,
-            "exclusiveMinimum": 0,
+            "exclusiveMinimum": 0.0,
             "title": "Precio"
           },
           "modalidad": {
@@ -1757,7 +1787,7 @@
           "precio": {
             "type": "number",
             "maximum": 9999999999.99,
-            "exclusiveMinimum": 0,
+            "exclusiveMinimum": 0.0,
             "title": "Precio"
           },
           "modalidad": {
@@ -1871,7 +1901,7 @@
           "precio": {
             "type": "number",
             "maximum": 9999999999.99,
-            "exclusiveMinimum": 0,
+            "exclusiveMinimum": 0.0,
             "title": "Precio"
           },
           "modalidad": {
@@ -2030,7 +2060,7 @@
         "properties": {
           "publicacion_id": {
             "type": "integer",
-            "exclusiveMinimum": 0,
+            "exclusiveMinimum": 0.0,
             "title": "Publicacion Id"
           },
           "motivo": {

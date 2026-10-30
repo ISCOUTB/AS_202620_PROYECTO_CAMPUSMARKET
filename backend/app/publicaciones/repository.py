@@ -1,7 +1,20 @@
+import hashlib
+import json
+
 import pymysql
 
 from backend.app.db import PersistenceUnavailableError, transaction
 from backend.app.db import connect as _connect
+
+
+class IdempotencyConflictError(ValueError):
+    """La clave ya se usó para otra solicitud o el recurso ya no existe."""
+
+
+def _payload_hash(data: dict) -> str:
+    # Los datos ya fueron normalizados por el servicio.
+    canonical = json.dumps(data, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
 def _column_exists(cursor, table_name: str, column_name: str) -> bool:
@@ -111,6 +124,20 @@ def initialize_database() -> None:
                 """
             )
 
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS solicitudes_idempotentes (
+                    propietario_id BIGINT UNSIGNED NOT NULL,
+                    operacion VARCHAR(64) NOT NULL,
+                    clave VARCHAR(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+                    payload_hash CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+                    publicacion_id BIGINT UNSIGNED NULL,
+                    creado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    PRIMARY KEY (propietario_id, operacion, clave)
+                ) ENGINE=InnoDB
+                """
+            )
+
         connection.commit()
 
     except pymysql.MySQLError as error:
@@ -140,7 +167,7 @@ def _select_publication_fields() -> str:
     """
 
 
-def create_publication(data: dict) -> dict:
+def create_publication(data: dict, idempotency_key: str | None = None) -> dict:
     initialize_database()
     connection = None
 
@@ -148,6 +175,46 @@ def create_publication(data: dict) -> dict:
         connection = _connect()
 
         with connection.cursor() as cursor:
+            if idempotency_key is not None:
+                payload_hash = _payload_hash(data)
+                try:
+                    cursor.execute(
+                        """
+                        INSERT INTO solicitudes_idempotentes
+                            (propietario_id, operacion, clave, payload_hash)
+                        VALUES (%s, 'crear_publicacion', %s, %s)
+                        """,
+                        (data["propietario_id"], idempotency_key, payload_hash),
+                    )
+                except pymysql.err.IntegrityError as error:
+                    if error.args[0] != 1062:
+                        raise
+                    # La UNIQUE de InnoDB espera a que el primer intento
+                    # haga COMMIT/ROLLBACK antes de informar duplicado.
+                    connection.rollback()
+                    cursor.execute(
+                        """
+                        SELECT payload_hash, publicacion_id
+                        FROM solicitudes_idempotentes
+                        WHERE propietario_id = %s AND operacion = 'crear_publicacion' AND clave = %s
+                        """,
+                        (data["propietario_id"], idempotency_key),
+                    )
+                    previous = cursor.fetchone()
+                    if previous is None or previous["payload_hash"] != payload_hash or previous["publicacion_id"] is None:
+                        raise IdempotencyConflictError("Idempotency-Key ya utilizada con otra solicitud.")
+                    cursor.execute(
+                        f"""
+                        SELECT {_select_publication_fields()} FROM publicaciones
+                        WHERE id = %s AND propietario_id = %s
+                        """,
+                        (previous["publicacion_id"], data["propietario_id"]),
+                    )
+                    existing = cursor.fetchone()
+                    if existing is None:
+                        raise IdempotencyConflictError("La publicación original ya no está disponible.")
+                    return existing
+
             cursor.execute(
                 """
                 INSERT INTO publicaciones (
@@ -182,6 +249,14 @@ def create_publication(data: dict) -> dict:
                 (publication_id, data["propietario_id"]),
             )
             row = cursor.fetchone()
+            if idempotency_key is not None:
+                cursor.execute(
+                    """
+                    UPDATE solicitudes_idempotentes SET publicacion_id = %s
+                    WHERE propietario_id = %s AND operacion = 'crear_publicacion' AND clave = %s
+                    """,
+                    (publication_id, data["propietario_id"], idempotency_key),
+                )
 
         connection.commit()
         return row

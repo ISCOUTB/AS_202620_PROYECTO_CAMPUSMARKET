@@ -109,6 +109,11 @@ def main():
     parser.add_argument("--base-url", default="https://campusmarket.iscoutb.dev")
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--expected-revision", required=True)
+    parser.add_argument(
+        "--reference-contract",
+        type=Path,
+        default=Path(__file__).resolve().parents[1] / "contracts/openapi-v2.json",
+    )
     parser.add_argument("--repeats", type=int, default=3)
     parser.add_argument("--samples", type=int, default=5)
     args = parser.parse_args()
@@ -136,7 +141,7 @@ def main():
     }
     (args.output / "plan.json").write_text(json.dumps(plan, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     all_rows, phases, health_rows, contracts = [], {name: [] for name in plan["expected_statuses"]}, [], []
-    versioned = json.loads((Path(__file__).resolve().parents[1] / "contracts/openapi-v2.json").read_text(encoding="utf-8"))
+    versioned = json.loads(args.reference_contract.read_text(encoding="utf-8"))
     for moment in ("before",):
         row, payload = observe(plan["base_url"], "/openapi.json", "contract_" + moment, 0, 0, log_path)
         all_rows.append(row)

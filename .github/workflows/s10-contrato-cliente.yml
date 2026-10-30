@@ -16,6 +16,8 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          fetch-depth: 2
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
         with:
           python-version: "3.12"
@@ -23,11 +25,22 @@ jobs:
         run: python -m pip install -r backend/requirements-dev.txt
       - name: Contrato, rechazo antes de servicio y correlacion de logs
         run: python -m pytest backend/tests/test_s10_contrato_cliente.py backend/tests/test_contrato_openapi.py backend/tests/test_observability.py -q
+      - name: Preparar contrato de referencia segun entorno
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            test "$(git rev-parse HEAD^1)" = "${{ github.event.pull_request.base.sha }}"
+            git show HEAD^1:contracts/openapi-v2.json > /tmp/s10-reference.json
+          else
+            cp contracts/openapi-v2.json /tmp/s10-reference.json
+          fi
+          python -m json.tool /tmp/s10-reference.json > /dev/null
       - name: Experimento nuevo de tres fases sobre HTTPS publico
         run: >-
           python scripts/experimento_s10_contrato.py
           --output artifacts/s10/${{ github.run_id }}
           --expected-revision 7856416795bb4accdf9d05e01adb470654875e56
+          --reference-contract /tmp/s10-reference.json
       - name: Conservar todas las muestras, incluidas las fallidas
         if: always()
         uses: actions/upload-artifact@v4
