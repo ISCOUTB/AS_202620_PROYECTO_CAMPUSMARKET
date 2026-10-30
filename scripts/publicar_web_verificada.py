@@ -11,6 +11,8 @@ import tempfile
 import zipfile
 from pathlib import Path
 
+from scripts.ensayar_imagen_ghcr import classify_pull_error
+
 REPOSITORY = "Nnigarp/AS_202620_PROYECTO_CAMPUSMARKET"
 BRANCH = "feat/web-institucional-20261030-40be256"
 SOURCE = "a9b6709a67f8036346acb64b9c2b9849ee355cf2"
@@ -41,7 +43,9 @@ def sha256(path):
 def command(args, stdin=None, timeout=180):
     result = subprocess.run(args, input=stdin, capture_output=True, timeout=timeout, check=False)
     # Nunca imprimir stdout/stderr de herramientas autenticadas.
-    require(result.returncode == 0, f"Operacion {args[0]} rechazada: exit={result.returncode}")
+    if result.returncode:
+        category = classify_pull_error(result.stderr.decode(errors="replace"))
+        raise VerificationError(f"Operacion {args[0]} rechazada: exit={result.returncode}; category={category}")
     return result.stdout
 
 
@@ -97,8 +101,9 @@ def inspect_identity(reference):
     data = json.loads(command(["docker", "image", "inspect", reference]))[0]
     require(data["Id"] == IMAGE_ID and data["Architecture"] == "amd64" and data["Os"] == "linux", "Imagen cargada/remota distinta")
     require(data["Config"]["Labels"]["org.opencontainers.image.revision"] == SOURCE, "Revision OCI distinta")
-    raw = command(["docker", "run", "--rm", "--pull=never", "--network=none", "--read-only", "--cap-drop=ALL", "--security-opt=no-new-privileges", "--memory=64m", "--cpus=0.5", "--entrypoint=cat", reference, "/app/REVISION", "/app/backend/web/source-revision.txt"])
-    require(raw.decode().split() == [SOURCE + SOURCE] or raw.decode().split() == [SOURCE, SOURCE], "REVISION API/Web distinta")
+    for path in ("/app/REVISION", "/app/backend/web/source-revision.txt"):
+        raw = command(["docker", "run", "--rm", "--pull=never", "--network=none", "--read-only", "--cap-drop=ALL", "--security-opt=no-new-privileges", "--memory=64m", "--cpus=0.5", "--entrypoint=cat", reference, path])
+        require(raw.decode().strip() == SOURCE, "REVISION API/Web distinta")
 
 
 def publish(token):
@@ -130,16 +135,23 @@ def publish(token):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--publish", action="store_true")
-    parser.add_argument("--archive", type=Path, help="ZIP original ya descargado; no omite procedencia en GitHub")
+    parser.add_argument("--archive", type=Path, help="Copia conservada del ZIP original; valida hashes fijados en codigo aun despues de caducar Actions")
     args = parser.parse_args()
     record = {"source_sha": SOURCE, "source_repository": REPOSITORY, "source_run": RUN, "artifact_id": ARTIFACT,
-              "zip_sha256": ZIP_SHA, "archive_sha256": TAR_SHA, "image_id": IMAGE_ID, "published": False}
+              "zip_sha256": ZIP_SHA, "archive_sha256": TAR_SHA, "image_id": IMAGE_ID,
+              "publication_attempted": False, "published": False}
     OUT.mkdir(parents=True, exist_ok=True)
     try:
         require(os.getenv("GITHUB_ACTIONS") == "true" and os.getenv("RUNNER_ENVIRONMENT") == "github-hosted", "Solo runner GitHub efimero")
         require(not os.getenv("DOCKER_HOST") and os.getenv("DOCKER_CONTEXT", "default") in {"", "default"}, "Docker remoto no permitido")
         require(command(["docker", "context", "inspect", "default", "--format", "{{.Endpoints.docker.Host}}"]).decode().strip() == "unix:///var/run/docker.sock", "Daemon no local")
-        verify_provenance(api(f"actions/runs/{RUN}"), api(f"actions/artifacts/{ARTIFACT}"))
+        if args.archive:
+            # Los hashes fijados y revisados autentican la copia completa; no
+            # consultar un endpoint que puede desaparecer al caducar Actions.
+            record["provenance"] = "Copia original autenticada por ZIP/TAR/Image ID fijados en codigo"
+        else:
+            verify_provenance(api(f"actions/runs/{RUN}"), api(f"actions/artifacts/{ARTIFACT}"))
+            record["provenance"] = "Metadatos GitHub vigentes y hashes fijados en codigo"
         with tempfile.TemporaryDirectory(prefix="cm-web-original-") as temp:
             directory = Path(temp)
             path = args.archive or directory / "artifact.zip"
@@ -150,6 +162,7 @@ def main():
             inspect_identity(IMAGE_ID)
             record["integrity_verified"] = True
             if args.publish:
+                record["publication_attempted"] = True
                 record["ghcr_reference"] = publish(os.environ.get("GH_TOKEN"))
                 record["published"] = True
         record["passed"] = True

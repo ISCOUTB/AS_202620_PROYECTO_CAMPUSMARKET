@@ -4,7 +4,9 @@ import copy
 import json
 import os
 import subprocess
+import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 from scripts import publicar_web_verificada as publisher
@@ -28,6 +30,16 @@ def evidence():
 
 
 class PublisherTests(unittest.TestCase):
+    def test_modified_backup_is_rejected_before_extraction(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "modified.zip"
+            path.write_bytes(b"synthetic modified backup")
+            destination = Path(directory) / "output"
+            destination.mkdir()
+            with self.assertRaisesRegex(publisher.VerificationError, "ZIP modificado"):
+                publisher.verify_archive(path, destination)
+            self.assertEqual(list(destination.iterdir()), [])
+
     def test_provenance_rejects_wrong_run_fork_event_source_status_and_zip(self):
         run, artifact = metadata()
         publisher.verify_provenance(run, artifact)
@@ -64,7 +76,7 @@ class PublisherTests(unittest.TestCase):
         failure = subprocess.CompletedProcess(["docker"], 1, b"synthetic-private-token", b"synthetic-password")
         with patch.object(publisher.subprocess, "run", return_value=failure), self.assertRaises(publisher.VerificationError) as result:
             publisher.command(["docker", "push", "safe-reference"])
-        self.assertEqual(str(result.exception), "Operacion docker rechazada: exit=1")
+        self.assertEqual(str(result.exception), "Operacion docker rechazada: exit=1; category=UNKNOWN")
 
     def test_publish_requires_manual_fork_branch(self):
         with patch.dict(os.environ, {"GITHUB_REPOSITORY": "ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET"}), self.assertRaises(publisher.VerificationError):
