@@ -24,7 +24,7 @@ La auditorÃ­a de Dokploy mostrÃ³ una variable `CAMPUSMARKET_REVISION` antigu
 - Run de Compose: `41024201484`.
 - Ensayo manual de verificaciÃ³n: `41025785578` (`publicar: false`).
 - Run de publicaciÃ³n: `41026286264` (`publicar: true`).
-- Digest: `sha256:f9eaabdb166274225c9ad49dc44999f71f6b1f7c9c5902dc68ab98b07115ce8b`.
+- Digest: `sha256:f9eaabdb166274225e9ad490c44999f71f6b1f7c9c5902dc68ab98b07115ce8b`.
 - Merge posterior de preparaciÃ³n de Compose: `321548f0e1068e2bea7e59d77f09c8717db5f19a`. **Este SHA no se atribuye a la imagen publicada**.
 
 ## Incidencia real y resultado

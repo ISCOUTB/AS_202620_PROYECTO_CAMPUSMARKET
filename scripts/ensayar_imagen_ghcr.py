@@ -17,7 +17,7 @@ from pathlib import Path
 
 REPOSITORY = "ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET"
 SOURCE_SHA = "2154e7880e5111537256206a29f4f4c29a8c86c4"
-IMAGE = "ghcr.io/iscoutb/campusmarket-api@sha256:f9eaabdb166274225c9ad49dc44999f71f6b1f7c9c5902dc68ab98b07115ce8b"
+IMAGE = "ghcr.io/iscoutb/campusmarket-api@sha256:f9eaabdb166274225e9ad490c44999f71f6b1f7c9c5902dc68ab98b07115ce8b"
 ROOT = Path(__file__).resolve().parents[1]
 COMPOSE_FILE = ROOT / "deploy/compose.prod.yaml"
 VOLUMES = {"api": ("publication_images", "/app/backend/uploads"), "db": ("mysql_data", "/var/lib/mysql")}
@@ -130,6 +130,28 @@ def require(condition, message):
         raise TrialError(message)
 
 
+def classify_pull_error(stderr):
+    """Categoria orientativa por patrones; nunca devuelve texto de Docker."""
+    text = stderr.lower()
+    patterns = (
+        ("PLATFORM_MISMATCH", ("no matching manifest", "no match for platform")),
+        ("REFERENCE_NOT_FOUND", ("manifest unknown", "manifest_unknown", "name unknown", "name_unknown", "404 not found")),
+        ("AUTHENTICATION", ("unauthorized", "authentication required")),
+        ("AUTHORIZATION", ("denied:", "access denied", "insufficient_scope", "forbidden")),
+        ("RATE_LIMIT", ("toomanyrequests", "too many requests")),
+        ("INVALID_REFERENCE", ("invalid reference format", "invalid checksum digest")),
+        ("DAEMON_UNAVAILABLE", ("cannot connect to the docker daemon", "is the docker daemon running")),
+        ("NETWORK", ("no such host", "network is unreachable", "connection refused", "connection reset", "i/o timeout", "context deadline exceeded", "tls handshake timeout", "dial tcp")),
+        ("TLS", ("x509:", "certificate verify failed", "tls:")),
+        ("REGISTRY_SERVER", ("500 internal server error", "502 bad gateway", "503 service unavailable", "504 gateway timeout")),
+        ("STORAGE", ("no space left on device",)),
+    )
+    category = next((category for category, markers in patterns if any(marker in text for marker in markers)), "UNKNOWN")
+    if category == "UNKNOWN" and "failed to resolve reference" in text and ": not found" in text:
+        return "REFERENCE_NOT_FOUND"
+    return category
+
+
 def project_from_environment(env):
     require(env.get("GITHUB_ACTIONS") == "true" and env.get("RUNNER_ENVIRONMENT") == "github-hosted", "Requiere runner efimero alojado por GitHub")
     require(env.get("GITHUB_REPOSITORY") == REPOSITORY, "Requiere el contexto del repositorio oficial")
@@ -184,12 +206,22 @@ class Trial:
         self.private.mkdir(mode=0o700, exist_ok=True)
         self.state_file.write_text(json.dumps(self.state, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    def command(self, args, operation, stdin=None, timeout=60):
+    def command(self, args, operation, stdin=None, timeout=60, diagnose_pull=False):
         try:
             result = subprocess.run(args, input=stdin, text=True, capture_output=True, timeout=timeout, check=False)
         except subprocess.TimeoutExpired:
+            if diagnose_pull:
+                self.state["docker_pull_error"] = {"category": "TIMEOUT", "exit_code": None}
+                self.save()
             raise TrialError("Tiempo agotado en " + operation) from None
-        require(result.returncode == 0, "Fallo de infraestructura: " + operation)
+        if result.returncode != 0:
+            message = "Fallo de infraestructura: " + operation
+            if diagnose_pull:
+                category = classify_pull_error(result.stderr)
+                self.state["docker_pull_error"] = {"category": category, "exit_code": result.returncode}
+                self.save()
+                message += f" [Docker pull: {category}; exit={result.returncode}]"
+            raise TrialError(message)
         return result.stdout
 
     def local_docker(self):
@@ -287,7 +319,7 @@ class Trial:
         require(self.state.get("prepared"), "Falta preparacion validada")
         self.config()
         self.begin("pull")
-        self.command(["docker", "pull", IMAGE], "descargar digest GHCR", timeout=240)
+        self.command(["docker", "pull", IMAGE], "descargar digest GHCR", timeout=240, diagnose_pull=True)
         image = json.loads(self.command(["docker", "image", "inspect", IMAGE], "inspeccionar imagen"))[0]
         require(IMAGE in image.get("RepoDigests", []) and image["Config"]["Labels"].get("org.opencontainers.image.revision") == SOURCE_SHA, "Digest o etiqueta remota incorrectos")
         self.state["image_id"] = image["Id"]

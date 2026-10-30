@@ -17,7 +17,7 @@ autoriza las operaciones pendientes y contrasta los resultados reales.
 | Usar pull_request_target, PAT o ampliar permisos para forzar una prueba | Rechazada | No son necesarios ni estan autorizados; un 403 se documenta como bloqueo |
 | Copiar produccion a development o tocar recursos del laboratorio | Rechazada | El ensayo se prepara en Actions. No modifica Dokploy ni consume la cuota compartida del equipo |
 
-## Evidencia y resultados reales
+## Historial: evidencia inicial antes del run
 
 Se ejecutaron validacion Compose standalone 5.6.1, Actionlint 1.7.12, Ruff
 0.16.9, Gitleaks 8.30.1, sintaxis Bash y Python, 14 casos negativos y cuatro pruebas unitarias
@@ -36,3 +36,27 @@ abierto de esa rama. Se entrega el enlace de comparacion para apertura manual,
 sin ampliar permisos ni simular la existencia del PR o del run.
 
 [Configuracion, matriz y procedimiento](../operacion/ensayo-ghcr.md).
+
+## Correccion del incidente 41046842362
+
+- Rama nueva del fork desde upstream/master `1068764ba84095b93fe0d643cf401503131473ec`.
+- **Corregido:** la IA conservo el digest proporcionado sin contrastarlo con el
+  log original de publicacion. La auditoria actual identifica dos caracteres
+  diferentes (posiciones hex 18 y 24). Se corrigen Compose, verificador y cinco
+  referencias documentales; el SHA fuente permanece `2154e788...`.
+- **Aceptado:** clasificar solo el fallo de pull GHCR mediante una lista cerrada
+  de categorias y el exit real del proceso. No publicar stderr/stdout ni intentar
+  una redaccion parcial que pueda dejar secretos. UNKNOWN es un fallo pendiente.
+- **Aceptado y validado localmente:** cinco pruebas unitarias de seguridad y
+  regresion del diagnostico; 20 mensajes de clasificacion, stdout/stderr privados,
+  timeout, fallo ordinario y exito. Ruff, Compose config y Gitleaks se usan sobre
+  el cambio. Son validaciones locales sin descargar la imagen.
+- **Rechazado:** afirmar un problema de permisos por el fallo de pull. Los logs
+  acreditan login exitoso y packages: read; el usuario confirma Actions access
+  Admin. El stderr antiguo fue descartado y no permite atribuir 403/404 exactos.
+- **Rechazado:** reconstruir/republicar imagen, cambiar runner/workflow,
+  visibilidad, permisos, credenciales o Dokploy, o repetir automaticamente el run.
+
+Resultados reales revisados: publicador `41026286264` satisfactorio; ensayo
+`41046842362`, intentos 1 y 2, fallidos antes de API/MySQL. No se atribuyen al
+codigo corregido los resultados del publicador ni los del ensayo anterior.

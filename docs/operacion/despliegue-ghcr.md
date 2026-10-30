@@ -22,7 +22,7 @@ Run de publicacion GHCR:
 41026286264
 
 Imagen:
-ghcr.io/iscoutb/campusmarket-api@sha256:f9eaabdb166274225c9ad49dc44999f71f6b1f7c9c5902dc68ab98b07115ce8b
+ghcr.io/iscoutb/campusmarket-api@sha256:f9eaabdb166274225e9ad490c44999f71f6b1f7c9c5902dc68ab98b07115ce8b
 
 ## 3. Infraestructura actual
 
