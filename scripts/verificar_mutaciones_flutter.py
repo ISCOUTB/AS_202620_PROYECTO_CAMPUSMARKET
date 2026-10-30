@@ -1,3 +1,5 @@
+import os
+
 """Verifica autorización del cliente introduciendo defectos y restaurando fuentes."""
 import subprocess
 from pathlib import Path
@@ -7,8 +9,8 @@ FRONTEND = ROOT / "frontend/campusmarket"
 CASES = [
     (
         "lib/publicaciones/publicaciones_api.dart",
-        "{'titulo': titulo,",
-        "{'propietario_id': 1, 'titulo': titulo,",
+        "'titulo': titulo,",
+        "'propietario_id': 1, 'titulo': titulo,",
         "crear y consultar propias envía sesión y omite cualquier propietario suministrado",
         "propietario fijo en el cliente",
     ),
@@ -31,7 +33,7 @@ def main():
         try:
             path.write_text(content.replace(original, defect, 1))
             result = subprocess.run(
-                ["flutter", "test", "test/session_authorization_test.dart", "--plain-name", test],
+                ["flutter.bat" if os.name == "nt" else "flutter", "test", "test/session_authorization_test.dart", "--plain-name", test],
                 cwd=FRONTEND, capture_output=True, text=True, timeout=120, check=False,
             )
             output = result.stdout + result.stderr
