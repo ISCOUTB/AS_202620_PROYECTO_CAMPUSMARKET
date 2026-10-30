@@ -50,6 +50,32 @@ jobs:
       - name: Cuatro contextos, EC-02, EC-01, memoria y recreación con volúmenes
         run: |
           python scripts/verificar_compose_mvp.py --project "$CAMPUSMARKET_CI_PROJECT" --env-file "$RUNNER_TEMP/campusmarket-compose.env" --revision "$GITHUB_SHA"
+      - name: Verificar identidad de imagen probada
+        shell: bash
+        run: |
+          set -euo pipefail
+          EXPECTED="$(git rev-parse --verify HEAD)"
+          test "$EXPECTED" = "$GITHUB_SHA"
+
+          IMAGE_ID="$(docker compose \
+            --project-name "$CAMPUSMARKET_CI_PROJECT" \
+            --env-file "$RUNNER_TEMP/campusmarket-compose.env" \
+            -f deploy/compose.lab.yaml \
+            -f deploy/compose.local.yaml \
+            images -q api)"
+
+          test -n "$IMAGE_ID"
+
+          OCI="$(docker image inspect "$IMAGE_ID" \
+            --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}')"
+
+          FILE="$(docker run --rm \
+            --entrypoint cat "$IMAGE_ID" /app/REVISION)"
+
+          test "$OCI" = "$EXPECTED"
+          test "$FILE" = "$EXPECTED"
+
+          echo "Imagen Compose verificada para SHA=$EXPECTED"
       - name: Verificar diff y ausencia de cambios en tracked files
         run: |
           git diff --check bfe3222c1e29dddc404560cdd9d61095d4bdb3fe HEAD
