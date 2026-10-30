@@ -9,15 +9,93 @@ La promocion productiva sigue aplazada segun ADR-0024.
 
 - Base de implementacion: `0971b2b0c229c25d4ebefd5c90bf1b8625656932`, merge del PR #72.
 - Commit fuente de la imagen: `2154e7880e5111537256206a29f4f4c29a8c86c4`.
-- Imagen: `ghcr.io/iscoutb/campusmarket-api@sha256:f9eaabdb166274225c9ad49dc44999f71f6b1f7c9c5902dc68ab98b07115ce8b`.
+- Imagen: `ghcr.io/iscoutb/campusmarket-api@sha256:f9eaabdb166274225e9ad490c44999f71f6b1f7c9c5902dc68ab98b07115ce8b`.
 - Workflow nuevo: [ensayo-ghcr.yml](../../.github/workflows/ensayo-ghcr.yml).
 - Verificador nuevo: [ensayar_imagen_ghcr.py](../../scripts/ensayar_imagen_ghcr.py).
-- **Run real de este ensayo: pendiente. No existe una URL de ejecucion acreditada.**
+- **Run real:** [41046842362](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/41046842362), dos intentos fallidos sobre `1068764ba84095b93fe0d643cf401503131473ec`. API/MySQL no llegaron a arrancar. La correccion de esta rama no se ha ejecutado en Actions.
 
 `GITHUB_SHA` identifica el codigo del workflow, no el backend de la imagen.
 El verificador contrasta OCI, `/app/REVISION` y el encabezado HTTP con el commit
 fuente indicado arriba, independientemente del HEAD documental. El par SHA/digest
 es el objetivo explicito de este ensayo; no es una variable productiva fija.
+
+## Incidente: digest transcrito incorrectamente
+
+La investigacion compara el codigo de `1068764ba84095b93fe0d643cf401503131473ec`
+con los logs del publicador exitoso. No consulta secretos, permisos del paquete
+ni recursos productivos. Upstream/master y el master del fork coincidieron en
+ese commit al crear `fix/diagnostico-pull-ghcr-20261030-1068764`.
+
+| Referencia | Digest SHA-256 |
+|---|---|
+| Solicitado por Compose y verificador en los dos intentos fallidos | `f9eaabdb166274225c9ad49dc44999f71f6b1f7c9c5902dc68ab98b07115ce8b` |
+| Publicado y descargado por el publicador exitoso | `f9eaabdb166274225e9ad490c44999f71f6b1f7c9c5902dc68ab98b07115ce8b` |
+
+Hay dos diferencias en la parte hexadecimal (posiciones desde 1): **18: c/e** y
+**24: d/0**. El nombre de paquete es el mismo. El workflow del ensayo no contiene
+un digest: invoca el verificador, cuya constante IMAGE y el campo api.image de
+Compose contenian el mismo valor incorrecto. Por eso `config` aprobaba una
+configuracion internamente coherente, pero que apuntaba a otra referencia.
+
+Evidencia verificable:
+
+- [Publicacion, job 123965073846](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/41026286264/job/123965073846), paso 6: a las 03:25:23 del 30/10/2026 (Colombia, UTC-5), el push imprime el digest correcto; despues `imagetools inspect`, `pull` y la verificacion remota terminan satisfactoriamente. `GHCR_VERIFICADO` repite esa referencia.
+- El Image ID acreditado es `sha256:8e409313166b2c39cd0cc173cd9082e9e8ca7364746d4afb790bab652dc3962b`, diferente del digest del manifiesto. OCI y REVISION se verificaron contra `2154e7880e5111537256206a29f4f4c29a8c86c4`.
+- [Ensayo, intento 1, job 124032891662](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/41046842362/job/124032891662) y [reintento 2, job 124037350081](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/41046842362/job/124037350081): Compose, login y cleanup exitosos; falla la descarga antes de descargar MySQL o iniciar los servicios.
+- Los tres jobs muestran runner `2.338.0`, imagen `ubuntu-24.04`, version `20261025.353.1`. El publicador dispone de `packages: write`; el ensayo acredita `packages: read`. No hay evidencia de incompatibilidad del runner.
+- El rol Admin en Manage Actions access y la visibilidad Internal son informacion comprobada por el usuario; no se han consultado ni cambiado desde esta investigacion. Login exitoso no prueba por si solo la autorizacion de una descarga concreta.
+
+**Causa corregible confirmada:** el ensayo no solicita el digest que se publico.
+El error de Docker concreto (404/manifest, autorizacion, red u otro) no puede
+recuperarse de esos logs: `capture_output=True` capturo stderr y el verificador
+lo descarto al elevar un mensaje generico. Los logs solo preservan el exit 1 de
+Python, no el codigo de salida de Docker. No se afirma un fallo de permisos ni
+se atribuye un mensaje MANIFEST_UNKNOWN que no se ha observado.
+
+La correccion es literal: sustituir las dos referencias ejecutables y las cinco
+referencias documentales; no se reconstruye ni publica otra imagen, no cambia
+el SHA fuente y no se modifica el workflow. El Compose alternativo permanece
+sin activar en Dokploy. Las evidencias antiguas pueden contrastarse en el
+commit anterior; este apartado deja constancia expresa de la fe de erratas.
+
+## Diagnostico seguro y validacion de la correccion
+
+Solo el `docker pull` de GHCR activa el diagnostico nuevo. Ante un exit distinto
+de cero, el verificador registra `docker_pull_error` con **category** y
+**exit_code**, y utiliza esos mismos datos en su mensaje de fallo. Un timeout
+se registra como TIMEOUT y exit_code nulo. Nunca devuelve, imprime ni archiva
+stderr/stdout, argumentos, credenciales o variables de entorno como diagnostico.
+
+Las categorias orientativas distinguen referencia ausente, plataforma,
+autenticacion, autorizacion, cuota, referencia invalida, daemon, red, TLS,
+registro y almacenamiento. Lo no reconocido queda UNKNOWN. Son patrones de
+errores Docker, no una comprobacion de permisos administrativos. Referencia de
+codigos de registro: [Distribution HTTP API V2](https://distribution.github.io/distribution/spec/api/).
+
+Validaciones locales de esta correccion, sin Engine ni acceso al paquete:
+
+```text
+python -m unittest scripts.test_ensayar_imagen_ghcr -v
+python -m ruff check scripts/ensayar_imagen_ghcr.py scripts/test_ensayar_imagen_ghcr.py
+docker compose --project-name <proyecto-de-prueba> --env-file <env-sintetico> -f deploy/compose.prod.yaml config --format json
+git diff --check
+```
+
+Las cinco pruebas unitarias cubren 20 mensajes de clasificacion, supresion de
+salidas sensibles, timeout, fallo ordinario y retorno satisfactorio. Se valida
+Compose con credenciales sinteticas, se compara su imagen con el digest extraido
+del log de publicacion y se exige que el digest anterior sea rechazado.
+Gitleaks revisa los archivos del cambio. Ninguna de estas validaciones descarga
+la imagen ni arranca servicios.
+
+| Criterio | Estado | Archivo/linea en el commit auditado | Commit | Run | Resultado |
+|---|---|---|---|---|---|
+| Publicacion y comprobacion de la identidad remota | CUMPLE | `.github/workflows/publicar-ghcr.yml:185` | `2154e7880e5111537256206a29f4f4c29a8c86c4` | `41026286264` | Digest correcto e Image ID acreditados |
+| Referencia solicitada por el ensayo | NO CUMPLE | `scripts/ensayar_imagen_ghcr.py:20`; `deploy/compose.prod.yaml:3` | `1068764ba84095b93fe0d643cf401503131473ec` | `41046842362`, intentos 1 y 2 | Dos caracteres distintos al digest publicado |
+| Login y permisos declarados del job | CUMPLE | `.github/workflows/ensayo-ghcr.yml:6`, `:28` | `1068764ba84095b93fe0d643cf401503131473ec` | Ambos intentos | Login exitoso y packages: read; no acredita acceso efectivo a un manifiesto |
+| Causa Docker exacta de la descarga fallida | BLOQUEADO | `scripts/ensayar_imagen_ghcr.py:187` | `1068764ba84095b93fe0d643cf401503131473ec` | Ambos intentos | stderr y exit Docker no preservados; no se inventa 403/404 |
+| Cleanup de los intentos fallidos | CUMPLE | `scripts/ensayar_imagen_ghcr.py:325` | `1068764ba84095b93fe0d643cf401503131473ec` | Ambos intentos | Cleanup exitoso; servicios no iniciados |
+| API, SQL, salud y persistencia de la imagen corregida | BLOQUEADO | Verificador de esta rama | Rama de correccion | No ejecutado | No se repite el ensayo automaticamente |
 
 ## Configuracion y comprobaciones implementadas
 
@@ -26,7 +104,7 @@ es el objetivo explicito de este ensayo; no es una variable productiva fija.
 2. Autenticacion efimera de Actions por stdin. No PAT, secretos nuevos ni
    credenciales persistidas en el checkout. La configuracion Docker se guarda
    temporalmente en el runner y se elimina en cleanup.
-3. Se utiliza **sin modificar** `deploy/compose.prod.yaml`. Antes de arrancar se
+3. Se utiliza directamente `deploy/compose.prod.yaml`, corregido solo en su digest. Antes de arrancar se
    ejecuta `docker compose config --format json`, sin publicar el resultado
    completo. Se rechazan builds, puertos, bind mounts, redes/volumenes externos,
    referencias a otros proyectos y una base ajena al ensayo.
@@ -56,7 +134,7 @@ El host usa Python estandar y Docker/Compose disponibles en el runner. Pillow y
 PyMySQL se utilizan dentro de la imagen, donde ya existen. No se incorporan
 dependencias al producto ni se modifican workflows existentes.
 
-## Validacion estatica efectuada
+## Historial: validacion estatica inicial
 
 - Docker Compose standalone **5.6.1**: `config --format json` valido con valores
   sinteticos. Se verificaron digest, dos servicios, limites 256 MiB + 256 MiB,
@@ -72,13 +150,16 @@ dependencias al producto ni se modifican workflows existentes.
 - Cuatro pruebas unitarias de control sin daemon: cleanup acotado al namespace,
   eliminacion de credenciales incluso ante error de infraestructura, supresion
   de stdout/stderr sensibles e informe incompleto que falla.
-- `git diff --check`. No se alteran Compose, backend ni configuraciones productivas.
+- `git diff --check`. En esa preparacion inicial no se alteraron Compose, backend ni configuraciones productivas.
 
 Estas comprobaciones **no equivalen** a descargar GHCR o ejecutar MySQL/API.
 El entorno de implementacion carece de Docker Engine. Las pruebas unitarias
 simulan la infraestructura; sus identificadores temporales no son runs de Actions.
 
-## Matriz previa a la ejecucion real
+## Historial: matriz anterior al run 41046842362
+
+Esta matriz conserva el estado previo. El estado actual y la fe de erratas
+figuran en los apartados del incidente anteriores.
 
 El workflow y verificador se publicaron en el commit `80152f17d175409f0d171ac39e5f96108d4ee4ff` del fork.
 La matriz producida
@@ -96,7 +177,7 @@ real del run; no se inserta un hash autorreferencial en este documento.
 | Prueba funcional y persistencia sintetica | BLOQUEADO | `scripts/ensayar_imagen_ghcr.py:38`, `:285` | Pendiente ejecucion | Pendiente | Falta recrear contenedores y verificar SQL/archivo |
 | Cleanup real incluso ante fallo de tests | PARCIAL | `.github/workflows/ensayo-ghcr.yml:40`; `scripts/ensayar_imagen_ghcr.py:325` | `80152f17d175409f0d171ac39e5f96108d4ee4ff` | Pendiente | Pruebas unitarias de control aprobadas; falta Docker real |
 
-## Entrega y permiso de Pull Request
+## Historial: entrega inicial y permiso de Pull Request
 
 La rama `ci/ensayo-ghcr-20261030-0971b2b` se publico unicamente en el fork
 `Nnigarp/AS_202620_PROYECTO_CAMPUSMARKET`. GitHub confirmo un solo commit de
@@ -110,25 +191,24 @@ esta rama. No se reintenta con credenciales o permisos ampliados.
 [Abrir la comparacion y preparar el PR oficial](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/compare/master...Nnigarp:ci/ensayo-ghcr-20261030-0971b2b?expand=1).
 Ese enlace es un formulario de comparacion, **no una URL de PR creado**.
 
-## Ejecucion pendiente y evidencia real
+## Siguiente ejecucion, solo con autorizacion
 
-GitHub exige que un workflow manual exista en la **rama predeterminada** para
-registrar `workflow_dispatch`. Crear este archivo en la rama del fork y abrir
-el PR no lo hace ejecutable en el repositorio oficial. El job tambien rechaza
-el contexto de un fork. No se usara un trigger privilegiado para eludirlo.
+El workflow ya esta registrado en la rama predeterminada y se ejecuto en el
+contexto oficial sobre `1068764...`. La correccion se entrega en una rama nueva
+del fork. No se dispara ningun run ni se modifica un job anterior.
 
 Pasos del responsable autorizado, despues de revisar el PR:
 
-1. Coordinar la incorporacion del workflow a la rama predeterminada mediante
+1. Coordinar la incorporacion de la correccion a la rama predeterminada mediante
    el PR. **Fusionar a master tambien activa el autodeploy actual de Dokploy**;
    esa consecuencia requiere coordinacion independiente. Este trabajo no hace
    merge ni modifica ese autodeploy.
 2. Con el workflow ya registrado y autorizacion de ejecucion, abrir Actions en
    `ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET`, seleccionar **Ensayo aislado de imagen
    GHCR** y **Run workflow** sobre la version revisada.
-3. Si el paquete Internal devuelve 403, registrar el bloqueo. Un administrador
-   del paquete debe confirmar el acceso del repositorio; no se anaden PAT ni se
-   elevan permisos automaticamente.
+3. Si falla la descarga, consultar la categoria y exit_code de `docker_pull_error`.
+   No atribuir el fallo a permisos por conjetura, no anadir PAT ni elevar permisos
+   automaticamente. UNKNOWN conserva el fallo sin publicar salidas sensibles.
 4. Consultar el resumen y artefacto `ensayo-ghcr-<run_id>-<run_attempt>`:
    `resultado.json` y `matriz.md`. Incluyen SHA fuente, SHA del workflow, digest,
    Image IDs, MySQL efectivo, snapshots de montajes, checks y cleanup. Un fallo
@@ -138,8 +218,9 @@ Pasos del responsable autorizado, despues de revisar el PR:
 
 ## Riesgos y limites
 
-- Acceso Internal, arranque, SQL, dependencia de health, persistencia y cleanup
-  real siguen sin comprobarse para este workflow.
+- La descarga corregida, arranque, SQL, dependencia de health y persistencia
+  siguen sin comprobarse. Cleanup se ejecuto en ambos intentos, pero no se ha
+  ensayado todavia la eliminacion de un stack que haya llegado a funcionar.
 - MySQL usa el tag 8.4 requerido; se registra su digest e Image ID efectivos.
 - No se prueban red publica, HTTPS, dominio, autodeploy ni recuperacion productiva.
 - Una cancelacion forzada o perdida del runner puede impedir el ultimo paso;

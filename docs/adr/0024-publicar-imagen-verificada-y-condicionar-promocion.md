@@ -39,7 +39,7 @@ El despliegue activo reconstruye `api` desde GitHub. Queremos evitar que la imag
 - CI Compose: [run 41024201484](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/41024201484).
 - VerificaciÃ³n sin publicar: [run 41025785578](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/41025785578).
 - PublicaciÃ³n verificada: [run 41026286264](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/41026286264).
-- Imagen: `ghcr.io/iscoutb/campusmarket-api@sha256:f9eaabdb166274225c9ad49dc44999f71f6b1f7c9c5902dc68ab98b07115ce8b`.
+- Imagen: `ghcr.io/iscoutb/campusmarket-api@sha256:f9eaabdb166274225e9ad490c44999f71f6b1f7c9c5902dc68ab98b07115ce8b`.
 - Compose alternativo: [`deploy/compose.prod.yaml`](../../deploy/compose.prod.yaml).
 - Evidencia completa: [`evidencia-ghcr-cierre.md`](../operacion/evidencia-ghcr-cierre.md).
 
