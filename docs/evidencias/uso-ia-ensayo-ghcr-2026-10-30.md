@@ -29,4 +29,10 @@ Actions en el contexto oficial y exista autorizacion. **No hay una URL de run
 de este ensayo acreditada.** La publicacion anterior no se reutiliza como
 prueba de arranque, persistencia o limpieza del nuevo job.
 
+La rama del fork se publico con el commit de implementacion
+`80152f17d175409f0d171ac39e5f96108d4ee4ff`. La creacion del PR oficial fallo con
+403, `Resource not accessible by integration`; se verifico que no hay un PR
+abierto de esa rama. Se entrega el enlace de comparacion para apertura manual,
+sin ampliar permisos ni simular la existencia del PR o del run.
+
 [Configuracion, matriz y procedimiento](../operacion/ensayo-ghcr.md).

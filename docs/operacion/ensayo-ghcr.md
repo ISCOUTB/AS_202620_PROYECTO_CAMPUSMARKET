@@ -80,20 +80,35 @@ simulan la infraestructura; sus identificadores temporales no son runs de Action
 
 ## Matriz previa a la ejecucion real
 
-El commit final de estos archivos se identifica en el PR. La matriz producida
+El workflow y verificador se publicaron en el commit `80152f17d175409f0d171ac39e5f96108d4ee4ff` del fork.
+La matriz producida
 por Actions registra automaticamente el SHA exacto del workflow, lineas y URL
 real del run; no se inserta un hash autorreferencial en este documento.
 
 | Criterio | Estado | Archivo/linea | Commit | Run | Resultado |
 |---|---|---|---|---|---|
-| Sintaxis del workflow y configuracion Compose | CUMPLE | `.github/workflows/ensayo-ghcr.yml:1`; `deploy/compose.prod.yaml:1` | HEAD del PR | No aplica: validacion estatica local | Actionlint y Compose config ejecutados; no prueba runtime |
-| Aislamiento y rechazo de configuracion insegura | PARCIAL | `scripts/ensayar_imagen_ghcr.py:133`, `:143` | HEAD del PR | Pendiente | Casos negativos aprobados; falta inspeccion real de contenedores/volumenes |
+| Sintaxis del workflow y configuracion Compose | CUMPLE | `.github/workflows/ensayo-ghcr.yml:1`; `deploy/compose.prod.yaml:1` | `80152f17d175409f0d171ac39e5f96108d4ee4ff` | No aplica: validacion estatica local | Actionlint y Compose config ejecutados; no prueba runtime |
+| Aislamiento y rechazo de configuracion insegura | PARCIAL | `scripts/ensayar_imagen_ghcr.py:133`, `:143` | `80152f17d175409f0d171ac39e5f96108d4ee4ff` | Pendiente | Casos negativos aprobados; falta inspeccion real de contenedores/volumenes |
 | Acceso GHCR con permiso de lectura | BLOQUEADO | `.github/workflows/ensayo-ghcr.yml:28`; `scripts/ensayar_imagen_ghcr.py:285` | Pendiente ejecucion | Pendiente | El publicador anterior no acredita el contexto de este nuevo job |
 | API ejecutada desde el digest, sin build | BLOQUEADO | `scripts/ensayar_imagen_ghcr.py:264`, `:285` | Pendiente ejecucion | Pendiente | Implementado; falta ejecucion real |
 | OCI, REVISION, encabezado y SHA fuente | BLOQUEADO | `scripts/ensayar_imagen_ghcr.py:38`, `:264` | Fuente `2154e788...` | Pendiente | No se compara con HEAD documental |
 | MySQL conectado y healthchecks positivos/negativos | BLOQUEADO | `scripts/ensayar_imagen_ghcr.py:38`, `:285` | Pendiente ejecucion | Pendiente | Falta probar 200, SQL, 503 y recuperacion |
 | Prueba funcional y persistencia sintetica | BLOQUEADO | `scripts/ensayar_imagen_ghcr.py:38`, `:285` | Pendiente ejecucion | Pendiente | Falta recrear contenedores y verificar SQL/archivo |
-| Cleanup real incluso ante fallo de tests | PARCIAL | `.github/workflows/ensayo-ghcr.yml:40`; `scripts/ensayar_imagen_ghcr.py:325` | HEAD del PR | Pendiente | Pruebas unitarias de control aprobadas; falta Docker real |
+| Cleanup real incluso ante fallo de tests | PARCIAL | `.github/workflows/ensayo-ghcr.yml:40`; `scripts/ensayar_imagen_ghcr.py:325` | `80152f17d175409f0d171ac39e5f96108d4ee4ff` | Pendiente | Pruebas unitarias de control aprobadas; falta Docker real |
+
+## Entrega y permiso de Pull Request
+
+La rama `ci/ensayo-ghcr-20261030-0971b2b` se publico unicamente en el fork
+`Nnigarp/AS_202620_PROYECTO_CAMPUSMARKET`. GitHub confirmo un solo commit de
+implementacion sobre `0971b2b...` y exactamente cuatro archivos nuevos. Esta
+nota documental posterior registra el bloqueo de entrega; no cambia el ensayo.
+
+La integracion rechazo crear el PR contra ISCOUTB/master con **403, Resource
+not accessible by integration**. Se comprobo que no existe un PR abierto de
+esta rama. No se reintenta con credenciales o permisos ampliados.
+
+[Abrir la comparacion y preparar el PR oficial](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/compare/master...Nnigarp:ci/ensayo-ghcr-20261030-0971b2b?expand=1).
+Ese enlace es un formulario de comparacion, **no una URL de PR creado**.
 
 ## Ejecucion pendiente y evidencia real
 
