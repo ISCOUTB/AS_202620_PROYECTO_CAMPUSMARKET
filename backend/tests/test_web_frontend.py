@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.testclient import TestClient
 
 from backend.app.web_frontend import mount_web_frontend
@@ -79,3 +80,29 @@ def test_mount_does_not_follow_symlinks_or_escape_directory(web_dir):
     client = TestClient(app)
     for path in ("/app/escape.txt", "/app/%2e%2e/private.txt"):
         assert client.get(path).status_code == 404
+
+
+def test_real_application_preserves_uploads_auth_and_openapi(web_dir, tmp_path, monkeypatch):
+    from backend.app.main import app
+
+    # Montar sobre la aplicacion real, sin consultar MySQL ni datos de usuarios.
+    monkeypatch.setattr(app.router, "routes", list(app.router.routes))
+    monkeypatch.setattr(app, "openapi_schema", None)
+    before = app.openapi()
+    uploads = tmp_path / "synthetic-uploads"
+    uploads.mkdir()
+    (uploads / "fixture.png").write_bytes(b"synthetic transport fixture")
+    upload_route = next(route for route in app.routes if route.name == "uploads")
+    monkeypatch.setattr(upload_route, "app", StaticFiles(directory=uploads))
+    mount_web_frontend(app, web_dir)
+    app.openapi_schema = None
+    client = TestClient(app)
+    assert client.get("/openapi.json").json() == before
+    assert client.get("/uploads/fixture.png").content == b"synthetic transport fixture"
+    assert client.get("/app/uploads/fixture.png").status_code == 404
+    assert client.get("/app/backend/app/main.py").status_code == 404
+    assert client.get("/app/.env").status_code == 404
+    assert client.post("/app/index.html").status_code == 405
+    assert client.post("/publicaciones", json={}).status_code == 401
+    assert client.head("/app/main.dart.js").status_code == 200
+    assert client.get("/docs").status_code == 200
