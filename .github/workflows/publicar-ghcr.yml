@@ -1,6 +1,9 @@
 name: Preparar publicacion GHCR
 
 on:
+  push:
+    branches: [feat/web-institucional-20261030-40be256]
+    paths: [scripts/publicar_web_verificada.py, scripts/test_publicar_web_verificada.py, .github/workflows/publicar-ghcr.yml]
   workflow_dispatch:
     inputs:
       imagen:
@@ -212,7 +215,7 @@ jobs:
           echo "GHCR_VERIFICADO=$IMAGE@$DIGEST"
 
   verificar-web:
-    if: inputs.imagen == 'web-institucional' && github.repository == 'Nnigarp/AS_202620_PROYECTO_CAMPUSMARKET' && github.ref == 'refs/heads/feat/web-institucional-20261030-40be256'
+    if: (github.event_name == 'push' || inputs.imagen == 'web-institucional') && github.repository == 'Nnigarp/AS_202620_PROYECTO_CAMPUSMARKET' && github.ref == 'refs/heads/feat/web-institucional-20261030-40be256'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
@@ -231,8 +234,9 @@ jobs:
           python - <<'PY'
           import os
           from scripts.publicar_web_verificada import RUN, SOURCE
-          assert os.environ["RUN_ID"] == str(RUN)
-          assert os.environ["SOURCE_SHA"] == SOURCE
+          if os.environ["GITHUB_EVENT_NAME"] == "workflow_dispatch":
+              assert os.environ["RUN_ID"] == str(RUN)
+              assert os.environ["SOURCE_SHA"] == SOURCE
           PY
       - name: Recuperar y verificar la imagen original sin construir
         if: inputs.publicar != true
