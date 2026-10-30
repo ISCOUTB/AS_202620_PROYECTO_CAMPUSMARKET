@@ -4,6 +4,7 @@ task_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 python3 "$task_root/scripts/preparar_fixture_android.py"
 python3 "$task_root/scripts/asistir_selector_e2e.py" android > "$task_root/artifacts/e2e/selector.log" 2>&1 &
 picker_pid=$!
+reverse_created=0
 finish() {
   task_status=$?
   kill "$picker_pid" 2>/dev/null || true
@@ -12,6 +13,9 @@ finish() {
     timeout 15s adb exec-out screencap -p > "$task_root/artifacts/e2e/android-selector-fallo.png" || true
     timeout 15s adb logcat -d -t 600 > "$task_root/artifacts/e2e/android-adb-fallo.log" 2>&1 || true
     timeout 10s adb devices -l > "$task_root/artifacts/e2e/android-dispositivos-fallo.txt" 2>&1 || true
+  fi
+  if [ "$reverse_created" -eq 1 ]; then
+    adb -s emulator-5554 reverse --remove tcp:8000 || true
   fi
 }
 trap finish EXIT
@@ -23,5 +27,10 @@ if [ "$boot_state" != "1" ]; then
   exit 1
 fi
 adb -s emulator-5554 shell dumpsys activity activities | tail -n 12
+# Tunel exclusivo del emulador al backend sintetico del runner. No depende
+# del alias de red 10.0.2.2 y se retira al terminar, incluso si falla el test.
+adb -s emulator-5554 reverse --no-rebind tcp:8000 tcp:8000
+reverse_created=1
+adb -s emulator-5554 reverse --list | awk '$2 == "tcp:8000" && $3 == "tcp:8000" { found=1 } END { exit !found }'
 # Keep the real Flutter integration test mandatory; allow time for a slow VM-service handshake.
-timeout --signal=TERM --kill-after=20s 12m flutter drive --no-dds --driver=test_driver/mvp_driver.dart --target=integration_test/mvp_flow_test.dart -d emulator-5554 --dart-define=CAMPUSMARKET_API_BASE_URL=http://10.0.2.2:8000
+timeout --signal=TERM --kill-after=20s 12m flutter drive --no-dds --driver=test_driver/mvp_driver.dart --target=integration_test/mvp_flow_test.dart -d emulator-5554 --dart-define=CAMPUSMARKET_API_BASE_URL=http://127.0.0.1:8000

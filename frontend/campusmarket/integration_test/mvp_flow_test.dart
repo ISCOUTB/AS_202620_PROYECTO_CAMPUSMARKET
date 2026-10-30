@@ -140,6 +140,11 @@ void main() {
     }
 
     try {
+    // Comprobar el transporte desde el cliente real, no solo desde el host CI.
+    // Un error aqui no imprime credenciales ni cuerpos de respuestas.
+    final health = await http.get(Uri.parse('$defaultApiBaseUrl/health')).timeout(const Duration(seconds: 20));
+    expect(health.statusCode, 200, reason: 'Health accesible desde el cliente de integración');
+    binding.reportData!['client_health_status'] = health.statusCode;
     await tester.pumpWidget(const CampusMarketApp());
     await until(() => find.byType(CircularProgressIndicator).evaluate().isEmpty, 'Inicio cargado');
     await screenshot('inicio-vacio');
