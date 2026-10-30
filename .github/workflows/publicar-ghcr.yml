@@ -3,6 +3,12 @@ name: Preparar publicacion GHCR
 on:
   workflow_dispatch:
     inputs:
+      imagen:
+        description: "Imagen acreditada a recuperar (Web publica solo candidato en el fork)"
+        required: true
+        default: compose
+        type: choice
+        options: [compose, web-institucional]
       run_id:
         description: "Run de Compose que produjo la imagen"
         required: true
@@ -25,7 +31,7 @@ permissions:
 
 jobs:
   verificar-artefacto:
-    if: github.repository == 'ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET' && github.ref == 'refs/heads/master'
+    if: inputs.imagen != 'web-institucional' && github.repository == 'ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET' && github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -204,3 +210,44 @@ jobs:
           echo "- Identidad OCI, archivo REVISION e imagen remota: OK" >> "$GITHUB_STEP_SUMMARY"
 
           echo "GHCR_VERIFICADO=$IMAGE@$DIGEST"
+
+  verificar-web:
+    if: inputs.imagen == 'web-institucional' && github.repository == 'Nnigarp/AS_202620_PROYECTO_CAMPUSMARKET' && github.ref == 'refs/heads/feat/web-institucional-20261030-40be256'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: "3.12"
+      - name: Validar publicador y seleccion exacta del candidato
+        env:
+          RUN_ID: ${{ inputs.run_id }}
+          SOURCE_SHA: ${{ inputs.source_sha }}
+        run: |
+          python -m unittest scripts.test_publicar_web_verificada -v
+          python - <<'PY'
+          import os
+          from scripts.publicar_web_verificada import RUN, SOURCE
+          assert os.environ["RUN_ID"] == str(RUN)
+          assert os.environ["SOURCE_SHA"] == SOURCE
+          PY
+      - name: Recuperar y verificar la imagen original sin construir
+        if: inputs.publicar != true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python -m scripts.publicar_web_verificada
+      - name: Publicar exclusivamente el candidato original en GHCR del fork
+        if: inputs.publicar == true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python -m scripts.publicar_web_verificada --publish
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: publicacion-web-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/publicacion-web/
+          if-no-files-found: error
+          retention-days: 90

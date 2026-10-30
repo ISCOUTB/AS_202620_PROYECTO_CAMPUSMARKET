@@ -26,8 +26,9 @@ def test_missing_build_does_not_replace_api(tmp_path):
 
 def test_partial_build_fails_explicitly(web_dir):
     (web_dir / "main.dart.js").unlink()
+    app = FastAPI()
     with pytest.raises(RuntimeError, match="Build Flutter incompleto"):
-        mount_web_frontend(FastAPI(), web_dir)
+        mount_web_frontend(app, web_dir)
 
 
 def test_mount_preserves_root_contracts_and_docs(web_dir):
