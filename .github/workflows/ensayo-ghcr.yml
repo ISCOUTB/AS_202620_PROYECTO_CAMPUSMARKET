@@ -1,0 +1,55 @@
+name: Ensayo aislado de imagen GHCR
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  ensayo:
+    if: github.repository == 'ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Obtener la version del ensayo
+        id: checkout
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+
+      - name: Validar aislamiento y Compose con credenciales sinteticas
+        run: |
+          printf 'DOCKER_CONFIG=%s/campusmarket-ghcr-docker-%s-%s\n' \
+            "$RUNNER_TEMP" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" >> "$GITHUB_ENV"
+          python3 scripts/ensayar_imagen_ghcr.py prepare
+
+      - name: Autenticar lectura de GHCR
+        env:
+          GHCR_TOKEN: ${{ github.token }}
+          GHCR_USER: ${{ github.actor }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io \
+            --username "$GHCR_USER" --password-stdin > /dev/null
+
+      - name: Ejecutar imagen publicada con MySQL y verificar persistencia
+        run: python3 scripts/ensayar_imagen_ghcr.py run
+
+      - name: Limpiar exclusivamente los recursos del ensayo
+        if: ${{ always() && steps.checkout.outcome == 'success' }}
+        run: python3 scripts/ensayar_imagen_ghcr.py cleanup
+
+      - name: Generar evidencia sin secretos
+        if: ${{ always() && steps.checkout.outcome == 'success' }}
+        run: python3 scripts/ensayar_imagen_ghcr.py report
+
+      - name: Conservar resultado y matriz del run
+        if: ${{ always() && steps.checkout.outcome == 'success' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ensayo-ghcr-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/ensayo-ghcr/
+          if-no-files-found: error
+          retention-days: 14
