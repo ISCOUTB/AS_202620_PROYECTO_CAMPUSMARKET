@@ -127,6 +127,10 @@ jobs:
           done
           echo "::error::No se pudo instalar NDK $ndk_version tras tres intentos"
           exit 1
+      - name: Preparar distribución Gradle oficial con integridad antes del emulador
+        if: matrix.platform == 'android'
+        shell: bash
+        run: bash scripts/preparar_gradle_ci.sh
       - name: Ejecutar flujo Android en emulador real
         if: matrix.platform == 'android'
         uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
