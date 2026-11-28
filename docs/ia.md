@@ -837,3 +837,34 @@ Seguimiento del correctivo: la primera ejecución superó Gitleaks, pero la comp
 | Interpretación corregida del contrato | Se descartó atribuir a la imagen nueva el 9/9 del run oficial, que observó `46ede525…`. El ensayo posterior obtuvo 8/9 bajo `4af0e620…`. La expectativa de revisión era antigua. OpenAPI, contenido de catálogo y respuestas 200/422/200 sí coincidieron. | [Run oficial](https://github.com/ISCOUTB/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/45353575784), [run posterior del fork](https://github.com/Nnigarp/AS_202620_PROYECTO_CAMPUSMARKET/actions/runs/45384460142) y [referencia fijada](../.github/s10-produccion.json). La configuración y los criterios originales se conservan. |
 
 **Límites.** La recuperación desde una copia independiente de MySQL y fotos, el rollback productivo y una nueva validación integral autenticada del despliegue siguen pendientes. El éxito de CI no acredita esas operaciones. La asistencia de IA pertenece al proceso de desarrollo y documentación. El equipo conserva las decisiones arquitectónicas y operativas. El producto sigue funcionando sin un modelo generativo, conforme a [ADR-0010](adr/0010-no-incorporar-componente-generativo-en-campusmarket.md).
+
+## 2026-11-27 — Aplicación de cambios S17
+
+Codex, sin subagentes, contrastó Git, GHCR, GitHub Actions, Sonar y las evaluaciones oficiales. Implementó la prueba de escritor indebido y el job documental, preparó la referencia Git de S10 y ejecutó el ensayo público de lectura. El registro conserva el [resultado y sus límites](cierre-arquitectonico/evidencias-cierre.md).
+
+| Propuesta | Decisión y verificación |
+|---|---|
+| Actualizar la expectativa pública | Se aceptó después de comparar etiqueta OCI, digest de Compose y revisión servida. El esquema de ambos commits tenía el mismo objeto Git. |
+| Comprobar propiedad y trazabilidad en cada PR | Se aceptaron fixtures sintéticos y un job independiente. Ruff detectó una llamada sin política explícita de retorno y se corrigió antes de publicar el cierre. |
+| Certificar EC-01 con HTTP o convertir preguntas del evaluador en testimonios | Se descartaron ambas inferencias. El observador visible falló en la preparación y las fuentes primarias del equipo siguen pendientes. |
+| Aprobar el ADR o redactar lecciones en nombre de los integrantes | La aceptación y las tres lecciones requieren ratificación humana. Las propuestas se identifican como borrador. |
+
+Se publicaron las revisiones en el fork. El equipo reservó para después de su revisión la apertura del PR. Se conserva el fallo local de imágenes y su corrección de identificación y aislamiento en el registro de pruebas.
+
+**Seguimiento de CI.** Codex cotejó las 26 coordenadas del informe redactado con el inventario público de Sonar, obtuvo el Gate por identificador de análisis y comprobó el escáner con un valor ajeno en la misma ruta. La excepción está restringida a valores públicos enumerados. Se conservaron las cinco coincidencias del historial completo ya clasificadas en S9/S10. [Evidencia y alcance](cierre-arquitectonico/evidencias-cierre.md).
+
+
+### Revisión independiente posterior de S17 — 27/nov/2026
+
+ChatGPT consultó GitHub, contrastó el diff del candidato técnico `a32e3ce` y verificó cinco workflows exitosos para ese SHA. Se aceptó fijar los enlaces de los runs y del diff, conservando la distinción entre candidato y master. Se descartó declarar aceptación del ADR o lecciones personales sin ratificación, y certificar un SHA nuevo con runs de otro. No se ejecutaron pruebas propias ni se modificaron código, umbrales, secretos o producción. [Resultados y pendientes](cierre-arquitectonico/evidencias-cierre.md#verificación-independiente-del-candidato-a32e3ce).
+
+### Corrección de procedencia y revisión de cierre — 27/nov/2026
+
+ChatGPT reabrió las evaluaciones del repositorio oficial e interpretó inicialmente de forma incorrecta el alcance de la observación oral de colores y cuadros. Nilver aclaró que correspondía a la presentación HTML, no a la aplicación. Se retiró RF-11 de la matriz técnica y se corrigieron las referencias en la retrospectiva y evidencias; se conserva el historial Git. Se descartó modificar Flutter por esa observación y declarar ratificación colectiva o lecciones personales sin confirmación. El ADR-0027 conserva su implementación técnica verificada y ratificación pendiente. Se documentaron los cinco runs de 2b393a7. [Matriz](cierre-arquitectonico/matriz-retroalimentacion.md) · [evidencia](cierre-arquitectonico/evidencias-cierre.md).
+
+
+### Ratificación humana — 27/nov/2026
+
+El 27/nov/2026 a las 19:04 (Colombia), los tres integrantes, Nilver García Pimentel, Joshua Tenorio y Camilo Martínez, comunicaron conjuntamente en el chat de cierre que confirmaban sus respectivas lecciones individuales, aprobaban el ADR-0027 y autorizaban registrar la conformidad en GitHub. Es una declaración conjunta del equipo recibida en el chat, no tres firmas digitales independientes.
+
+ChatGPT registró la conformidad en el ADR, arc42, retrospectiva, matriz y evidencias. Se descartó extender esta aprobación a recomendaciones originales no localizadas o a checks de un SHA todavía no ejecutados. No se modificó código, pruebas ni producción. [Conformidad](cierre-arquitectonico/retrospectiva.md#conformidad-del-equipo).
